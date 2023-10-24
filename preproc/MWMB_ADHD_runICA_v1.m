@@ -1,0 +1,136 @@
+%% Init
+clear all;
+close all; 
+%%
+if isempty(findstr(pwd,'thandrillon'))==0
+    path_LSCPtools='/Users/tand0009/WorkGit/LSCPtools/';
+    path_fieldtrip='/Users/thandrillon/WorkGit/projects/ext/fieldtrip/';
+    data_path='/Users/thandrillon/Data/Nir_NeuroMod/raw_data/';
+    preproc_path='/Users/thandrillon/Data/Nir_NeuroMod/preproc/';
+    path_detectSW='/Users/thandrillon/Data/Nir_NeuroMod/SW_detection/';
+else
+    path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
+    path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
+    data_path = '/Volumes/Seagate/MWMB_ADHD_SART/EEG/';
+    preproc_path='/Volumes/Seagate/MWMB_ADHD_SART/preproc/';
+    path_detectSW = '/Volumes/Seagate/MWMB_ADHD_SART/SW_detection/';
+    
+    %     mkdir(path_detectSW)
+end
+% adding relevant toolboxes to the path
+% spm12 and LSCPtools
+addpath(genpath(path_LSCPtools))
+addpath(path_fieldtrip)
+ft_defaults;
+
+% select relevant files, here baseline blocks
+eeg_files=dir([data_path filesep '*.eeg']);
+
+%EEG Layout info
+run ../MWMB_ADHD_elec_layout.m 
+
+%% Loop across files
+RS = ["R1", "R2"];
+for nF=1:length(eeg_files)
+    if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
+        continue; %  EP - Jump to the bottom of the loop.
+    end
+
+    if contains(eeg_files(nF).name,RS) %To skip resting state files
+        continue;
+    end
+
+    fprintf('... working on %s\n',[eeg_files(nF).folder filesep eeg_files(nF).name])
+    %%% load the data
+    SubInfo=split(eeg_files(nF).name,'-');
+    SubID=SubInfo{2};
+
+
+    %%% minimal preprocessing
+    cfg=[];
+    cfg.SubID               = SubID;
+    cfg.dataset             = [eeg_files(nF).folder filesep eeg_files(nF).name];
+    
+    cfg.demean         = 'yes';
+    cfg.lpfilter       = 'yes';        % enable high-pass filtering
+    cfg.lpfilttype     = 'but';
+    cfg.lpfiltord      = 4;
+    cfg.lpfreq         = 40;
+    cfg.hpfilter       = 'yes';        % enable high-pass filtering
+    cfg.hpfilttype     = 'but';
+    cfg.hpfiltord      = 4;
+    cfg.hpfreq         = 1;
+    cfg.dftfilter      = 'yes';        % enable notch filtering to eliminate power line noise
+    cfg.dftfreq        = [50 100]; % set up the frequencies for notch filtering
+    
+    cfg.reref      = 'yes';
+    cfg.refchannel = 'all';
+    
+    data                = ft_preprocessing(cfg); % read raw data
+
+    %%% rename channels
+    mylabels=data.label;
+    for nCh=1:length(mylabels)
+        findspace=findstr(mylabels{nCh},' ');
+        if isempty(findspace)
+            newlabels{nCh}=mylabels{nCh};
+        else
+            if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
+                newlabels{nCh}=mylabels{nCh}(findspace+1:end);
+            else
+                newlabels{nCh}=mylabels{nCh}(1:findspace-1);
+            end
+        end
+    end
+    cfg=[];
+    cfg.channel        = data.label; %hdr.label(find((cellfun(@isempty,regexp(hdr.label,'EOG'))) & (cellfun(@isempty,regexp(hdr.label,'EMG'))) & (cellfun(@isempty,regexp(hdr.label,'ECG'))) & (cellfun(@isempty,regexp(hdr.label,'Mic')))));
+    cfg.montage.labelold = data.label;
+    cfg.montage.labelnew = newlabels;
+    cfg.montage.tra=eye(length(data.label));
+    data = ft_preprocessing(cfg, data); %causing an error because they're mutually exclusive
+
+    std_vec=log(std(data.trial{1},[],2));
+    kurt_vec=log(kurtosis(data.trial{1},[],2));
+    badCh_std=find(std_vec>(mean(std_vec)+3*std(std_vec)));
+    badCh_kur=find(kurt_vec>(mean(kurt_vec)+3*std(kurt_vec)));
+
+
+    %
+    badChannels=unique([badCh_std ; badCh_kur]);
+    if ~isempty(badChannels)
+        fprintf('... ... interpolating %g channels\n',length(badChannels))
+        % find neighbours
+        cfg=[];
+        cfg.method        = 'triangulation';
+        cfg.layout        = layout;
+        cfg.feedback      = 'no';
+        cfg.channel = layout.label;
+        [neighbours] = ft_prepare_neighbours(cfg);
+        
+        % interpolate channels
+        cfg=[];
+        cfg.method         = 'weighted';
+        cfg.badchannel     = layout.label(badChannels);
+        cfg.missingchannel = [];
+        cfg.neighbours     = neighbours;
+        cfg.trials         = 'all';
+        cfg.layout         = layout;
+        cfg.channel = layout.label;
+        [data] = ft_channelrepair(cfg, data); %crashing here
+    end
+    
+    %
+    cfg=[];
+    cfg.reref      = 'yes';
+    cfg.refchannel = 'all';
+    data = ft_preprocessing(cfg,data);
+    
+
+    %%% run ICA
+    rankICA = rank(data.trial{1,1});
+    cfg        = [];
+    cfg.method = 'runica'; % this is the default and uses the implementation from EEGLAB
+    cfg.numcomponent = rankICA;
+    comp = ft_componentanalysis(cfg, data);
+    save([preproc_path filesep 'ICA_' eeg_files(nF).name(1:end-4) 'mat'],'data','comp','rankICA','badChannels');
+end
