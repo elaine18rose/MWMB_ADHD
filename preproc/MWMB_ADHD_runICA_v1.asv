@@ -102,7 +102,7 @@ for nF=1:length(eeg_files)
         % find neighbours
         cfg=[];
         cfg.method        = 'triangulation';
-        cfg.layout        = layout(1:64,:);
+        cfg.layout        = layout;
         cfg.feedback      = 'no';
         cfg.channel = layout.label;
         [neighbours] = ft_prepare_neighbours(cfg);
@@ -116,7 +116,7 @@ for nF=1:length(eeg_files)
         cfg.trials         = 'all';
         cfg.layout         = layout;
         cfg.channel = layout.label;
-        [data] = ft_channelrepair(cfg, data);
+        [data] = ft_channelrepair(cfg, data); %crashing here
     end
     
     %
@@ -132,5 +132,5 @@ for nF=1:length(eeg_files)
     cfg.method = 'runica'; % this is the default and uses the implementation from EEGLAB
     cfg.numcomponent = rankICA;
     comp = ft_componentanalysis(cfg, data);
-    save([preproc_path filesep 'ICA_' eeg_files(nF).name(1:end-4) 'mat'],'data','comp','rankICA','badChannels');
+    save([preproc_path filesep 'ICA_ft_SART_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
 end
