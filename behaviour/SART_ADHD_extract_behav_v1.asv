@@ -1,0 +1,389 @@
+%% Init
+clear all;
+
+if isempty(findstr(pwd,'thandrillon'))==0 
+    path_LSCPtools='/Users/thandrillon/WorkGit/LSCPtools/';
+    path_fieldtrip='/Users/thandrillon/WorkGit/projects/ext/fieldtrip/';
+    behav_path='/Users/thandrillon/Data/Nir_NeuroMod/raw_data/'; %% Needs to be updated
+    path_detectSW='/Users/thandrillon/Data/Nir_NeuroMod/SW_detection/'; %% Needs to be updated
+else
+    path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
+    path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
+    behav_path = '/Volumes/Seagate/MWMB_ADHD_SART/Behaviour/';
+    preproc_path='/Volumes/Seagate/MWMB_ADHD_SART/preproc/';
+    path_detectSW = '/Volumes/Seagate/MWMB_ADHD_SART/SW_detection/';
+    save_path = '/Users/elaine/desktop/Git_Studies/MWMB_ADHD/tables';
+    
+    %     mkdir(path_detectSW)
+end
+% adding relevant toolboxes to the path
+addpath(genpath(path_LSCPtools))
+addpath(path_fieldtrip)
+ft_defaults;
+% addpath(genpath(path_ExGauss))
+% addpath(genpath(path_FMINSEARCHBND))
+
+addpath(behav_path)
+
+% select relevant files, here baseline blocks
+files=dir([behav_path filesep 'wanderIM_behavres_*.mat']);
+
+% NOTE: test_res columns: 
+% nblock this_blockcond thiset ntrial this_seq_trial TargetID thisresp stimonset dur_face_no_rand thisresptime  this_nogo this_go
+
+%NOTE: probe_res columns:
+% this_probe this_probetime startProbe nblock this_blockcond ntrial probe_responses(:,1)' probe_responses(:,2)' probe_responses(:,3)' probe_responses(:,4)';
+
+%%
+behavres_mat=[];
+behavgroup_cond=[];
+stateres_mat=[];
+stategroup_cond=[];
+resblock_mat=[];
+
+for nF=1:length(files)
+    File_Name=files(nF).name;
+    if contains(File_Name, "AUTOSAVE") ==1; %Skips autosaves per block
+        continue;
+    end
+    fprintf('... processing %s\n',File_Name);
+    SubN=(File_Name(1:end-4));
+    load(File_Name)
+
+    if SubN(19)=='C'
+        Group='CTR';
+    elseif SubN(19)=='A'
+        Group='ADHD';
+    elseif SubN == 'wanderIM_behavres_001_20Sep2023-1704' | 'wanderIM_behavres_004_03Oct2023-1131' % These participants were missing their ppt group in the name 
+        Group = 'CTR';
+    else
+        Group='missing';
+    end
+    
+    %%% Blocks, MWMB responses and performance
+    blockN = test_res(:,1);
+
+    this_probe = probe_res(:,1);
+    probe_block = probe_res(:,4);
+    state_resp = probe_res(:, 19); % Note: 1 = On, 2 = MW, 3 = MB
+    distraction_resp = probe_res(:,20); % Note: 1 = in the room; 2 = personal; 3 = about the task
+    intentional_resp=probe_res(:,21); % Note: 1 = Entirely intentional to 4 = Entirely unintentional
+    vigilance_resp=probe_res(:,22); % Note: 1 = Extremely alert to 4 = Extremely sleepy
+
+    go_trials = test_res(:,12); %FLAG: Thomas, please check that I'm coding/interpreting this correctly
+    nogo_trials = test_res(:,11); % 1 = reacted (when they shouldn't have); 0 = didn't react (correct resp);
+    nTrial=test_res(:,4);
+    FA = (test_res(:,11)==1);
+    Miss = (test_res(:,12)==0);
+    RT = test_res(:,10)-test_res(:,8); %FLAG: I just copied this from the general code to check the behav data. This doesn't exclude RTs for FAs
+
+    % Compiling into tables 
+    this_behav=nan(length(test_res),7);
+    this_behav(:,1)=blockN;
+    this_behav(:,2)=nTrial;
+    this_behav(:,3)=go_trials;
+    this_behav(:,4)=nogo_trials;
+    this_behav(:,5)=FA;
+    this_behav(:,6)=Miss;
+    this_behav(:,7)=RT;
+
+    this_state=nan(length(probe_res),6);
+    this_state(:,1)=this_probe;
+    this_state(:,2)=probe_block;
+    this_state(:,3)=state_resp;
+    this_state(:,4)=distraction_resp;
+    this_state(:,5)=intentional_resp;
+    this_state(:,6)=vigilance_resp;
+
+    behavres_mat=[behavres_mat; [nF*ones(size(this_behav,1),1) this_behav]];  % This is making a matrix of the variables obtained and put in this_behav
+    behavgroup_cond=[behavgroup_cond; repmat({Group},size(this_behav,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
+
+    stateres_mat=[stateres_mat; [nF*ones(size(this_state,1),1) this_state]];  % This is making a matrix of the variables obtained and put in this_state
+    stategroup_cond=[stategroup_cond; repmat({Group},size(this_state,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
+    %% Saving the data by trial per participant
+    this_table=array2table(this_behav,...
+        'VariableNames',{'BlockN','nTrial','GoTrials','NoGoTrials','FA','Misses','RT'});
+    if File_Name(19)=='C' | File_Name(19)=='A';
+    writetable(this_table,[save_path filesep 'MWMB_ADHD_behav_' File_Name(19:22) '.txt']);
+    elseif SubN == 'wanderIM_behavres_001_20Sep2023-1704' |'wanderIM_behavres_004_03Oct2023-1131'
+            writetable(this_table,[save_path filesep 'MWMB_ADHD_behav_C' File_Name(19:21) '.txt']);
+    end
+
+    this_table=array2table(this_state,...
+        'VariableNames',{'ProbeNo','Block','State','Distraction','Intention','Vigilance'});
+    if File_Name(19)=='C' | File_Name(19)=='A';
+    writetable(this_table,[save_path filesep 'MWMB_ADHD_behav_' File_Name(19:22) '.txt']);
+    elseif SubN == 'wanderIM_behavres_001_20Sep2023-1704' |'wanderIM_behavres_004_03Oct2023-1131'
+            writetable(this_table,[save_path filesep 'MWMB_ADHD_state_C' File_Name(19:21) '.txt']);
+    end
+% 
+%     %by block data %% A mess. 
+%     for nbl=1:8
+%         resblock_mat=[resblock_mat; [nF nbl nanmean(this_behav(this_behav(:,3)==nbl & this_behav(:,4)==1,7)==1) nanmean(this_behav(this_behav(:,3)==nbl & this_behav(:,4)==1,7)==0) nanmean(this_behav(this_behav(:,3)==nbl & this_behav(:,4)==1 & this_behav(:,7)==1,9)) nanstd(this_behav(this_behav(:,3)==nbl & this_behav(:,4)==1 & this_behav(:,7)==1,9)]];
+%         groupblock_cond=[groupblock_cond ; {Group}];
+%         groupblock_SubID=[groupblock_SubID ; {SubN}];
+% 
+%         [dprime,crit]=calc_dprime(this_behav(this_behav(:,4)==0,6)==1,this_behav(this_behav(:,4)==1,7)==0); %dprime is calculated using Hit and FA;
+%         % Column 4 (Stim type) is only showing NT and column 6(Correct NT detected) is 1
+%         % Column 4 (Stim type) is only showing Targets and column 7 (Correct Target detected) is 0
+%         restask_mat=[restask_mat; [nF nanmean(this_behav(this_behav(:,4)==0,6)==1) nanmean(this_behav(this_behav(:,4)==0,6)==0) ...
+%             nanmean(this_behav(this_behav(:,4)==1,7)==1) nanmean(this_behav(this_behav(:,4)==1,7)==0) nanmean(this_behav(this_behav(:,4)==1 & this_behav(:,7)==1,9)) nanstd(this_behav(this_behav(:,4)==1 & this_behav(:,7)==1,9)) ...
+%             dprime crit]];
+%         grouptask_cond=[grouptask_cond ; {Group}];
+%         grouptask_SubID=[grouptask_SubID ; {SubN}];
+%     end
+
+
+end
+
+    %% Making a table of the by trial behavioural results per participant
+    table1=array2table(behavres_mat,'VariableNames',{'SubID','BlockN','TrialN','GoTrials','NoGoTrials','FA','Misses','RT'});
+    table1.Group=behavgroup_cond;
+    table1.SubID=categorical(table1.SubID);
+    table1.Group=categorical(table1.Group);
+    % table1.Group=reordercats(table1.Group,[2,1]);
+
+    writetable(table1,[save_path filesep 'MWMB_ADHD_behav_bytrial.txt']); %%% FLAG: Need to fix "SubID" because right now it's wrong
+
+
+    table2=array2table(stateres_mat,'VariableNames',{'SubID','ProbeN','BlockN','State','Distraction','Intention','Vigilance'});
+    table2.Group=stategroup_cond;
+    table2.SubID=categorical(table2.SubID);
+    table2.Group=categorical(table2.Group);
+    % table1.Group=reordercats(table1.Group,[2,1]);
+
+    writetable(table2,[save_path filesep 'MWMB_ADHD_state_bytrial.txt']); %%% FLAG: Need to fix "SubID" because right now it's wrong
+
+
+%%
+Colors=[253,174,97;
+    171,217,233;
+    44,123,182]/256;
+
+ctrs=unique(table2.SubID(table2.Group=='CTR' ));
+Miss_CTR=[];
+for nc=1:length(ctrs)
+    Miss_CTR(nc)=nanmean(table2.Miss(table2.SubID==ctrs(nc)));
+end
+adhds=unique(table2.SubID(table2.Group=='ADHD' ));
+Miss_ADHD=[];
+for nc=1:length(adhds)
+    Miss_ADHD(nc)=nanmean(table2.Miss(table2.SubID==adhds(nc)));
+end
+
+FA_CTR=[];
+for nc=1:length(ctrs)
+    FA_CTR(nc)=nanmean(table2.FA(table2.SubID==ctrs(nc)));
+end
+FA_ADHD=[];
+for nc=1:length(adhds)
+    FA_ADHD(nc)=nanmean(table2.FA(table2.SubID==adhds(nc)));
+end
+
+stdRT_CTR=[];
+for nc=1:length(ctrs)
+    stdRT_CTR(nc)=nanmean(table2.stdRT(table2.SubID==ctrs(nc)))./nanmean(table2.Hit_RT(table2.SubID==ctrs(nc)));
+end
+stdRT_ADHD=[];
+for nc=1:length(adhds)
+    stdRT_ADHD(nc)=nanmean(table2.stdRT(table2.SubID==adhds(nc)))./nanmean(table2.Hit_RT(table2.SubID==adhds(nc)));
+end
+
+Hit_RT_CTR=[];
+for nc=1:length(ctrs)
+    Hit_RT_CTR(nc)=nanmean(table2.Hit_RT(table2.SubID==ctrs(nc)));
+end
+Hit_RT_ADHD=[];
+for nc=1:length(adhds)
+    Hit_RT_ADHD(nc)=nanmean(table2.Hit_RT(table2.SubID==adhds(nc)));
+end
+
+Hit_CTR=[];
+for nc=1:length(ctrs)
+    Hit_CTR(nc)=nanmean(table2.Hit(table2.SubID==ctrs(nc)));
+end
+Hit_ADHD=[];
+for nc=1:length(adhds)
+    Hit_ADHD(nc)=nanmean(table2.Hit(table2.SubID==adhds(nc)));
+end
+
+%Miss
+% figure;
+% h1 = raincloud_plot(100*Miss_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
+%     'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',8,'bound_data',[0 100]);
+% h2 = raincloud_plot(100*Miss_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
+%     'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',8,'bound_data',[0 100]);
+% 
+% set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+% set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+% set(gca,'XLim', [-20 110], 'YLim',ylim.*[1 1.5]); % set(gca,'XLim', [-10 110], 'YLim', ylim.*[0.5 1.7]);
+% format_fig; title('MISS'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
+
+figure;
+h1 = raincloud_plot(100*Miss_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
+    'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',8,'bound_data',[0 100]);
+h2 = raincloud_plot(100*Miss_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
+    'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',8,'bound_data',[0 100]);
+
+set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+set(gca,'XLim', [-20 110], 'YLim',ylim.*[1 1.5]); % set(gca,'XLim', [-10 110], 'YLim', ylim.*[0.5 1.7]);
+format_fig; title('MISS'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'}); 
+
+%FA
+figure;
+h1 = raincloud_plot(100*FA_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
+    'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',.5,'bound_data',[0 100]);
+h2 = raincloud_plot(100*FA_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
+    'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',.5,'bound_data',[0 100]);
+
+set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+set(gca,'XLim', [-1 7], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [0 6], 'YLim', ylim.*[0.5 1.7]);
+format_fig; title('FA'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
+
+%%
+%stdRT
+figure;
+h1 = raincloud_plot(stdRT_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
+    'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',.02);
+h2 = raincloud_plot(stdRT_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
+    'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',.02);
+
+set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+set(gca,'XLim', [0.0 0.4], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [0.0 0.3], 'YLim', ylim.*[0.5 1.7]);
+format_fig; title('stdRT/meanRT'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
+
+%Hit_RT
+figure;
+h1 = raincloud_plot(Hit_RT_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
+    'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',.04);
+h2 = raincloud_plot(Hit_RT_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
+    'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',.04);
+
+set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+set(gca,'XLim', [1.1 1.8], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [1.1 1.9], 'YLim', ylim.*[0.5 1.7]);
+format_fig; title('RT (s)'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
+
+%Hit
+figure;
+h1 = raincloud_plot(Hit_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
+    'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',.02);
+h2 = raincloud_plot(Hit_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
+    'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',.02);
+
+set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+set(gca,'XLim', [0 1.15], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [0.0 1.1], 'YLim', ylim.*[0.5 1.7]);
+format_fig; title('Hit'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
+
+%%
+%% Repeated Measures plot
+
+%Hit
+data_to_plot=[];
+group_labels={'CTR','ADHD'};
+for i = 1:8 % number of repetitions
+    for j = 1:2 % number of group
+        data_to_plot{i, j} = table2.Hit(table2.BlockN==i & table2.Group==group_labels{j});
+    end
+end
+
+figure; hold on;
+h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+set(gca, 'XLim', [-0.05 1.1]);
+xtix = get(gca, 'xtick'); %to change y-axis to percentage
+set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
+title(['Hits per Block']);
+xlabel('Percentage of Hits'); ylabel('Block Number');
+format_fig;
+
+%Miss
+data_to_plot=[];
+group_labels={'CTR','ADHD'};
+for i = 1:8 % number of repetitions
+    for j = 1:2 % number of group
+        data_to_plot{i, j} = table2.Miss(table2.BlockN==i & table2.Group==group_labels{j});
+    end
+end
+
+figure; hold on;
+h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+set(gca, 'XLim', [-0.1 1.1]);
+xtix = get(gca, 'xtick'); %to change y-axis to percentage
+set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
+title(['Misses per Block']);
+xlabel('Percentage of Misses'); ylabel('Block Number');
+format_fig;
+
+%False Alarms
+data_to_plot=[];
+group_labels={'CTR','ADHD'};
+for i = 1:8 % number of repetitions
+    for j = 1:2 % number of group
+        data_to_plot{i, j} = table2.FA(table2.BlockN==i & table2.Group==group_labels{j});
+    end
+end
+
+figure; hold on;
+h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+set(gca, 'XLim', [-0.015 0.12]);
+xtix = get(gca, 'xtick'); %to change y-axis to percentage
+set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
+title(['False alarms per Block']);
+xlabel('Percentage of False Alarms'); ylabel('Block Number');
+format_fig;
+
+%Hit RT
+data_to_plot=[];
+group_labels={'CTR','ADHD'};
+for i = 1:8 % number of repetitions
+    for j = 1:2 % number of group
+        data_to_plot{i, j} = table2.Hit_RT(table2.BlockN==i & table2.Group==group_labels{j});
+    end
+end
+
+figure; hold on;
+h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+set(gca, 'XLim', [0.75 2.25]);
+title(['Hit Reaction Times per Block']);
+xlabel('Reaction Times (seconds)'); ylabel('Block Number');
+format_fig;
+
+%stdRT
+data_to_plot=[];
+group_labels={'CTR','ADHD'};
+for i = 1:8 % number of repetitions
+    for j = 1:2 % number of group
+        data_to_plot{i, j} = table2.stdRT(table2.BlockN==i & table2.Group==group_labels{j});
+    end
+end
+
+figure; hold on;
+h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+set(gca, 'XLim', [-0.3 1.6]);
+title(['stdRTs per block']);
+format_fig;
+
+%% plot the inter-probe interval
+plot(diff(probe_res(:,3)))
+% compute the prooportion of mind states
+nanmean(probe_res(:,19)==1) % on
+nanmean(probe_res(:,19)==2) % MW
+nanmean(probe_res(:,19)==3) % MB
+% compute the vigilance ratings
+nanmean(probe_res(:,22)==1)
+nanmean(probe_res(:,22)==2)
+nanmean(probe_res(:,22)==3)
+nanmean(probe_res(:,22)==4)
+% compute the perf on go trials
+nanmean(test_res(:,12))
+% compute the perf on nogo trials
+nanmean(test_res(:,11))
+% plot the distribution of RTs
+all_RT=test_res(:,10)-test_res(:,8);
+figure; hist(all_RT,100)
+
+
