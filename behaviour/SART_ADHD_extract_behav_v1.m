@@ -1,11 +1,12 @@
 %% Init
-% clear all;
+clear all;
 
 if isempty(findstr(pwd,'thandrillon'))==0 
     path_LSCPtools='/Users/thandrillon/WorkGit/LSCPtools/';
     path_fieldtrip='/Users/thandrillon/WorkGit/projects/ext/fieldtrip/';
-    behav_path='/Users/thandrillon/Data/Nir_NeuroMod/raw_data/'; %% Needs to be updated
-    path_detectSW='/Users/thandrillon/Data/Nir_NeuroMod/SW_detection/'; %% Needs to be updated
+    behav_path = '/Users/thandrillon/Data/ADHD_MW/Behaviour/';
+    save_path = '/Users/thandrillon/WorkGit/projects/inprogress/MWMB_ADHD/tables';
+    path_RainCloudPlot='/Users/thandrillon/WorkGit/projects/ext/RainCloudPlots/';
 else
     path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
     path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
@@ -43,9 +44,10 @@ stateres_mat=[];
 stategroup_cond=[];
 resblock_mat=[];
 
+
 for nF=1:length(files)
     File_Name=files(nF).name;
-    if contains(File_Name, "AUTOSAVE") ==1; %Skips autosaves per block
+    if contains(File_Name, "AUTOSAVE") ==1 %Skips autosaves per block
         continue;
     end
     fprintf('... processing %s\n',File_Name);
@@ -80,81 +82,134 @@ for nF=1:length(files)
     RT = test_res(:,10)-test_res(:,8); %FLAG: I just copied this from the general code to check the behav data. This doesn't exclude RTs for FAs
 
     % Compiling into tables 
-    this_behav=nan(length(test_res),7);
-    this_behav(:,1)=blockN;
-    this_behav(:,2)=nTrial;
-    this_behav(:,3)=go_trials;
-    this_behav(:,4)=nogo_trials;
-    this_behav(:,5)=FA;
-    this_behav(:,6)=Miss;
-    this_behav(:,7)=RT;
+    this_behav=nan(length(test_res),9);
+    this_behav(:,3)=blockN;
+    this_behav(:,4)=nTrial;
+    this_behav(:,5)=go_trials;
+    this_behav(:,6)=nogo_trials;
+    this_behav(:,7)=FA;
+    this_behav(:,8)=Miss;
+    this_behav(:,9)=RT;
 
-    this_state=nan(length(probe_res),6);
-    this_state(:,1)=this_probe;
-    this_state(:,2)=probe_block;
-    this_state(:,3)=state_resp;
-    this_state(:,4)=distraction_resp;
-    this_state(:,5)=intentional_resp;
-    this_state(:,6)=vigilance_resp;
+    this_state2=nan(length(probe_res),11);
+    this_state2(:,3)=this_probe;
+    this_state2(:,4)=probe_block;
+    this_state2(:,5)=state_resp;
+    this_state2(:,6)=distraction_resp;
+    this_state2(:,7)=intentional_resp;
+    this_state2(:,8)=vigilance_resp;
+    this_state2(:,9)=nan;
+    this_state2(:,10)=nan;
+    this_state2(:,11)=nan;
 
-    behavres_mat=[behavres_mat; [nF*ones(size(this_behav,1),1) this_behav]];  % This is making a matrix of the variables obtained and put in this_behav
-    behavgroup_cond=[behavgroup_cond; repmat({Group},size(this_behav,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
-
-    stateres_mat=[stateres_mat; [nF*ones(size(this_state,1),1) this_state]];  % This is making a matrix of the variables obtained and put in this_state
-    stategroup_cond=[stategroup_cond; repmat({Group},size(this_state,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
+%     behavres_mat=[behavres_mat; [nF*ones(size(this_behav,1),1) this_behav]];  % This is making a matrix of the variables obtained and put in this_behav
+%     behavgroup_cond=[behavgroup_cond; repmat({Group},size(this_behav,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
+% 
+%     stateres_mat=[stateres_mat; [nF*ones(size(this_state,1),1) this_state]];  % This is making a matrix of the variables obtained and put in this_state
+%     stategroup_cond=[stategroup_cond; repmat({Group},size(this_state,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
     %% Saving the data by trial per participant
-    this_table=array2table(this_behav,...
-        'VariableNames',{'BlockN','nTrial','GoTrials','NoGoTrials','FA','Misses','RT'});
-    if File_Name(19)=='C' | File_Name(19)=='A';
-    writetable(this_table,[save_path filesep 'MWMB_ADHD_behav_' File_Name(19:22) '.txt']);
-    elseif SubN == 'wanderIM_behavres_001_20Sep2023-1704' |'wanderIM_behavres_004_03Oct2023-1131'
-            writetable(this_table,[save_path filesep 'MWMB_ADHD_behav_C' File_Name(19:21) '.txt']);
+    behav_table=array2table(this_behav,...
+        'VariableNames',{'SubID','Group','BlockN','nTrial','GoTrials','NoGoTrials','FA','Misses','RT'});
+    behav_table.SubID=categorical(behav_table.SubID);
+behav_table.Group=categorical(behav_table.Group);
+    if File_Name(19)=='C' || File_Name(19)=='A'
+        SubCond=File_Name(19);
+        SubID=File_Name(20:22);
+        behav_table.SubID=repmat(SubID,size(behav_table,1),1);
+        behav_table.Group=repmat(SubCond,size(behav_table,1),1);
+        writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_' File_Name(19:22) '.txt']);
+    elseif strcmp(SubN , 'wanderIM_behavres_001_20Sep2023-1704') || strcmp(SubN , 'wanderIM_behavres_004_03Oct2023-1131')
+        SubCond='C';
+        SubID=File_Name(19:21);
+               behav_table.SubID=repmat(SubID,size(behav_table,1),1);
+        behav_table.Group=repmat(SubCond,size(behav_table,1),1);
+        writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_C' File_Name(19:21) '.txt']);
     end
 
-    this_table=array2table(this_state,...
-        'VariableNames',{'ProbeNo','Block','State','Distraction','Intention','Vigilance'});
-    if File_Name(19)=='C' | File_Name(19)=='A';
-    writetable(this_table,[save_path filesep 'MWMB_ADHD_behav_' File_Name(19:22) '.txt']);
-    elseif SubN == 'wanderIM_behavres_001_20Sep2023-1704' |'wanderIM_behavres_004_03Oct2023-1131'
-            writetable(this_table,[save_path filesep 'MWMB_ADHD_state_C' File_Name(19:21) '.txt']);
+    probe_table=array2table(this_state2,...
+        'VariableNames',{'SubID','Group','ProbeNo','Block','State','Distraction','Intention','Vigilance','Miss','FA','HitRT'});
+   probe_table.SubID=categorical(probe_table.SubID);
+probe_table.Group=categorical(probe_table.Group);
+       probe_table.SubID=repmat(SubID,size(probe_table,1),1);
+        probe_table.Group=repmat(SubCond,size(probe_table,1),1);
+for nP=1:size(probe_table,1)
+        ProbeTrialIndex=probe_res(nP,6);
+        BlockIndex=probe_res(nP,4);
+        go_trials=test_res(test_res(:,1)==BlockIndex & test_res(:,4)<ProbeTrialIndex & test_res(:,5)~=3,:);
+        nogo_trials=test_res(test_res(:,1)==BlockIndex & test_res(:,4)<ProbeTrialIndex & test_res(:,5)==3,:);
+        go_trials=go_trials(end-17:end,:);
+        nogo_trials=nogo_trials(end-1:end,:);
+        probe_table.Miss(nP)=nanmean(go_trials(:,end)==0);
+        probe_table.HitRT(nP)=nanmean(go_trials(:,10)-go_trials(:,8));
+        probe_table.FA(nP)=nanmean(nogo_trials(:,end-1)==0);
     end
-% 
-%     %by block data %% A mess. 
-%     for nbl=1:4
-%         resblock_mat=[resblock_mat; [nF nbl nanmean(this_behav(this_behav(:,3)==nbl & this_behav(:,4)==1,7)==1) nanmean(this_behav(this_behav(:,3)==nbl & this_behav(:,4)==1,7)==0) nanmean(this_behav(this_behav(:,3)==nbl & this_behav(:,4)==1 & this_behav(:,7)==1,9)) nanstd(this_behav(this_behav(:,3)==nbl & this_behav(:,4)==1 & this_behav(:,7)==1,9)]];
-%         groupblock_cond=[groupblock_cond ; {Group}];
-%         groupblock_SubID=[groupblock_SubID ; {SubN}];
-% 
-%         [dprime,crit]=calc_dprime(this_behav(this_behav(:,4)==0,6)==1,this_behav(this_behav(:,4)==1,7)==0); %dprime is calculated using Hit and FA;
-%         % Column 4 (Stim type) is only showing NT and column 6(Correct NT detected) is 1
-%         % Column 4 (Stim type) is only showing Targets and column 7 (Correct Target detected) is 0
-%         restask_mat=[restask_mat; [nF nanmean(this_behav(this_behav(:,4)==0,6)==1) nanmean(this_behav(this_behav(:,4)==0,6)==0) ...
-%             nanmean(this_behav(this_behav(:,4)==1,7)==1) nanmean(this_behav(this_behav(:,4)==1,7)==0) nanmean(this_behav(this_behav(:,4)==1 & this_behav(:,7)==1,9)) nanstd(this_behav(this_behav(:,4)==1 & this_behav(:,7)==1,9)) ...
-%             dprime crit]];
-%         grouptask_cond=[grouptask_cond ; {Group}];
-%         grouptask_SubID=[grouptask_SubID ; {SubN}];
-%     end
+    if File_Name(19)=='C' || File_Name(19)=='A'
+        writetable(probe_table,[save_path filesep 'MWMB_ADHD_probeBehav_' File_Name(19:22) '.txt']);
+    elseif strcmp(SubN , 'wanderIM_behavres_001_20Sep2023-1704') || strcmp(SubN , 'wanderIM_behavres_004_03Oct2023-1131')
+        writetable(probe_table,[save_path filesep 'MWMB_ADHD_probeBehav_C' File_Name(19:21) '.txt']);
+    end
+    
+    %by block data
+    block_table=zeros(4,15);
+    block_table=array2table(block_table,...
+        'VariableNames',{'SubID','Group','Block','ON','MW','MB','DK','Dist','Perso','Int','Intention','Vigilance','Miss','FA','HitRT'});
+ block_table.SubID=categorical(block_table.SubID);
+block_table.Group=categorical(block_table.Group);
 
+block_table.Block=(1:4)';
+    block_table.Miss=1-grpstats(test_res(:,12),test_res(:,1));
+    block_table.FA=1-grpstats(test_res(:,11),test_res(:,1));
+    all_RT=test_res(:,10)-test_res(:,8);
+    all_RT(test_res(:,5)==3)=NaN;
+    block_table.HitRT=grpstats(all_RT,test_res(:,1));
+    block_table.Intention=grpstats(probe_res(:,21),probe_res(:,4));
+    block_table.Vigilance=grpstats(probe_res(:,22),probe_res(:,4));
 
+    block_table.ON=grpstats(probe_res(:,19)==1,probe_res(:,4));
+    block_table.MW=grpstats(probe_res(:,19)==2,probe_res(:,4));
+    block_table.MB=grpstats(probe_res(:,19)==3,probe_res(:,4));
+    block_table.DK=grpstats(probe_res(:,19)==4,probe_res(:,4));
+    
+    sub_probe_res=probe_res;%(probe_res(:,19)==2,:);
+    block_table.Dist=grpstats(sub_probe_res(:,20)==1,sub_probe_res(:,4),'sum')./grpstats(sub_probe_res(:,19)==2,sub_probe_res(:,4),'sum');
+    block_table.Perso=grpstats(sub_probe_res(:,20)==2,sub_probe_res(:,4),'sum')./grpstats(sub_probe_res(:,19)==2,sub_probe_res(:,4),'sum');
+    block_table.Int=grpstats(sub_probe_res(:,20)==3,sub_probe_res(:,4),'sum')./grpstats(sub_probe_res(:,19)==2,sub_probe_res(:,4),'sum');
+         block_table.SubID=repmat(SubID,size(block_table,1),1);
+        block_table.Group=repmat(SubCond,size(block_table,1),1);
+   if File_Name(19)=='C' || File_Name(19)=='A'
+        writetable(block_table,[save_path filesep 'MWMB_ADHD_blockBehav_' File_Name(19:22) '.txt']);
+    elseif strcmp(SubN , 'wanderIM_behavres_001_20Sep2023-1704') || strcmp(SubN , 'wanderIM_behavres_004_03Oct2023-1131')
+        writetable(block_table,[save_path filesep 'MWMB_ADHD_blockBehav_C' File_Name(19:21) '.txt']);
+   end
+   
+   if exist('all_behav_table')==0
+       all_behav_table=behav_table;
+       all_probe_table=probe_table;
+       all_block_table=block_table;
+   else
+       all_behav_table=[all_behav_table ; behav_table];
+       all_probe_table=[all_probe_table ; probe_table];
+       all_block_table=[all_block_table ; block_table];
+   end
 end
 
-    %% Making a table of the by trial behavioural results per participant
-    table1=array2table(behavres_mat,'VariableNames',{'SubID','BlockN','TrialN','GoTrials','NoGoTrials','FA','Misses','RT'});
-    table1.Group=behavgroup_cond;
-    table1.SubID=categorical(table1.SubID);
-    table1.Group=categorical(table1.Group);
-    % table1.Group=reordercats(table1.Group,[2,1]);
-
-    writetable(table1,[save_path filesep 'MWMB_ADHD_behav_bytrial.txt']); %%% FLAG: Need to fix "SubID" because right now it's wrong
-
-
-    table2=array2table(stateres_mat,'VariableNames',{'SubID','ProbeN','BlockN','State','Distraction','Intention','Vigilance'});
-    table2.Group=stategroup_cond;
-    table2.SubID=categorical(table2.SubID);
-    table2.Group=categorical(table2.Group);
-    % table1.Group=reordercats(table1.Group,[2,1]);
-
-    writetable(table2,[save_path filesep 'MWMB_ADHD_state_bytrial.txt']); %%% FLAG: Need to fix "SubID" because right now it's wrong
+%     %% Making a table of the by trial behavioural results per participant
+%     table1=array2table(behavres_mat,'VariableNames',{'SubID','BlockN','TrialN','GoTrials','NoGoTrials','FA','Misses','RT'});
+%     table1.Group=behavgroup_cond;
+%     table1.SubID=categorical(table1.SubID);
+%     table1.Group=categorical(table1.Group);
+%     % table1.Group=reordercats(table1.Group,[2,1]);
+% 
+%     writetable(table1,[save_path filesep 'MWMB_ADHD_behav_bytrial.txt']); %%% FLAG: Need to fix "SubID" because right now it's wrong
+% 
+% 
+%     table2=array2table(stateres_mat,'VariableNames',{'SubID','ProbeN','BlockN','State','Distraction','Intention','Vigilance'});
+%     table2.Group=stategroup_cond;
+%     table2.SubID=categorical(table2.SubID);
+%     table2.Group=categorical(table2.Group);
+%     % table1.Group=reordercats(table1.Group,[2,1]);
+% 
+%     writetable(table2,[save_path filesep 'MWMB_ADHD_state_bytrial.txt']); %%% FLAG: Need to fix "SubID" because right now it's wrong
 
 
 %%
