@@ -115,14 +115,14 @@ behav_table.Group=categorical(behav_table.Group);
     if File_Name(19)=='C' || File_Name(19)=='A'
         SubCond=File_Name(19);
         SubID=File_Name(20:22);
-        behav_table.SubID=repmat(SubID,size(behav_table,1),1);
-        behav_table.Group=repmat(SubCond,size(behav_table,1),1);
+        behav_table.SubID=repmat({SubID},size(behav_table,1),1);
+        behav_table.Group=repmat({SubCond},size(behav_table,1),1);
         writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_' File_Name(19:22) '.txt']);
     elseif strcmp(SubN , 'wanderIM_behavres_001_20Sep2023-1704') || strcmp(SubN , 'wanderIM_behavres_004_03Oct2023-1131')
         SubCond='C';
         SubID=File_Name(19:21);
-               behav_table.SubID=repmat(SubID,size(behav_table,1),1);
-        behav_table.Group=repmat(SubCond,size(behav_table,1),1);
+               behav_table.SubID=repmat({SubID},size(behav_table,1),1);
+        behav_table.Group=repmat({SubCond},size(behav_table,1),1);
         writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_C' File_Name(19:21) '.txt']);
     end
 
@@ -130,8 +130,8 @@ behav_table.Group=categorical(behav_table.Group);
         'VariableNames',{'SubID','Group','ProbeNo','Block','State','Distraction','Intention','Vigilance','Miss','FA','HitRT'});
    probe_table.SubID=categorical(probe_table.SubID);
 probe_table.Group=categorical(probe_table.Group);
-       probe_table.SubID=repmat(SubID,size(probe_table,1),1);
-        probe_table.Group=repmat(SubCond,size(probe_table,1),1);
+       probe_table.SubID=repmat({SubID},size(probe_table,1),1);
+        probe_table.Group=repmat({SubCond},size(probe_table,1),1);
 for nP=1:size(probe_table,1)
         ProbeTrialIndex=probe_res(nP,6);
         BlockIndex=probe_res(nP,4);
@@ -174,8 +174,8 @@ block_table.Block=(1:4)';
     block_table.Dist=grpstats(sub_probe_res(:,20)==1,sub_probe_res(:,4),'sum')./grpstats(sub_probe_res(:,19)==2,sub_probe_res(:,4),'sum');
     block_table.Perso=grpstats(sub_probe_res(:,20)==2,sub_probe_res(:,4),'sum')./grpstats(sub_probe_res(:,19)==2,sub_probe_res(:,4),'sum');
     block_table.Int=grpstats(sub_probe_res(:,20)==3,sub_probe_res(:,4),'sum')./grpstats(sub_probe_res(:,19)==2,sub_probe_res(:,4),'sum');
-         block_table.SubID=repmat(SubID,size(block_table,1),1);
-        block_table.Group=repmat(SubCond,size(block_table,1),1);
+         block_table.SubID=repmat({SubID},size(block_table,1),1);
+        block_table.Group=repmat({SubCond},size(block_table,1),1);
    if File_Name(19)=='C' || File_Name(19)=='A'
         writetable(block_table,[save_path filesep 'MWMB_ADHD_blockBehav_' File_Name(19:22) '.txt']);
     elseif strcmp(SubN , 'wanderIM_behavres_001_20Sep2023-1704') || strcmp(SubN , 'wanderIM_behavres_004_03Oct2023-1131')
@@ -216,25 +216,27 @@ end
 Colors=[253,174,97;
     171,217,233;
     44,123,182]/256;
+all_behav_table.Group=categorical(all_behav_table.Group);
+all_behav_table.SubID=categorical(all_behav_table.SubID);
 
-ctrs=unique(table1.SubID(table1.Group=='CTR' ));
+ctrs=unique(all_behav_table.SubID(all_behav_table.Group=='C' ));
 Miss_CTR=[];
 for nc=1:length(ctrs)
-    Miss_CTR(nc)=nanmean(table1.Misses(table1.SubID==ctrs(nc)));
+    Miss_CTR(nc)=nanmean(all_behav_table.Misses(all_behav_table.SubID==ctrs(nc)));
 end
-adhds=unique(table1.SubID(table1.Group=='ADHD' ));
+adhds=unique(all_behav_table.SubID(all_behav_table.Group=='A' ));
 Miss_ADHD=[];
 for nc=1:length(adhds)
-    Miss_ADHD(nc)=nanmean(table1.Misses(table1.SubID==adhds(nc)));
+    Miss_ADHD(nc)=nanmean(all_behav_table.Misses(all_behav_table.SubID==adhds(nc)));
 end
 
 FA_CTR=[];
 for nc=1:length(ctrs)
-    FA_CTR(nc)=nanmean(table1.FA(table1.SubID==ctrs(nc)));
+    FA_CTR(nc)=nanmean(all_behav_table.FA(all_behav_table.SubID==ctrs(nc)));
 end
 FA_ADHD=[];
 for nc=1:length(adhds)
-    FA_ADHD(nc)=nanmean(table1.FA(table1.SubID==adhds(nc)));
+    FA_ADHD(nc)=nanmean(all_behav_table.FA(all_behav_table.SubID==adhds(nc)));
 end
 
 % stdRT_CTR=[];
@@ -248,11 +250,11 @@ end
 
 Hit_RT_CTR=[];
 for nc=1:length(ctrs)
-    Hit_RT_CTR(nc)=nanmean(table1.RT(table1.SubID==ctrs(nc)));
+    Hit_RT_CTR(nc)=nanmean(all_behav_table.RT(all_behav_table.SubID==ctrs(nc)));
 end
 Hit_RT_ADHD=[];
 for nc=1:length(adhds)
-    Hit_RT_ADHD(nc)=nanmean(table1.RT(table1.SubID==adhds(nc)));
+    Hit_RT_ADHD(nc)=nanmean(all_behav_table.RT(all_behav_table.SubID==adhds(nc)));
 end
 
 
@@ -271,8 +273,8 @@ end
 figure;
 h1 = raincloud_plot(100*Miss_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
     'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',8,'bound_data',[0 100]);
-h2 = raincloud_plot(100*Miss_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
-    'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',8,'bound_data',[0 100]);
+% h2 = raincloud_plot(100*Miss_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
+%     'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',8,'bound_data',[0 100]);
 
 set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
 set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
@@ -324,7 +326,7 @@ data_to_plot=[];
 group_labels={'CTR','ADHD'};
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
-        data_to_plot{i, j} = table1.Misses(table1.BlockN==i & table1.Group==group_labels{j});
+        data_to_plot{i, j} = all_behav_table.Misses(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
     end
 end
 
@@ -342,7 +344,7 @@ data_to_plot=[];
 group_labels={'CTR','ADHD'};
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
-        data_to_plot{i, j} = table1.FA(table1.BlockN==i & table1.Group==group_labels{j});
+        data_to_plot{i, j} = all_behav_table.FA(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
     end
 end
 
@@ -360,7 +362,7 @@ data_to_plot=[];
 group_labels={'CTR','ADHD'};
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
-        data_to_plot{i, j} = table1.Hit_RT(table1.BlockN==i & table1.Group==group_labels{j});
+        data_to_plot{i, j} = all_behav_table.Hit_RT(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
     end
 end
 
@@ -376,7 +378,7 @@ format_fig;
 % group_labels={'CTR','ADHD'};
 % for i = 1:4 % number of repetitions
 %     for j = 1:2 % number of group
-%         data_to_plot{i, j} = table1.stdRT(table1.BlockN==i & table1.Group==group_labels{j});
+%         data_to_plot{i, j} = all_behav_table.stdRT(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
 %     end
 % end
 % 
