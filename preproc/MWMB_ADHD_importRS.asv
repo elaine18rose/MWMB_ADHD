@@ -11,6 +11,7 @@ else
     
 end
 
+run ../localdef_ADHD_CTET.m
 addpath((path_fieldtrip));
 ft_defaults;
 addpath(genpath(path_LSCPtools))
@@ -26,7 +27,7 @@ for nF=1:length(files)
     if isempty(findstr(SubID,'ID-'))==0
         SubID(1:findstr(SubID,'ID-')+3)=[];
     end
-    FileNameID=SubID;
+    File
     if isempty(findstr(SubID,'_R'))==0
         SubID(findstr(SubID,'_R'):end)=[];
     end
@@ -36,7 +37,7 @@ for nF=1:length(files)
     %     end
     fprintf('... working on %s (%g/%g)\n',file_name,nF,length(files))
     
-    if redo==1 || exist([path_data filesep 'Preproc' filesep 'feRS_ft_' FileNameID '.mat'])==0
+    if redo==1 || exist([path_data filesep 'Preproc' filesep 'fe_ft_RS1_' SubID '.mat'])==0
         
         hdr=ft_read_header([folder_name filesep file_name]);
         evt=ft_read_event([folder_name filesep file_name]);
@@ -72,7 +73,7 @@ for nF=1:length(files)
         cfgbs.demean          = 'yes';
         cfgbs.baselinewindow  = [-0.2 0];
         data                  = ft_resampledata(cfgbs,dat); % read raw data
-        save([path_data filesep 'Preproc' filesep 'feRS_ft_' FileNameID],'data');
+        save([path_data filesep 'Preproc' filesep 'fe_ft_' SubID],'data');
         
     end
     toc;
