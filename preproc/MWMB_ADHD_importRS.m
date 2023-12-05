@@ -8,10 +8,13 @@ if isempty(findstr(pwd,'thandrillon'))==0
     path_LSCPtools='/Users/thandrillon/WorkGit/LSCPtools/';
     path_data='/Users/thandrillon/Data/ADHD_MW/';
 else
-    
+    path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
+    path_fieldtrip = '/Users/elaine/Desktop/MATLAB_Functions/fieldtrip/';
+    path_data = '/Volumes/Seagate/MWMB_ADHD_SART/';
 end
 
 addpath((path_fieldtrip));
+%addpath(genpath(fullfile('/Users/elaine/Desktop/MATLAB_Functions/fieldtrip'))) %Demetrio 
 ft_defaults;
 addpath(genpath(path_LSCPtools))
 
@@ -20,11 +23,14 @@ files=dir([path_data filesep 'EEG' filesep '*_R*.eeg']);
 %% loop on subjects
 redo=0; % 1 to force re-import, 0 otherwise
 for nF=1:length(files)
+    if startsWith(files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
+        continue; %  EP - Jump to the bottom of the loop.
+    end
     file_name = files(nF).name;
     folder_name = files(nF).folder;
     SubID=file_name(1:end-4);
     if isempty(findstr(SubID,'ID-'))==0
-        SubID(1:findstr(SubID,'ID-')+3)=[];
+        SubID(1:findstr(SubID,'ID-')+2)=[];
     end
     FileNameID=SubID;
     if isempty(findstr(SubID,'_R'))==0

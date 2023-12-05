@@ -8,8 +8,11 @@ if isempty(findstr(pwd,'thandrillon'))==0
     path_LSCPtools='/Users/thandrillon/WorkGit/LSCPtools/';
     path_data='/Users/thandrillon/Data/ADHD_MW/';
 else
-    
+    path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
+    path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
+    path_data = '/Volumes/Seagate/MWMB_ADHD_SART/';
 end
+addpath('/Users/elaine/desktop/MATLAB_Functions/fieldtrip/');
 addpath((path_fieldtrip));
 ft_defaults;
 addpath(genpath(path_LSCPtools))
@@ -20,7 +23,7 @@ files=dir([path_data filesep 'EEG' filesep '*.eeg']);
 redo_block=1; % 1 to force re-import, 0 otherwise
 redo_probe=1; % 1 to force re-import, 0 otherwise
 redo_trial=1; % 1 to force re-import, 0 otherwise
-for nF=1:length(files)
+for nF=40:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
     if isempty(findstr(file_name,'_'))==0
@@ -106,7 +109,7 @@ for nF=1:length(files)
 %             trig_probestart     =13; %P
 %             trig_probeend       =16; %C
             
-        %%% Define RS1
+        %%% Define task duration for probes
         evt(find(cellfun(@isempty,{evt.value})==1)) = []; %% Elaine - added to remove empty cells in evt.value
         evt(find_trials({evt.type},'New Segment')) = []; %% Elaine - added to remove empty cells in evt.value
         
@@ -162,7 +165,7 @@ for nF=1:length(files)
 %             trig_probestart     =13; %P
 %             trig_probeend       =16; %C
             
-        %%% Define RS1
+        %%% Define task duration for trials
         evt(find(cellfun(@isempty,{evt.value})==1)) = []; %% Elaine - added to remove empty cells in evt.value
         evt(find_trials({evt.type},'New Segment')) = []; %% Elaine - added to remove empty cells in evt.value
         

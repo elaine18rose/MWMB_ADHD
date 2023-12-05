@@ -47,7 +47,7 @@ for nF=1:length(eeg_files)
     SubInfo=split(eeg_files(nF).name,'-');
     SubID=SubInfo{2};
 
-    if redo==1 || exist([preproc_path filesep 'ICA_ft_ADHDSART_' SubID(1:end-4) '.mat'])==0 % To skip already preprocessed files
+    if redo==1 || exist([preproc_path filesep 'Icfe_ft_MWADHD_' SubID(1:end-4) '.mat'])==0 % To skip already preprocessed files
         fprintf('... working on %s\n',[eeg_files(nF).name])
 
         %%% minimal preprocessing
@@ -136,6 +136,6 @@ for nF=1:length(eeg_files)
         cfg.method = 'runica'; % this is the default and uses the implementation from EEGLAB
         cfg.numcomponent = rankICA;
         comp = ft_componentanalysis(cfg, data);
-        save([preproc_path filesep 'ICA_ft_ADHDSART_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
+        save([preproc_path filesep 'Icfe_ft_MWADHD_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
     end
 end
