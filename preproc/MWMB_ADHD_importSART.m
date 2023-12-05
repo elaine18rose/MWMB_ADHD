@@ -119,7 +119,7 @@ for nF=40:length(files)
         cfg.table               = table;
         cfg.SubID               = SubID;
         cfg.dataset             = [folder_name filesep file_name];
-        cfg.trialdef.prestim    = -25;
+        cfg.trialdef.prestim    = 25;
         cfg.trialdef.poststim   = 2;
         cfg = ft_definetrial(cfg);
         
@@ -175,7 +175,7 @@ for nF=40:length(files)
         cfg.table               = table;
         cfg.SubID               = SubID;
         cfg.dataset             = [folder_name filesep file_name];
-        cfg.trialdef.prestim    = -0.2;
+        cfg.trialdef.prestim    = 0.2;
         cfg.trialdef.poststim   = 1.5;
         cfg = ft_definetrial(cfg);
         
@@ -196,13 +196,32 @@ for nF=40:length(files)
         cfg.refchannel = 'all';
         
         dat                = ft_preprocessing(cfg); % read raw data
-        
+        events=cfg.event;
         cfgbs=[];
         cfgbs.resamplefs      = 250; 
-        cfgbs.detrend         = 'yes';
+        cfgbs.demean         = 'yes';
+        cfgbs.baseline         = [-0.2 0];
         data                  = ft_resampledata(cfgbs,dat); % read raw data
-        save([path_data filesep 'Preproc' filesep 'fetrial_ft_' SubID],'data');
+        save([path_data filesep 'Preproc' filesep 'fetrial_ft_' SubID],'data','events');
         
+        
+        cfg = [];
+        cfg.trials = find_trials({events.value},'S  9');
+        godata = ft_timelockanalysis(cfg, data);
+        cfg = [];
+        cfg.demean         = 'yes';
+        cfg.baselinewindow         = [-0.2 0];
+        godata                = ft_preprocessing(cfg,godata); % read raw data
+
+                
+        cfg = [];
+        cfg.trials = find_trials({events.value},'S 10');
+        nogodata = ft_timelockanalysis(cfg, data);
+cfg = [];
+        cfg.demean         = 'yes';
+        cfg.baselinewindow         = [-0.2 0];
+        nogodata                = ft_preprocessing(cfg,nogodata); % read raw data
+
     end
     
 end
