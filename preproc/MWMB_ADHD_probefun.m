@@ -27,7 +27,7 @@ startProbeIdx=find_trials({evt.value},'S 13');
 evt_samples=[evt.sample];
 for i=1:length(startProbeIdx)
     % add this to the trl definition
-    begsample     = evt_samples(startProbeIdx(i))+cfg.trialdef.prestim*hdr.Fs;
+    begsample     = evt_samples(startProbeIdx(i))-cfg.trialdef.prestim*hdr.Fs;
     endsample     = evt_samples(startProbeIdx(i))+cfg.trialdef.poststim*hdr.Fs;
     offset        = -cfg.trialdef.prestim*hdr.Fs;
     trl(end+1, :) = [round([begsample endsample offset])];

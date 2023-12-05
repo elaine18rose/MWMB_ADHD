@@ -24,7 +24,7 @@ for nF=1:length(files)
     folder_name = files(nF).folder;
     SubID=file_name(1:end-4);
     if isempty(findstr(SubID,'ID-'))==0
-        SubID(1:findstr(SubID,'ID-')+3)=[];
+        SubID(1:findstr(SubID,'ID-')+2)=[];
     end
     FileNameID=SubID;
     if isempty(findstr(SubID,'_R'))==0
