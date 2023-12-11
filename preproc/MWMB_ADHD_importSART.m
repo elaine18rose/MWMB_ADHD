@@ -23,7 +23,7 @@ files=dir([path_data filesep 'EEG' filesep '*.eeg']);
 redo_block=1; % 1 to force re-import, 0 otherwise
 redo_probe=1; % 1 to force re-import, 0 otherwise
 redo_trial=1; % 1 to force re-import, 0 otherwise
-for nF=40:length(files)
+for nF=44:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
     if isempty(findstr(file_name,'_'))==0
@@ -44,7 +44,7 @@ for nF=40:length(files)
         
         hdr=ft_read_header([folder_name filesep file_name]);
         evt=ft_read_event([folder_name filesep file_name]);
-        %               trig_start          =1;  %S
+        %             trig_start          =1;  %S
         %             trig_end            =4;  %E
         %             trig_startBlock     =5;  %B
         %             trig_endBlock       =8;  %K
@@ -99,7 +99,7 @@ for nF=40:length(files)
         
         hdr=ft_read_header([folder_name filesep file_name]);
         evt=ft_read_event([folder_name filesep file_name]);
-%               trig_start          =1;  %S
+%             trig_start          =1;  %S
 %             trig_end            =4;  %E
 %             trig_startBlock     =5;  %B
 %             trig_endBlock       =8;  %K
@@ -155,7 +155,7 @@ for nF=40:length(files)
         
         hdr=ft_read_header([folder_name filesep file_name]);
         evt=ft_read_event([folder_name filesep file_name]);
-%               trig_start          =1;  %S
+%             trig_start          =1;  %S
 %             trig_end            =4;  %E
 %             trig_startBlock     =5;  %B
 %             trig_endBlock       =8;  %K

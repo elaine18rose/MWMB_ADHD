@@ -140,7 +140,7 @@ for nP=1:size(probe_table,1)
         go_trials=go_trials(end-17:end,:);
         nogo_trials=nogo_trials(end-1:end,:);
         probe_table.Miss(nP)=nanmean(go_trials(:,end)==0);
-        probe_table.HitRT(nP)=nanmean(go_trials(:,10)-go_trials(:,8));
+        probe_table.HitRT(nP)=nanmean(go_trials(:,10)-go_trials(:,8)); % Ask Thomas if this doesn't included FA data 
         probe_table.FA(nP)=nanmean(nogo_trials(:,end-1)==0);
     end
     if File_Name(19)=='C' || File_Name(19)=='A'

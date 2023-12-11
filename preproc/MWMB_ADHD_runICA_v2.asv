@@ -8,12 +8,16 @@ if isempty(findstr(pwd,'thandrillon'))==0
     data_path='/Users/thandrillon/Data/Nir_NeuroMod/raw_data/';
     preproc_path='/Users/thandrillon/Data/Nir_NeuroMod/preproc/';
     path_detectSW='/Users/thandrillon/Data/Nir_NeuroMod/SW_detection/';
+    path_eeglab='/Users/thandrillon/WorkGit/projects/ext/eeglab/';
+    path_ICAlabel='/Users/thandrillon/WorkGit/projects/ext/ICLabel/';
 else
     path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
     path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
     data_path = '/Volumes/Seagate/MWMB_ADHD_SART/EEG/';
     preproc_path='/Volumes/Seagate/MWMB_ADHD_SART/preproc/';
     path_detectSW = '/Volumes/Seagate/MWMB_ADHD_SART/SW_detection/';
+    path_eeglab='/Users/elaine/desktop/MATLAB_Functions/eeglab/';
+    path_ICAlabel='/Users/elaine/desktop/MATLAB_Functions/ICLabel/';
 
     %     mkdir(path_detectSW)
 end
@@ -22,17 +26,20 @@ end
 addpath(genpath(path_LSCPtools))
 addpath(path_fieldtrip)
 ft_defaults;
+addpath(path_eeglab);
+eeglab;
 
-% select relevant files, here baseline blocks
+% select relevant files, here task 
 eeg_files=dir([data_path filesep '*.eeg']);
 
 %EEG Layout info
 run ../MWMB_ADHD_elec_layout.m
 
+
 %% Loop across files
 RS = ["R1", "R2"];
 
-redo=0;
+redo=1;
 
 for nF=1:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
@@ -40,20 +47,25 @@ for nF=1:length(eeg_files)
     end
 
     if contains(eeg_files(nF).name,RS) %To skip resting state files
-        continue;
+        continue
     end
 
     %%% load the data
     SubInfo=split(eeg_files(nF).name,'-');
     SubID=SubInfo{2};
 
-    if redo==1 || exist([preproc_path filesep 'Icfe_ft_MWADHD_' SubID(1:end-4) '.mat'])==0 % To skip already preprocessed files
+    if redo==1 || exist([preproc_path filesep 'Icfe_MWADHD_' SubID(1:end-4) '.mat'])==0 % To skip already preprocessed files
         fprintf('... working on %s\n',[eeg_files(nF).name])
 
         %%% minimal preprocessing
         cfg=[];
         cfg.SubID               = SubID;
         cfg.dataset             = [eeg_files(nF).folder filesep eeg_files(nF).name];
+        % defining epochs - move this to the end after running ica 
+%         cfg.trialfun            = 'MWMB_ADHD_blockfun';
+%         cfg.trialdef.prestim    = 1;
+%         cfg.trialdef.poststim   = 1;
+%         cfg = ft_definetrial(cfg);
 
         cfg.demean         = 'yes';
         cfg.lpfilter       = 'yes';        % enable high-pass filtering
@@ -93,10 +105,17 @@ for nF=1:length(eeg_files)
         cfg.montage.tra=eye(length(data.label));
         data = ft_preprocessing(cfg, data); %causing an error because they're mutually exclusive
 
-        std_vec=log(std(data.trial{1},[],2));
-        kurt_vec=log(kurtosis(data.trial{1},[],2));
-        badCh_std=find(std_vec>(mean(std_vec)+3*std(std_vec)));
-        badCh_kur=find(kurt_vec>(mean(kurt_vec)+3*std(kurt_vec)));
+        % Automating removal of noisy channels
+        std_vec=[];
+        kurt_vec=[];
+        for k=1:length(data.trial)
+        std_vec=[std_vec log(std(data.trial{k},[],2))];
+        kurt_vec=[kurt_vec log(kurtosis(data.trial{k},[],2))];
+        end
+        mean_std_vec=mean(std_vec);
+        mean_kurt_vec=mean(kurt_vec);
+        badCh_std=find(mean_std_vec>(mean(mean_std_vec)+3*std(mean_std_vec)));
+        badCh_kur=find(mean_kurt_vec>(mean(mean_kurt_vec)+3*std(mean_kurt_vec)));
 
 
         %
@@ -123,19 +142,60 @@ for nF=1:length(eeg_files)
             [data] = ft_channelrepair(cfg, data); %crashing here
         end
 
-        %
         cfg=[];
         cfg.reref      = 'yes';
         cfg.refchannel = 'all';
         data = ft_preprocessing(cfg,data);
 
 
-        %%% run ICA
-        rankICA = rank(data.trial{1,1});
-        cfg        = [];
-        cfg.method = 'runica'; % this is the default and uses the implementation from EEGLAB
-        cfg.numcomponent = rankICA;
-        comp = ft_componentanalysis(cfg, data);
-        save([preproc_path filesep 'Icfe_ft_MWADHD_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
+        EEG = fieldtrip2eeglab(data);
+        eloc = readlocs([path_fieldtrip filesep template filesep layout filesep acticap-64ch-standard2.mat])%eloc = readlocs('/Users/elaine/Desktop/MATLAB_Functions/fieldtrip/template/layout/acticap-64ch-standard2.mat'); %%eloc = readlocs('chanlocs.ced'); % Channel location - right now it's 28 channels when we need 64
+        toRemove = false(1, length(eloc));
+        for nCh = 1:length(eloc)
+            if contains(eloc(nCh).labels,'Gnd')|| contains(eloc(nCh).labels,'Ref')
+                toRemove(nCh) = true;
+            end
+        end
+        eloc(toRemove) = []; %Remove Grnd and Ref electrodes
+
+        EEG.chanlocs=eloc;
+        EEG = eeg_checkset(EEG); %This checks if current channel no. has the same amount as channel locations. If not, it deletes channel locations
+        EEG_ica = pop_runica(EEG, 'icatype', 'runica'); %Runs ICA
+        EEG_icalabels = pop_iclabel(EEG_ica,'default'); %Automates detectio of bad ICA components crashes here
+
+
+        ICA_classification=EEG_icalabels.etc.ic_classification.ICLabel.classifications;
+        ICA_classification=array2table(ICA_classification,'VariableNames',EEG_icalabels.etc.ic_classification.ICLabel.classes);
+        save([preproc_path filesep 'comp2i_' eeg_files(nF).name],'EEG_icalabels','ICA_classification')
+
+
+        %%% run ICA through field trip
+        %         rankICA = rank(data.trial{1,1});
+        %         cfg        = [];
+        %         cfg.method = 'runica'; % this is the default and uses the implementation from EEGLAB
+        %         cfg.numcomponent = rankICA;
+        %         comp = ft_componentanalysis(cfg, data);
+
+        EEG.icawinv=comp.topo;
+        EEG.icaweights=comp.unmixing;
+        rejected_comps = find(EEG.reject.gcompreject > 0);
+        EEG = pop_subcomp(EEG, rejected_comps);
+        EEG = eeg_checkset(EEG);
+
+        % convert back to Fieldtrip
+        curPath = pwd;
+        p = fileparts(which('ft_read_header'));
+        cd(fullfile(p, 'private'));
+        hdr = read_eeglabheader( EEG );
+        data = read_eeglabdata( EEG, 'header', hdr );
+        event = read_eeglabevent( EEG, 'header', hdr );
+
+        OUTEEG = pop_subcomp( EEG, components, plotag);
+
+        EEG_icalabels = pop_iclabel(EEG_ica,'default');
+
+        % See if you can move epoching here
+
+        save([preproc_path filesep 'Icfe_MWADHD_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
     end
 end
