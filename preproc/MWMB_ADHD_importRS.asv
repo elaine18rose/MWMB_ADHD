@@ -13,8 +13,8 @@ else
     path_data = '/Volumes/Seagate/MWMB_ADHD_SART/';
 end
 
-addpath((path_fieldtrip));
-%addpath(genpath(fullfile('/Users/elaine/Desktop/MATLAB_Functions/fieldtrip'))) %Demetrio 
+%addpath((path_fieldtrip));
+addpath(genpath(fullfile('/Users/elaine/Desktop/MATLAB_Functions/fieldtrip'))) %Demetrio 
 ft_defaults;
 addpath(genpath(path_LSCPtools))
 
@@ -30,7 +30,7 @@ for nF=1:length(files)
     folder_name = files(nF).folder;
     SubID=file_name(1:end-4);
     if isempty(findstr(SubID,'ID-'))==0
-        SubID(1:findstr(SubID,'ID-')+2)=[];
+        SubID(1:findstr(SubID,'ID-')+3)=[];
     end
     FileNameID=SubID;
     if isempty(findstr(SubID,'_R'))==0
