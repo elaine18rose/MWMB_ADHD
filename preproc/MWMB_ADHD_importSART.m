@@ -20,9 +20,9 @@ addpath(genpath(path_LSCPtools))
 files=dir([path_data filesep 'EEG' filesep '*.eeg']);
 
 %% loop on subjects
-redo_block=1; % 1 to force re-import, 0 otherwise
+redo_block=0; % 1 to force re-import, 0 otherwise
 redo_probe=1; % 1 to force re-import, 0 otherwise
-redo_trial=1; % 1 to force re-import, 0 otherwise
+redo_trial=0; % 1 to force re-import, 0 otherwise
 for nF=44:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
@@ -116,7 +116,7 @@ for nF=44:length(files)
          %%% Define epochs
         cfg=[];
         cfg.trialfun            = 'MWMB_ADHD_probefun';
-        cfg.table               = table;
+%         cfg.table               = table;
         cfg.SubID               = SubID;
         cfg.dataset             = [folder_name filesep file_name];
         cfg.trialdef.prestim    = 25;
