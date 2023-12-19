@@ -39,9 +39,9 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 
-redo=1;
+redo=0;
 
-for nF=1:length(eeg_files)
+for nF=35:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
         continue; %  EP - Jump to the bottom of the loop.
     end
@@ -54,13 +54,13 @@ for nF=1:length(eeg_files)
     SubInfo=split(eeg_files(nF).name,'-');
     SubID=SubInfo{2};
 
-    if redo==1 || exist([preproc_path filesep 'Icfe_MWADHD_' SubID(1:end-4) '.mat'])==0 % To skip already preprocessed files
+    if redo==1 || exist([preproc_path filesep 'comp2i_' SubID(1:end-4) '.eeg'])==0 % To skip already preprocessed files
         fprintf('... working on %s\n',[eeg_files(nF).name])
 
         %%% minimal preprocessing
         cfg=[];
-        cfg.SubID               = SubID;
-        cfg.dataset             = [eeg_files(nF).folder filesep eeg_files(nF).name];
+        cfg.SubID          = SubID;
+        cfg.dataset        = [eeg_files(nF).folder filesep eeg_files(nF).name];
 
 
         cfg.demean         = 'yes';
@@ -71,47 +71,47 @@ for nF=1:length(eeg_files)
         cfg.hpfilter       = 'yes';        % enable high-pass filtering
         cfg.hpfilttype     = 'but';
         cfg.hpfiltord      = 4;
-        cfg.hpfreq         = 1;
+        cfg.hpfreq         = 1; %!!! Pierre said his script filters at 0.1 not 1  - discuss with Thomas !!!
         cfg.dftfilter      = 'yes';        % enable notch filtering to eliminate power line noise
         cfg.dftfreq        = [50 100];     % set up the frequencies for notch filtering
 
-        cfg.reref      = 'yes';
-        cfg.refchannel = 'all';
+        cfg.reref          = 'yes';
+        cfg.refchannel     = 'all';
 
-        data                = ft_preprocessing(cfg); % read raw data
+        data               = ft_preprocessing(cfg); % read raw data
 
         %%% rename channels
-        mylabels=data.label;
-        for nCh=1:length(mylabels)
-            findspace=findstr(mylabels{nCh},' ');
+        mylabels = data.label;
+        for nCh = 1:length(mylabels)
+            findspace = findstr(mylabels{nCh},' ');
             if isempty(findspace)
-                newlabels{nCh}=mylabels{nCh};
+                newlabels{nCh} = mylabels{nCh};
             else
                 if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
-                    newlabels{nCh}=mylabels{nCh}(findspace+1:end);
+                    newlabels{nCh} = mylabels{nCh}(findspace+1:end);
                 else
-                    newlabels{nCh}=mylabels{nCh}(1:findspace-1);
+                    newlabels{nCh} = mylabels{nCh}(1:findspace-1);
                 end
             end
         end
         cfg=[];
-        cfg.channel        = data.label; %hdr.label(find((cellfun(@isempty,regexp(hdr.label,'EOG'))) & (cellfun(@isempty,regexp(hdr.label,'EMG'))) & (cellfun(@isempty,regexp(hdr.label,'ECG'))) & (cellfun(@isempty,regexp(hdr.label,'Mic')))));
+        cfg.channel          = data.label; %hdr.label(find((cellfun(@isempty,regexp(hdr.label,'EOG'))) & (cellfun(@isempty,regexp(hdr.label,'EMG'))) & (cellfun(@isempty,regexp(hdr.label,'ECG'))) & (cellfun(@isempty,regexp(hdr.label,'Mic')))));
         cfg.montage.labelold = data.label;
         cfg.montage.labelnew = newlabels;
-        cfg.montage.tra=eye(length(data.label));
+        cfg.montage.tra      = eye(length(data.label));
         data = ft_preprocessing(cfg, data); %causing an error because they're mutually exclusive
 
         % Automating removal of noisy channels
-        std_vec=[];
-        kurt_vec=[];
-        for k=1:length(data.trial)
-        std_vec=[std_vec log(std(data.trial{k},[],2))];
-        kurt_vec=[kurt_vec log(kurtosis(data.trial{k},[],2))];
+        std_vec = [];
+        kurt_vec = [];
+        for k = 1:length(data.trial)
+        std_vec =[std_vec log(std(data.trial{k},[],2))];
+        kurt_vec =[kurt_vec log(kurtosis(data.trial{k},[],2))];
         end
-        mean_std_vec=mean(std_vec);
-        mean_kurt_vec=mean(kurt_vec);
-        badCh_std=find(mean_std_vec>(mean(mean_std_vec)+3*std(mean_std_vec)));
-        badCh_kur=find(mean_kurt_vec>(mean(mean_kurt_vec)+3*std(mean_kurt_vec)));
+        mean_std_vec = mean(std_vec);
+        mean_kurt_vec = mean(kurt_vec);
+        badCh_std = find(mean_std_vec>(mean(mean_std_vec)+3*std(mean_std_vec)));
+        badCh_kur = find(mean_kurt_vec>(mean(mean_kurt_vec)+3*std(mean_kurt_vec)));
 
 
         %
@@ -143,6 +143,13 @@ for nF=1:length(eeg_files)
         cfg.refchannel = 'all';
         data = ft_preprocessing(cfg,data);
 
+        cfg=[];
+        cfg.trialfun            = 'MWMB_ADHD_probefun';
+        cfg.dataset             = [eeg_files(nF).folder filesep eeg_files(nF).name];
+        cfg.trialdef.prestim    = 30;
+        cfg.trialdef.poststim   = 0;
+        cfg = ft_definetrial(cfg);
+        data = ft_preprocessing(cfg,data);
 
         EEG = fieldtrip2eeglab(data);
         eloc = readlocs('/Users/elaine/Desktop/MATLAB_Functions/fieldtrip/template/layout/acticap-64ch-standard2.mat'); %%eloc = readlocs('chanlocs.ced'); % Channel location - right now it's 28 channels when we need 64
@@ -158,8 +165,6 @@ for nF=1:length(eeg_files)
         EEG.chanlocs=eloc;
         EEG = eeg_checkset(EEG); %This checks if current channel no. has the same amount as channel locations. If not, it deletes channel locations
         EEG_ica = pop_runica(EEG, 'icatype', 'runica'); %Runs ICA
-        EEG.icawinv=comp.topo; %%CRASHING HERE - can't find comp variable 
-        EEG.icaweights=comp.unmixing; %This also doesn't work
         EEG_icalabels = pop_iclabel(EEG_ica,'default'); %Automates detectio of bad ICA components
 
 
@@ -180,26 +185,26 @@ for nF=1:length(eeg_files)
         EEG = pop_subcomp(EEG, rejected_comps);
         EEG = eeg_checkset(EEG);
 
-        % convert back to Fieldtrip
-        curPath = pwd;
-        p = fileparts(which('ft_read_header'));
-        cd(fullfile(p, 'private'));
-        hdr = read_eeglabheader( EEG );
-        data = read_eeglabdata( EEG, 'header', hdr );
-        event = read_eeglabevent( EEG, 'header', hdr );
-
-        OUTEEG = pop_subcomp( EEG, components, plotag);
-
-        EEG_icalabels = pop_iclabel(EEG_ica,'default');
-
-        %defining epochs - moved this after ICA because the script wasn't
-        %running due to diff trial numbers per block
-        cfg                     = [];
-        cfg.trialfun            = 'MWMB_ADHD_blockfun';
-        cfg.trialdef.prestim    = 1;
-        cfg.trialdef.poststim   = 1;
-        cfg                     = ft_definetrial(cfg);
-
-        save([preproc_path filesep 'Icfe_MWADHD_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
+%         % convert back to Fieldtrip
+%         curPath = pwd;
+%         p = fileparts(which('ft_read_header'));
+%         cd(fullfile(p, 'private'));
+%         hdr = read_eeglabheader( EEG );
+%         data = read_eeglabdata( EEG, 'header', hdr );
+%         event = read_eeglabevent( EEG, 'header', hdr );
+% 
+%         OUTEEG = pop_subcomp( EEG, components, plotag);
+% 
+%         EEG_icalabels = pop_iclabel(EEG_ica,'default');
+% 
+%         %defining epochs - moved this after ICA because the script wasn't
+%         %running due to diff trial numbers per block
+%         cfg                     = [];
+%         cfg.trialfun            = 'MWMB_ADHD_blockfun';
+%         cfg.trialdef.prestim    = 1;
+%         cfg.trialdef.poststim   = 1;
+%         cfg                     = ft_definetrial(cfg);
+% 
+%         save([preproc_path filesep 'Icfe_MWADHD_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
     end
 end
