@@ -24,7 +24,7 @@ addpath(path_fieldtrip)
 ft_defaults;
 
 % select relevant files, here baseline blocks
-eeg_files=dir([data_path filesep '*.eeg']);
+eeg_files=dir([data_path filesep  '*.eeg']);
 
 %EEG Layout info
 run ../MWMB_ADHD_elec_layout.m
@@ -32,7 +32,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 
-redo=0;
+redo=1;
 
 for nF=1:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
