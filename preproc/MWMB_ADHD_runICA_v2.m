@@ -5,9 +5,8 @@ close all;
 if isempty(findstr(pwd,'thandrillon'))==0
     path_LSCPtools='/Users/tand0009/WorkGit/LSCPtools/';
     path_fieldtrip='/Users/thandrillon/WorkGit/projects/ext/fieldtrip/';
-    data_path='/Users/thandrillon/Data/Nir_NeuroMod/raw_data/';
-    preproc_path='/Users/thandrillon/Data/Nir_NeuroMod/preproc/';
-    path_detectSW='/Users/thandrillon/Data/Nir_NeuroMod/SW_detection/';
+    data_path='/Users/thandrillon/Data/ADHD_MW/EEG/';
+    preproc_path='/Users/thandrillon/Data/ADHD_MW/Preproc/';
     path_eeglab='/Users/thandrillon/WorkGit/projects/ext/eeglab/';
     path_ICAlabel='/Users/thandrillon/WorkGit/projects/ext/ICLabel/';
 else
@@ -39,9 +38,9 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 
-redo=0;
+redo=1;
 
-for nF=35:length(eeg_files)
+for nF=1:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
         continue; %  EP - Jump to the bottom of the loop.
     end
@@ -54,7 +53,7 @@ for nF=35:length(eeg_files)
     SubInfo=split(eeg_files(nF).name,'-');
     SubID=SubInfo{2};
 
-    if redo==1 || exist([preproc_path filesep 'comp2i_' SubID(1:end-4) '.eeg'])==0 % To skip already preprocessed files
+    if redo==1 || exist([preproc_path filesep 'comp2i_' SubID(1:end-4) '.mat'])==0 % To skip already preprocessed files
         fprintf('... working on %s\n',[eeg_files(nF).name])
 
         %%% minimal preprocessing
