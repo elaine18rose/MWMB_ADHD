@@ -151,7 +151,7 @@ for nF=1:length(eeg_files)
         data = ft_preprocessing(cfg,data);
 
         EEG = fieldtrip2eeglab(data);
-        eloc = readlocs('/Users/elaine/Desktop/MATLAB_Functions/fieldtrip/template/layout/acticap-64ch-standard2.mat'); %%eloc = readlocs('chanlocs.ced'); % Channel location - right now it's 28 channels when we need 64
+        eloc = readlocs([path_fieldtrip '/template/layout/acticap-64ch-standard2.mat']); %%eloc = readlocs('chanlocs.ced'); % Channel location - right now it's 28 channels when we need 64
         % need to fix line above to make it more streamlined
         toRemove = false(1, length(eloc));
         for nCh = 1:length(eloc)

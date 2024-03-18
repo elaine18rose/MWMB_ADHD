@@ -78,7 +78,7 @@ for nF=1:length(files)
     nogo_trials = test_res(:,11); % 1 = reacted (when they shouldn't have); 0 = didn't react (correct resp);
     nTrial=test_res(:,4);
     CR = (test_res(:,11)); FA=abs(1-CR);
-    Hits = (test_res(:,12)); Miss=abs(1-Hits);
+    Hits = (test_res(:,12)); Miss=abs(1-Miss);
     RT = test_res(:,10)-test_res(:,8); %FLAG: I just copied this from the general code to check the behav data. This doesn't exclude RTs for FAs
 
     % Compiling into tables 
@@ -272,25 +272,25 @@ end
 
 figure;
 h1 = raincloud_plot(100*Miss_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
-    'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',5,'bound_data',[0 100]);
-h2 = raincloud_plot(100*Miss_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
-    'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',5,'bound_data',[0 100]);
+    'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',8,'bound_data',[0 100]);
+% h2 = raincloud_plot(100*Miss_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
+%     'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',8,'bound_data',[0 100]);
 
 set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
 set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
-set(gca,'XLim', [0 100], 'YLim',ylim.*[1 1.5]); % set(gca,'XLim', [-10 110], 'YLim', ylim.*[0.5 1.7]);
+set(gca,'XLim', [-20 110], 'YLim',ylim.*[1 1.5]); % set(gca,'XLim', [-10 110], 'YLim', ylim.*[0.5 1.7]);
 format_fig; title('MISS'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'}); 
 
 %FA
 figure;
 h1 = raincloud_plot(100*FA_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
-    'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',5,'bound_data',[0 100]);
+    'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',.5,'bound_data',[0 100]);
 h2 = raincloud_plot(100*FA_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
-    'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',5,'bound_data',[0 100]);
+    'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',.5,'bound_data',[0 100]);
 
 set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
 set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
-set(gca,'XLim', [0 100], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [0 6], 'YLim', ylim.*[0.5 1.7]);
+set(gca,'XLim', [-1 7], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [0 6], 'YLim', ylim.*[0.5 1.7]);
 format_fig; title('FA'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
 
 %%
