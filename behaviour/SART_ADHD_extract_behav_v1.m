@@ -1,5 +1,6 @@
 %% Init
-clear all;
+clear all; 
+close all;
 
 if isempty(findstr(pwd,'thandrillon'))==0 
     path_LSCPtools='/Users/thandrillon/WorkGit/LSCPtools/';
@@ -77,9 +78,10 @@ for nF=1:length(files)
     go_trials = test_res(:,12); %FLAG: Thomas, please check that I'm coding/interpreting this correctly
     nogo_trials = test_res(:,11); % 1 = reacted (when they shouldn't have); 0 = didn't react (correct resp);
     nTrial=test_res(:,4);
-    CR = (test_res(:,11)); FA=abs(1-CR);
-    Hits = (test_res(:,12)); Miss=abs(1-Hits);
+    CR = (test_res(:,11)); FA=abs(1-CR); % Thomas changed this so now it only counts the number of times participants react to a NoGo
+    Hits = (test_res(:,12)); Miss=abs(1-Hits); %Thomas also changes this so for Hits, it counts responses for Gos and then for Misses it counts how many are missed
     RT = test_res(:,10)-test_res(:,8); %FLAG: I just copied this from the general code to check the behav data. This doesn't exclude RTs for FAs
+    %correct_RT = RT(Hits); % FLAG to fix
 
     % Compiling into tables 
     this_behav=nan(length(test_res),9);
@@ -114,13 +116,13 @@ for nF=1:length(files)
 behav_table.Group=categorical(behav_table.Group);
     if File_Name(19)=='C' || File_Name(19)=='A'
         SubCond=File_Name(19);
-        SubID=File_Name(20:22);
+        SubID=File_Name(19:22);
         behav_table.SubID=repmat({SubID},size(behav_table,1),1);
         behav_table.Group=repmat({SubCond},size(behav_table,1),1);
         writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_' File_Name(19:22) '.txt']);
     elseif strcmp(SubN , 'wanderIM_behavres_001_20Sep2023-1704') || strcmp(SubN , 'wanderIM_behavres_004_03Oct2023-1131')
         SubCond='C';
-        SubID=File_Name(19:21);
+        SubID=(['C' File_Name(19:21)]);
                behav_table.SubID=repmat({SubID},size(behav_table,1),1);
         behav_table.Group=repmat({SubCond},size(behav_table,1),1);
         writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_C' File_Name(19:21) '.txt']);
@@ -128,10 +130,10 @@ behav_table.Group=categorical(behav_table.Group);
 
     probe_table=array2table(this_state2,...
         'VariableNames',{'SubID','Group','ProbeNo','Block','State','Distraction','Intention','Vigilance','Miss','FA','HitRT'});
-   probe_table.SubID=categorical(probe_table.SubID);
-probe_table.Group=categorical(probe_table.Group);
-       probe_table.SubID=repmat({SubID},size(probe_table,1),1);
-        probe_table.Group=repmat({SubCond},size(probe_table,1),1);
+    probe_table.SubID=categorical(probe_table.SubID);
+    probe_table.Group=categorical(probe_table.Group);
+    probe_table.SubID=repmat({SubID},size(probe_table,1),1);
+    probe_table.Group=repmat({SubCond},size(probe_table,1),1);
 for nP=1:size(probe_table,1)
         ProbeTrialIndex=probe_res(nP,6);
         BlockIndex=probe_res(nP,4);
@@ -139,9 +141,9 @@ for nP=1:size(probe_table,1)
         nogo_trials=test_res(test_res(:,1)==BlockIndex & test_res(:,4)<ProbeTrialIndex & test_res(:,5)==3,:);
         go_trials=go_trials(end-17:end,:);
         nogo_trials=nogo_trials(end-1:end,:);
-        probe_table.Miss(nP)=nanmean(go_trials(:,end)==0);
-        probe_table.HitRT(nP)=nanmean(go_trials(:,10)-go_trials(:,8)); % Ask Thomas if this doesn't included FA data 
-        probe_table.FA(nP)=nanmean(nogo_trials(:,end-1)==0);
+        probe_table.Miss(nP)=nanmean(go_trials(:,end)==0); % FLAG: Does this also need to be fixed
+        probe_table.HitRT(nP)=nanmean(go_trials(:,10)-go_trials(:,8)); % FLAG: Ask Thomas if this doesn't included FA data 
+        probe_table.FA(nP)=nanmean(nogo_trials(:,end-1)==0); % FLAG: Does this also need to be fixed
     end
     if File_Name(19)=='C' || File_Name(19)=='A'
         writetable(probe_table,[save_path filesep 'MWMB_ADHD_probeBehav_' File_Name(19:22) '.txt']);
@@ -149,14 +151,14 @@ for nP=1:size(probe_table,1)
         writetable(probe_table,[save_path filesep 'MWMB_ADHD_probeBehav_C' File_Name(19:21) '.txt']);
     end
     
-    %by block data
+    % by block data
     block_table=zeros(4,15);
     block_table=array2table(block_table,...
         'VariableNames',{'SubID','Group','Block','ON','MW','MB','DK','Dist','Perso','Int','Intention','Vigilance','Miss','FA','HitRT'});
- block_table.SubID=categorical(block_table.SubID);
-block_table.Group=categorical(block_table.Group);
+    block_table.SubID=categorical(block_table.SubID);
+    block_table.Group=categorical(block_table.Group);
 
-block_table.Block=(1:4)';
+    block_table.Block=(1:4)';
     block_table.Miss=1-grpstats(test_res(:,12),test_res(:,1));
     block_table.FA=1-grpstats(test_res(:,11),test_res(:,1));
     all_RT=test_res(:,10)-test_res(:,8);
@@ -259,17 +261,6 @@ end
 
 
 %Miss
-% figure;
-% h1 = raincloud_plot(100*Miss_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
-%     'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',8,'bound_data',[0 100]);
-% h2 = raincloud_plot(100*Miss_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
-%     'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',8,'bound_data',[0 100]);
-% 
-% set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
-% set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
-% set(gca,'XLim', [-20 110], 'YLim',ylim.*[1 1.5]); % set(gca,'XLim', [-10 110], 'YLim', ylim.*[0.5 1.7]);
-% format_fig; title('MISS'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
-
 figure;
 h1 = raincloud_plot(100*Miss_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
     'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',5,'bound_data',[0 100]);
@@ -278,8 +269,9 @@ h2 = raincloud_plot(100*Miss_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0
 
 set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
 set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
-set(gca,'XLim', [0 100], 'YLim',ylim.*[1 1.5]); % set(gca,'XLim', [-10 110], 'YLim', ylim.*[0.5 1.7]);
+set(gca,'XLim', [0 20], 'YLim',ylim.*[1 1.5]); % set(gca,'XLim', [-10 110], 'YLim', ylim.*[0.5 1.7]);
 format_fig; title('MISS'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'}); 
+set(gca,'YColor','none') % removes Y-axis 
 
 %FA
 figure;
@@ -292,6 +284,7 @@ set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
 set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
 set(gca,'XLim', [0 100], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [0 6], 'YLim', ylim.*[0.5 1.7]);
 format_fig; title('FA'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
+set(gca,'YColor','none') % removes Y-axis 
 
 %%
 % %stdRT
@@ -315,7 +308,7 @@ h2 = raincloud_plot(Hit_RT_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5
 
 set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
 set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
-set(gca,'XLim', [1.1 1.8], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [1.1 1.9], 'YLim', ylim.*[0.5 1.7]);
+set(gca,'XLim', [0.1 0.8], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [1.1 1.9], 'YLim', ylim.*[0.5 1.7]);
 format_fig; title('RT (s)'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
 
 
@@ -323,7 +316,7 @@ format_fig; title('RT (s)'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
 %% Repeated Measures plot
 %Miss
 data_to_plot=[];
-group_labels={'CTR','ADHD'};
+group_labels={'C','A'};
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
         data_to_plot{i, j} = all_behav_table.Misses(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
@@ -332,7 +325,7 @@ end
 
 figure; hold on;
 h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-set(gca, 'XLim', [-0.1 1.1]);
+set(gca, 'XLim', [0.01 0.08]);
 xtix = get(gca, 'xtick'); %to change y-axis to percentage
 set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
 title(['Misses per Block']);
@@ -341,7 +334,7 @@ format_fig;
 
 %False Alarms
 data_to_plot=[];
-group_labels={'CTR','ADHD'};
+group_labels={'C','A'};
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
         data_to_plot{i, j} = all_behav_table.FA(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
@@ -350,7 +343,7 @@ end
 
 figure; hold on;
 h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-set(gca, 'XLim', [-0.015 0.12]);
+set(gca, 'XLim', [-0.015 1]);
 xtix = get(gca, 'xtick'); %to change y-axis to percentage
 set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
 title(['False alarms per Block']);
@@ -359,16 +352,16 @@ format_fig;
 
 %Hit RT
 data_to_plot=[];
-group_labels={'CTR','ADHD'};
+group_labels={'C','A'};
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
-        data_to_plot{i, j} = all_behav_table.Hit_RT(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
+        data_to_plot{i, j} = all_behav_table.RT(all_behav_table.BlockN==i  & all_behav_table.Group==group_labels{j});
     end
 end
 
 figure; hold on;
 h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-set(gca, 'XLim', [0.75 2.25]);
+set(gca, 'XLim', [0 .75]);
 title(['Hit Reaction Times per Block']);
 xlabel('Reaction Times (seconds)'); ylabel('Block Number');
 format_fig;
@@ -389,22 +382,224 @@ format_fig;
 % format_fig;
 
 %% plot the inter-probe interval
-plot(diff(probe_res(:,3)))
-% compute the prooportion of mind states
-nanmean(probe_res(:,19)==1) % on
-nanmean(probe_res(:,19)==2) % MW
-nanmean(probe_res(:,19)==3) % MB
-% compute the vigilance ratings
-nanmean(probe_res(:,22)==1)
-nanmean(probe_res(:,22)==2)
-nanmean(probe_res(:,22)==3)
-nanmean(probe_res(:,22)==4)
-% compute the perf on go trials
-nanmean(test_res(:,12))
-% compute the perf on nogo trials
-nanmean(test_res(:,11))
-% plot the distribution of RTs
-all_RT=test_res(:,10)-test_res(:,8);
-figure; hist(all_RT,100)
+% plot(diff(probe_res(:,3)))
+% % compute the prooportion of mind states
+% nanmean(probe_res(:,19)==1) % on
+% nanmean(probe_res(:,19)==2) % MW
+% nanmean(probe_res(:,19)==3) % MB
+% % compute the vigilance ratings
+% nanmean(probe_res(:,22)==1)
+% nanmean(probe_res(:,22)==2)
+% nanmean(probe_res(:,22)==3)
+% nanmean(probe_res(:,22)==4)
+% % compute the perf on go trials
+% nanmean(test_res(:,12))
+% % compute the perf on nogo trials
+% nanmean(test_res(:,11))
+% % plot the distribution of RTs
+% all_RT=test_res(:,10)-test_res(:,8);
+% figure; hist(all_RT,100)
+% 
+
+%% Box plots of mean distribution 
+% Misses
+lineWidth = 3;
+figure; 
+subplot(1,2,1)
+boxplot(100*Miss_CTR,'Colors',Colors(1,:), 'symbol', 'o k')
+ylim([0 15])
+ylabel('Misses')
+xlabel ('Control')
+
+h = findobj(gca,'Tag','Box');
+for j=1:length(h)
+    set(h(j),'LineWidth',lineWidth)
+
+    patch(get(h(j),'XData'),get(h(j),'YData'),get(h(j),'Color'),'FaceAlpha',.5);
+end
+format_fig
+
+subplot(1,2,2)
+boxplot(100*Miss_ADHD, 'Colors',Colors(2,:), 'symbol', 'o k')
+ylim([0 15])
+ylabel('Misses')
+xlabel('ADHD')
+
+h = findobj(gca,'Tag','Box');
+for j=1:length(h)
+    set(h(j),'LineWidth',lineWidth)
+    patch(get(h(j),'XData'),get(h(j),'YData'),get(h(j),'Color'),'FaceAlpha',.5);
+end
+format_fig
 
 
+% FAs
+lineWidth = 3;
+figure; 
+subplot(1,2,1)
+boxplot(100*FA_CTR,'Colors',Colors(1,:), 'symbol', 'o k')
+ylim([0 100])
+ylabel('False Alarms')
+xlabel ('Control')
+
+h = findobj(gca,'Tag','Box');
+for j=1:length(h)
+    set(h(j),'LineWidth',lineWidth)
+
+    patch(get(h(j),'XData'),get(h(j),'YData'),get(h(j),'Color'),'FaceAlpha',.5);
+end
+format_fig
+
+subplot(1,2,2)
+boxplot(100*FA_ADHD, 'Colors',Colors(2,:), 'symbol', 'o k')
+ylim([0 100])
+ylabel('False Alarms')
+xlabel('ADHD')
+
+h = findobj(gca,'Tag','Box');
+for j=1:length(h)
+    set(h(j),'LineWidth',lineWidth)
+    patch(get(h(j),'XData'),get(h(j),'YData'),get(h(j),'Color'),'FaceAlpha',.5);
+end
+format_fig
+
+
+%% Mind States 
+numbers_of_interest = [1, 2, 3, 4];
+ADHD_state = [];
+Control_state =[];
+Control_state = zeros(length(ctrs), length(numbers_of_interest));
+ADHD_state = zeros(length(adhds), length(numbers_of_interest));
+
+clear state_values
+for nc = 1:length(ctrs)
+    % Extract the State column for the current participant
+    state_values = all_probe_table.State(all_probe_table.SubID == ctrs(nc));
+    % Count occurrences of each number (1, 2, 3, 4) for the current participant
+    Control_state(nc, :) = histcounts(state_values, [numbers_of_interest, Inf]);
+end
+
+% Calculate the total occurrences of each number across all participants
+Ctr_state_total_occurrences = sum(Control_state);
+% Calculate the percentage distribution
+Ctr_state_percentage_distribution = Ctr_state_total_occurrences / sum(Ctr_state_total_occurrences) * 100;
+
+
+clear state_values
+for nc = 1:length(adhds)
+    % Extract the State column for the current participant
+    state_values = all_probe_table.State(all_probe_table.SubID == adhds(nc));
+    % Count occurrences of each number (1, 2, 3, 4) for the current participant
+    ADHD_state(nc, :) = histcounts(state_values, [numbers_of_interest, Inf]);
+end
+
+ADHD_state_total_occurrences = sum(ADHD_state);
+ADHD_state_percentage_distribution = ADHD_state_total_occurrences / sum(ADHD_state_total_occurrences) * 100;
+
+
+
+% Plot the distribution
+labels = {'On Task', 'Mind Wandering','Mind Blanking', 'Dont Remember'};
+
+figure;
+subplot(1,2,1)
+bar(1:numel(labels), Ctr_state_percentage_distribution, 'FaceColor',Colors(1,:));
+ylabel('% Distribution of Mind State Occurrence');
+title('Controls');
+xticks(1:numel(labels));
+xticklabels(labels);
+xtickangle(45);
+% Add percentage values on top of each bar
+for i = 1:numel(labels)
+    for j = 1:size(Ctr_state_percentage_distribution, 1)
+        text(i, Ctr_state_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_state_percentage_distribution(j, i)), ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20);
+    end
+end
+format_fig
+
+subplot(1,2,2)
+bar(1:numel(labels), ADHD_state_percentage_distribution, 'FaceColor',Colors(2,:));
+ylabel('% Distribution of Mind State Occurrence');
+title('ADHD');
+xticks(1:numel(labels));
+xticklabels(labels);
+xtickangle(45);
+% Add percentage values on top of each bar
+for i = 1:numel(labels)
+    for j = 1:size(ADHD_state_percentage_distribution, 1)
+        text(i, ADHD_state_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_state_percentage_distribution(j, i)), ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20);
+    end
+end
+format_fig
+
+
+%% Vigilance
+numbers_of_interest = [1, 2, 3, 4];
+ADHD_vig = [];
+Control_vig =[];
+Control_vig = zeros(length(ctrs), length(numbers_of_interest));
+ADHD_vig = zeros(length(adhds), length(numbers_of_interest));
+
+clear vig_values
+for nc = 1:length(ctrs)
+    % Extract the State column for the current participant
+    vig_values = all_probe_table.Vigilance(all_probe_table.SubID == ctrs(nc));
+    % Count occurrences of each number (1, 2, 3, 4) for the current participant
+    Control_vig(nc, :) = histcounts(vig_values, [numbers_of_interest, Inf]);
+end
+
+% Calculate the total occurrences of each number across all participants
+Ctr_vig_total_occurrences = sum(Control_vig);
+% Calculate the percentage distribution
+Ctr_vig_percentage_distribution = Ctr_vig_total_occurrences / sum(Ctr_vig_total_occurrences) * 100;
+
+clear vig_values
+for nc = 1:length(adhds)
+    % Extract the State column for the current participant
+    vig_values = all_probe_table.Vigilance(all_probe_table.SubID == adhds(nc));
+    % Count occurrences of each number (1, 2, 3, 4) for the current participant
+    ADHD_vig(nc, :) = histcounts(vig_values, [numbers_of_interest, Inf]);
+end
+
+ADHD_vig_total_occurrences = sum(ADHD_vig);
+ADHD_vig_percentage_distribution = ADHD_vig_total_occurrences / sum(ADHD_vig_total_occurrences) * 100;
+
+
+
+% Plot the distribution
+labels = {'Extremely Alert', 'Alert','Sleepy', 'Extremely Sleepy'};
+
+figure;
+subplot(1,2,1)
+bar(1:numel(labels), Ctr_vig_percentage_distribution, 'FaceColor',Colors(1,:));
+ylabel('% Distribution of Vigilance Ratings');
+title('Controls');
+xticks(1:numel(labels));
+xticklabels(labels);
+xtickangle(45);
+% Add percentage values on top of each bar
+for i = 1:numel(labels)
+    for j = 1:size(Ctr_vig_percentage_distribution, 1)
+        text(i, Ctr_vig_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_vig_percentage_distribution(j, i)), ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20);
+    end
+end
+format_fig
+
+subplot(1,2,2)
+bar(1:numel(labels), ADHD_vig_percentage_distribution, 'FaceColor',Colors(2,:));
+ylabel('% Distribution of Vigilance Ratings');
+title('ADHD');
+xticks(1:numel(labels));
+xticklabels(labels);
+xtickangle(45);
+% Add percentage values on top of each bar
+for i = 1:numel(labels)
+    for j = 1:size(ADHD_vig_percentage_distribution, 1)
+        text(i, ADHD_vig_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_vig_percentage_distribution(j, i)), ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20);
+    end
+end
+format_fig
