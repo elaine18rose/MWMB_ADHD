@@ -504,15 +504,15 @@ labels = {'On Task', 'Mind Wandering','Mind Blanking', 'Dont Remember'};
 figure;
 subplot(1,2,1)
 bar(1:numel(labels), Ctr_state_percentage_distribution, 'FaceColor',Colors(1,:));
-ylabel('% Distribution of Mind State Occurrence');
+ylabel('% Distribution of Mind State Occurence');
 title('Controls');
 xticks(1:numel(labels));
 xticklabels(labels);
 xtickangle(45);
 % Add percentage values on top of each bar
 for i = 1:numel(labels)
-    for j = 1:size(Ctr_state_percentage_distribution, 1)
-        text(i, Ctr_state_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_state_percentage_distribution(j, i)), ...
+    for j = 1:size(Ctr_percentage_distribution, 1)
+        text(i, Ctr_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_percentage_distribution(j, i)), ...
             'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20);
     end
 end
@@ -520,15 +520,15 @@ format_fig
 
 subplot(1,2,2)
 bar(1:numel(labels), ADHD_state_percentage_distribution, 'FaceColor',Colors(2,:));
-ylabel('% Distribution of Mind State Occurrence');
+ylabel('% Distribution of Mind State Occurence');
 title('ADHD');
 xticks(1:numel(labels));
 xticklabels(labels);
 xtickangle(45);
 % Add percentage values on top of each bar
 for i = 1:numel(labels)
-    for j = 1:size(ADHD_state_percentage_distribution, 1)
-        text(i, ADHD_state_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_state_percentage_distribution(j, i)), ...
+    for j = 1:size(ADHD_percentage_distribution, 1)
+        text(i, ADHD_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_percentage_distribution(j, i)), ...
             'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20);
     end
 end
@@ -553,7 +553,7 @@ end
 % Calculate the total occurrences of each number across all participants
 Ctr_vig_total_occurrences = sum(Control_vig);
 % Calculate the percentage distribution
-Ctr_vig_percentage_distribution = Ctr_vig_total_occurrences / sum(Ctr_vig_total_occurrences) * 100;
+Ctr_percentage_distribution = Ctr_vig_total_occurrences / sum(Ctr_vig_total_occurrences) * 100;
 
 clear vig_values
 for nc = 1:length(adhds)
@@ -563,42 +563,42 @@ for nc = 1:length(adhds)
     ADHD_vig(nc, :) = histcounts(vig_values, [numbers_of_interest, Inf]);
 end
 
-ADHD_vig_total_occurrences = sum(ADHD_vig);
-ADHD_vig_percentage_distribution = ADHD_vig_total_occurrences / sum(ADHD_vig_total_occurrences) * 100;
+ADHD_total_occurrences = sum(ADHD_vig);
+ADHD_percentage_distribution = ADHD_total_occurrences / sum(ADHD_total_occurrences) * 100;
 
 
 
 % Plot the distribution
-labels = {'Extremely Alert', 'Alert','Sleepy', 'Extremely Sleepy'};
+labels = {'On Task', 'Mind Wandering','Mind Blanking', 'Dont Remember'};
 
 figure;
 subplot(1,2,1)
-bar(1:numel(labels), Ctr_vig_percentage_distribution, 'FaceColor',Colors(1,:));
-ylabel('% Distribution of Vigilance Ratings');
+bar(1:numel(labels), Ctr_percentage_distribution, 'FaceColor',Colors(1,:));
+ylabel('% Distribution of Mind State Occurence');
 title('Controls');
 xticks(1:numel(labels));
 xticklabels(labels);
 xtickangle(45);
 % Add percentage values on top of each bar
 for i = 1:numel(labels)
-    for j = 1:size(Ctr_vig_percentage_distribution, 1)
-        text(i, Ctr_vig_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_vig_percentage_distribution(j, i)), ...
+    for j = 1:size(Ctr_percentage_distribution, 1)
+        text(i, Ctr_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_percentage_distribution(j, i)), ...
             'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20);
     end
 end
 format_fig
 
 subplot(1,2,2)
-bar(1:numel(labels), ADHD_vig_percentage_distribution, 'FaceColor',Colors(2,:));
-ylabel('% Distribution of Vigilance Ratings');
+bar(1:numel(labels), ADHD_percentage_distribution, 'FaceColor',Colors(2,:));
+ylabel('% Distribution of Mind State Occurence');
 title('ADHD');
 xticks(1:numel(labels));
 xticklabels(labels);
 xtickangle(45);
 % Add percentage values on top of each bar
 for i = 1:numel(labels)
-    for j = 1:size(ADHD_vig_percentage_distribution, 1)
-        text(i, ADHD_vig_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_vig_percentage_distribution(j, i)), ...
+    for j = 1:size(ADHD_percentage_distribution, 1)
+        text(i, ADHD_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_percentage_distribution(j, i)), ...
             'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20);
     end
 end
