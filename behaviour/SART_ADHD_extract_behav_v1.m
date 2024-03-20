@@ -78,9 +78,11 @@ for nF=1:length(files)
     go_trials = test_res(:,12); %FLAG: Thomas, please check that I'm coding/interpreting this correctly
     nogo_trials = test_res(:,11); % 1 = reacted (when they shouldn't have); 0 = didn't react (correct resp);
     nTrial=test_res(:,4);
-    CR = (test_res(:,11)); FA=abs(1-CR); % Thomas changed this so now it only counts the number of times participants react to a NoGo
-    Hits = (test_res(:,12)); Miss=abs(1-Hits); %Thomas also changes this so for Hits, it counts responses for Gos and then for Misses it counts how many are missed
-    RT = test_res(:,10)-test_res(:,8); %FLAG: I just copied this from the general code to check the behav data. This doesn't exclude RTs for FAs
+    CR = (test_res(:,11)); FA=(1-CR); % Thomas changed this so now it only counts the number of times participants react to a NoGo
+    Hits = (test_res(:,12)); Miss=(1-Hits); %Thomas also changes this so for Hits, it counts responses for Gos and then for Misses it counts how many are missed
+    RT_all = test_res(:,10)-test_res(:,8); %FLAG: I just copied this from the general code to check the behav data. This doesn't exclude RTs for FAs
+    RT = RT_all; RT(isnan(test_res(:,12)))=NaN;
+    RT(RT<0.150)=NaN; warning('removing trials with RT below 150ms')
     %correct_RT = RT(Hits); % FLAG to fix
 
     % Compiling into tables 
@@ -141,9 +143,10 @@ for nP=1:size(probe_table,1)
         nogo_trials=test_res(test_res(:,1)==BlockIndex & test_res(:,4)<ProbeTrialIndex & test_res(:,5)==3,:);
         go_trials=go_trials(end-17:end,:);
         nogo_trials=nogo_trials(end-1:end,:);
-        probe_table.Miss(nP)=nanmean(go_trials(:,end)==0); % FLAG: Does this also need to be fixed
-        probe_table.HitRT(nP)=nanmean(go_trials(:,10)-go_trials(:,8)); % FLAG: Ask Thomas if this doesn't included FA data 
-        probe_table.FA(nP)=nanmean(nogo_trials(:,end-1)==0); % FLAG: Does this also need to be fixed
+        probe_table.Miss(nP)=nanmean(go_trials(:,end)==0); 
+        tempRT=go_trials(:,10)-go_trials(:,8); tempRT(tempRT<0.150)=NaN;
+        probe_table.HitRT(nP)=nanmean(tempRT);  
+        probe_table.FA(nP)=nanmean(nogo_trials(:,end-1)==0); 
     end
     if File_Name(19)=='C' || File_Name(19)=='A'
         writetable(probe_table,[save_path filesep 'MWMB_ADHD_probeBehav_' File_Name(19:22) '.txt']);
@@ -499,12 +502,10 @@ ADHD_state_percentage_distribution = ADHD_state_total_occurrences / sum(ADHD_sta
 
 
 % Plot the distribution
-labels = {'On Task', 'Mind Wandering','Mind Blanking', 'Dont Remember'};
+labels = {'On Task', 'Wandering','Blanking', 'Dont Remember'};
 
-figure;
-subplot(1,2,1)
-bar(1:numel(labels), Ctr_state_percentage_distribution, 'FaceColor',Colors(1,:));
-ylabel('% Distribution of Mind State Occurrence');
+figure('Position',[1955         361         758         413]);
+bar((1:numel(labels))-0.2, Ctr_state_percentage_distribution, 'FaceColor',Colors(1,:),'BarWidth',0.38);
 title('Controls');
 xticks(1:numel(labels));
 xticklabels(labels);
@@ -512,15 +513,14 @@ xtickangle(45);
 % Add percentage values on top of each bar
 for i = 1:numel(labels)
     for j = 1:size(Ctr_state_percentage_distribution, 1)
-        text(i, Ctr_state_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_state_percentage_distribution(j, i)), ...
-            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20);
+        text(i-0.2, Ctr_state_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_state_percentage_distribution(j, i)), ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 12,'Color',Colors(1,:),'FontWeight','bold');
     end
 end
 format_fig
-
-subplot(1,2,2)
-bar(1:numel(labels), ADHD_state_percentage_distribution, 'FaceColor',Colors(2,:));
-ylabel('% Distribution of Mind State Occurrence');
+hold on;
+bar((1:numel(labels))+0.2, ADHD_state_percentage_distribution, 'FaceColor',Colors(2,:),'BarWidth',0.38);
+ylabel('% of Mind State');
 title('ADHD');
 xticks(1:numel(labels));
 xticklabels(labels);
@@ -528,12 +528,12 @@ xtickangle(45);
 % Add percentage values on top of each bar
 for i = 1:numel(labels)
     for j = 1:size(ADHD_state_percentage_distribution, 1)
-        text(i, ADHD_state_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_state_percentage_distribution(j, i)), ...
-            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20);
+        text(i+0.2, ADHD_state_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_state_percentage_distribution(j, i)), ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 12,'Color',Colors(2,:),'FontWeight','bold');
     end
 end
 format_fig
-
+xlim([0.5 4.5])
 
 %% Vigilance
 numbers_of_interest = [1, 2, 3, 4];
@@ -571,10 +571,9 @@ ADHD_vig_percentage_distribution = ADHD_vig_total_occurrences / sum(ADHD_vig_tot
 % Plot the distribution
 labels = {'Extremely Alert', 'Alert','Sleepy', 'Extremely Sleepy'};
 
-figure;
-subplot(1,2,1)
-bar(1:numel(labels), Ctr_vig_percentage_distribution, 'FaceColor',Colors(1,:));
-ylabel('% Distribution of Vigilance Ratings');
+figure('Position',[1955         361         758         413]);
+bar((1:numel(labels))-0.2, Ctr_vig_percentage_distribution, 'FaceColor',Colors(1,:),'BarWidth',0.38);
+ylabel('% Vigilance Ratings');
 title('Controls');
 xticks(1:numel(labels));
 xticklabels(labels);
@@ -582,15 +581,14 @@ xtickangle(45);
 % Add percentage values on top of each bar
 for i = 1:numel(labels)
     for j = 1:size(Ctr_vig_percentage_distribution, 1)
-        text(i, Ctr_vig_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_vig_percentage_distribution(j, i)), ...
-            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20);
+        text(i-0.2, Ctr_vig_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_vig_percentage_distribution(j, i)), ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom','FontSize', 12,'Color',Colors(2,:),'FontWeight','bold');
     end
 end
 format_fig
+hold on;
 
-subplot(1,2,2)
-bar(1:numel(labels), ADHD_vig_percentage_distribution, 'FaceColor',Colors(2,:));
-ylabel('% Distribution of Vigilance Ratings');
+bar((1:numel(labels))+0.2, ADHD_vig_percentage_distribution, 'FaceColor',Colors(2,:),'BarWidth',0.38);
 title('ADHD');
 xticks(1:numel(labels));
 xticklabels(labels);
@@ -598,8 +596,9 @@ xtickangle(45);
 % Add percentage values on top of each bar
 for i = 1:numel(labels)
     for j = 1:size(ADHD_vig_percentage_distribution, 1)
-        text(i, ADHD_vig_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_vig_percentage_distribution(j, i)), ...
-            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20);
+        text(i+0.2, ADHD_vig_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_vig_percentage_distribution(j, i)), ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 12,'Color',Colors(2,:),'FontWeight','bold');
     end
 end
 format_fig
+xlim([0.5 4.5])
