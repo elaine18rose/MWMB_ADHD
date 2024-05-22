@@ -6,4 +6,13 @@ cfg.layout = 'EEG1010.lay';
 cfg.channel = Labels;
 cfg.center      = 'yes';
 layout=ft_prepare_layout(cfg);
-
+orderchan=[];
+for nCh=1:length(Labels)
+    orderchan(nCh)=match_str(layout.label,Labels{nCh});
+end
+orderchan(length(Labels)+1)=length(Labels)+1;
+orderchan(length(Labels)+2)=length(Labels)+2;
+layout.label=layout.label(orderchan);
+layout.pos=layout.pos(orderchan,:);
+layout.width=layout.width(orderchan);
+layout.height=layout.height(orderchan);
