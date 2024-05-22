@@ -70,12 +70,20 @@ for nF=1:length(eeg_files)
         cfg.hpfilter       = 'yes';        % enable high-pass filtering
         cfg.hpfilttype     = 'but';
         cfg.hpfiltord      = 4;
-        cfg.hpfreq         = 1; %!!! Pierre said his script filters at 0.1 not 1  - discuss with Thomas !!!
+        cfg.hpfreq         = 1; %!!! Filtering at 1Hz to improve the ICA decomposition
         cfg.dftfilter      = 'yes';        % enable notch filtering to eliminate power line noise
         cfg.dftfreq        = [50 100];     % set up the frequencies for notch filtering
 
         cfg.reref          = 'yes';
         cfg.refchannel     = 'all';
+
+        cfg.trialfun            = 'MWMB_ADHD_probefun';
+%         cfg.table               = table;
+        cfg.SubID               = SubID;
+        cfg.dataset             = [eeg_files(nF).folder filesep eeg_files(nF).name];
+        cfg.trialdef.prestim    = 25;
+        cfg.trialdef.poststim   = 2;
+        cfg = ft_definetrial(cfg);
 
         data               = ft_preprocessing(cfg); % read raw data
 
@@ -107,14 +115,31 @@ for nF=1:length(eeg_files)
         std_vec =[std_vec log(std(data.trial{k},[],2))];
         kurt_vec =[kurt_vec log(kurtosis(data.trial{k},[],2))];
         end
-        mean_std_vec = mean(std_vec);
-        mean_kurt_vec = mean(kurt_vec);
-        badCh_std = find(mean_std_vec>(mean(mean_std_vec)+3*std(mean_std_vec)));
-        badCh_kur = find(mean_kurt_vec>(mean(mean_kurt_vec)+3*std(mean_kurt_vec)));
+        all_std_vec = (reshape(std_vec,1,numel(std_vec)));
+        all_kurt_vec = (reshape(kurt_vec,1,numel(kurt_vec)));
+        badCh_std_mat = (std_vec>(mean(all_std_vec)+3*std(all_std_vec)));
+        badCh_kur_mat = (kurt_vec>(mean(all_kurt_vec)+3*std(all_kurt_vec)));
 
+        % we can define a bad channel as a channel with more than 50% of
+        % probes above the threshold
+        badCh_std=find(mean(badCh_std_mat')>0.5);
+        badCh_kur=find(mean(badCh_kur_mat')>0.5);
+
+        % we can define a bad epoch as an epoch in which more than 20% of
+        % channels are above threshold
+        % probes above the threshold
+        badTr_std=find(mean(badCh_std_mat)>0.2);
+        badTr_kur=find(mean(badCh_kur_mat)>0.2);
 
         %
         badChannels=unique([badCh_std ; badCh_kur]);
+        badTrials=unique([badTr_std ; badTr_kur]);
+
+        badChannels_badTrials_info{nF,1}=SubID;
+        badChannels_badTrials_info{nF,2}=badCh_std;
+        badChannels_badTrials_info{nF,3}=badCh_kur;
+        badChannels_badTrials_info{nF,4}=badTr_std;
+        badChannels_badTrials_info{nF,5}=badTr_kur;
         if ~isempty(badChannels)
             fprintf('... ... interpolating %g channels\n',length(badChannels))
             % find neighbours
@@ -142,13 +167,11 @@ for nF=1:length(eeg_files)
         cfg.refchannel = 'all';
         data = ft_preprocessing(cfg,data);
 
-        cfg=[];
-        cfg.trialfun            = 'MWMB_ADHD_probefun';
-        cfg.dataset             = [eeg_files(nF).folder filesep eeg_files(nF).name];
-        cfg.trialdef.prestim    = 30;
-        cfg.trialdef.poststim   = 0;
-        cfg = ft_definetrial(cfg);
-        data = ft_preprocessing(cfg,data);
+        if ~isempty(badTrials)
+            cfg=[];
+            cfg.trials    = setdiff(1:length(data.trial),badTrials);
+            data = ft_redefinetrial(cfg,data);
+        end
 
         EEG = fieldtrip2eeglab(data);
         eloc = readlocs([path_fieldtrip '/template/layout/acticap-64ch-standard2.mat']); %%eloc = readlocs('chanlocs.ced'); % Channel location - right now it's 28 channels when we need 64
