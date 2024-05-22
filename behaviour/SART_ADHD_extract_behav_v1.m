@@ -276,7 +276,10 @@ set(gca,'XLim', [0 20], 'YLim',ylim.*[1 1.5]); % set(gca,'XLim', [-10 110], 'YLi
 format_fig; title('MISS'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'}); 
 set(gca,'YColor','none') % removes Y-axis 
 
-%FA
+[h,p,ci,stats] = ttest2(Miss_CTR,Miss_ADHD);
+Misseffect = meanEffectSize(Miss_CTR,Miss_ADHD);
+figure; gardnerAltmanPlot(Miss_ADHD,Miss_CTR);
+%% FA
 figure;
 h1 = raincloud_plot(100*FA_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
     'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',5,'bound_data',[0 100]);
@@ -288,6 +291,10 @@ set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
 set(gca,'XLim', [0 100], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [0 6], 'YLim', ylim.*[0.5 1.7]);
 format_fig; title('FA'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
 set(gca,'YColor','none') % removes Y-axis 
+
+[h,p,ci,stats] = ttest2(FA_CTR,FA_ADHD);
+FAeffect = meanEffectSize(FA_CTR,FA_ADHD);
+figure; gardnerAltmanPlot(FA_ADHD,FA_CTR);
 
 %%
 % %stdRT
@@ -313,61 +320,64 @@ set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
 set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
 set(gca,'XLim', [0.1 0.8], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [1.1 1.9], 'YLim', ylim.*[0.5 1.7]);
 format_fig; title('RT (s)'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
+set(gca,'YColor','none') % removes Y-axis 
 
 
+%RTeffect = meanEffectSize(Hit_RT_CTR,Hit_RT_ADHD);
+%figure; gardnerAltmanPlot(Hit_RT_ADHD,Hit_RT_CTR)
 %%
 %% Repeated Measures plot
-%Miss
-data_to_plot=[];
-group_labels={'C','A'};
-for i = 1:4 % number of repetitions
-    for j = 1:2 % number of group
-        data_to_plot{i, j} = all_behav_table.Misses(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
-    end
-end
-
-figure; hold on;
-h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-set(gca, 'XLim', [0.01 0.08]);
-xtix = get(gca, 'xtick'); %to change y-axis to percentage
-set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
-title(['Misses per Block']);
-xlabel('Percentage of Misses'); ylabel('Block Number');
-format_fig;
-
-%False Alarms
-data_to_plot=[];
-group_labels={'C','A'};
-for i = 1:4 % number of repetitions
-    for j = 1:2 % number of group
-        data_to_plot{i, j} = all_behav_table.FA(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
-    end
-end
-
-figure; hold on;
-h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-set(gca, 'XLim', [-0.015 1]);
-xtix = get(gca, 'xtick'); %to change y-axis to percentage
-set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
-title(['False alarms per Block']);
-xlabel('Percentage of False Alarms'); ylabel('Block Number');
-format_fig;
-
-%Hit RT
-data_to_plot=[];
-group_labels={'C','A'};
-for i = 1:4 % number of repetitions
-    for j = 1:2 % number of group
-        data_to_plot{i, j} = all_behav_table.RT(all_behav_table.BlockN==i  & all_behav_table.Group==group_labels{j});
-    end
-end
-
-figure; hold on;
-h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-set(gca, 'XLim', [0 .75]);
-title(['Hit Reaction Times per Block']);
-xlabel('Reaction Times (seconds)'); ylabel('Block Number');
-format_fig;
+% %Miss
+% data_to_plot=[];
+% group_labels={'C','A'};
+% for i = 1:4 % number of repetitions
+%     for j = 1:2 % number of group
+%         data_to_plot{i, j} = all_behav_table.Misses(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
+%     end
+% end
+% 
+% figure; hold on;
+% h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+% set(gca, 'XLim', [0.01 0.08]);
+% xtix = get(gca, 'xtick'); %to change y-axis to percentage
+% set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
+% title(['Misses per Block']);
+% xlabel('Percentage of Misses'); ylabel('Block Number');
+% format_fig;
+% 
+% %False Alarms
+% data_to_plot=[];
+% group_labels={'C','A'};
+% for i = 1:4 % number of repetitions
+%     for j = 1:2 % number of group
+%         data_to_plot{i, j} = all_behav_table.FA(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
+%     end
+% end
+% 
+% figure; hold on;
+% h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+% set(gca, 'XLim', [-0.015 1]);
+% xtix = get(gca, 'xtick'); %to change y-axis to percentage
+% set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
+% title(['False alarms per Block']);
+% xlabel('Percentage of False Alarms'); ylabel('Block Number');
+% format_fig;
+% 
+% %Hit RT
+% data_to_plot=[];
+% group_labels={'C','A'};
+% for i = 1:4 % number of repetitions
+%     for j = 1:2 % number of group
+%         data_to_plot{i, j} = all_behav_table.RT(all_behav_table.BlockN==i  & all_behav_table.Group==group_labels{j});
+%     end
+% end
+% 
+% figure; hold on;
+% h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+% set(gca, 'XLim', [0 .75]);
+% title(['Hit Reaction Times per Block']);
+% xlabel('Reaction Times (seconds)'); ylabel('Block Number');
+% format_fig;
 
 % %stdRT
 % data_to_plot=[];
@@ -406,65 +416,65 @@ format_fig;
 
 %% Box plots of mean distribution 
 % Misses
-lineWidth = 3;
-figure; 
-subplot(1,2,1)
-boxplot(100*Miss_CTR,'Colors',Colors(1,:), 'symbol', 'o k')
-ylim([0 15])
-ylabel('Misses')
-xlabel ('Control')
-
-h = findobj(gca,'Tag','Box');
-for j=1:length(h)
-    set(h(j),'LineWidth',lineWidth)
-
-    patch(get(h(j),'XData'),get(h(j),'YData'),get(h(j),'Color'),'FaceAlpha',.5);
-end
-format_fig
-
-subplot(1,2,2)
-boxplot(100*Miss_ADHD, 'Colors',Colors(2,:), 'symbol', 'o k')
-ylim([0 15])
-ylabel('Misses')
-xlabel('ADHD')
-
-h = findobj(gca,'Tag','Box');
-for j=1:length(h)
-    set(h(j),'LineWidth',lineWidth)
-    patch(get(h(j),'XData'),get(h(j),'YData'),get(h(j),'Color'),'FaceAlpha',.5);
-end
-format_fig
-
-
-% FAs
-lineWidth = 3;
-figure; 
-subplot(1,2,1)
-boxplot(100*FA_CTR,'Colors',Colors(1,:), 'symbol', 'o k')
-ylim([0 100])
-ylabel('False Alarms')
-xlabel ('Control')
-
-h = findobj(gca,'Tag','Box');
-for j=1:length(h)
-    set(h(j),'LineWidth',lineWidth)
-
-    patch(get(h(j),'XData'),get(h(j),'YData'),get(h(j),'Color'),'FaceAlpha',.5);
-end
-format_fig
-
-subplot(1,2,2)
-boxplot(100*FA_ADHD, 'Colors',Colors(2,:), 'symbol', 'o k')
-ylim([0 100])
-ylabel('False Alarms')
-xlabel('ADHD')
-
-h = findobj(gca,'Tag','Box');
-for j=1:length(h)
-    set(h(j),'LineWidth',lineWidth)
-    patch(get(h(j),'XData'),get(h(j),'YData'),get(h(j),'Color'),'FaceAlpha',.5);
-end
-format_fig
+% lineWidth = 3;
+% figure; 
+% subplot(1,2,1)
+% boxplot(100*Miss_CTR,'Colors',Colors(1,:), 'symbol', 'o k')
+% ylim([0 15])
+% ylabel('Misses')
+% xlabel ('Control')
+% 
+% h = findobj(gca,'Tag','Box');
+% for j=1:length(h)
+%     set(h(j),'LineWidth',lineWidth)
+% 
+%     patch(get(h(j),'XData'),get(h(j),'YData'),get(h(j),'Color'),'FaceAlpha',.5);
+% end
+% format_fig
+% 
+% subplot(1,2,2)
+% boxplot(100*Miss_ADHD, 'Colors',Colors(2,:), 'symbol', 'o k')
+% ylim([0 15])
+% ylabel('Misses')
+% xlabel('ADHD')
+% 
+% h = findobj(gca,'Tag','Box');
+% for j=1:length(h)
+%     set(h(j),'LineWidth',lineWidth)
+%     patch(get(h(j),'XData'),get(h(j),'YData'),get(h(j),'Color'),'FaceAlpha',.5);
+% end
+% format_fig
+% 
+% 
+% % FAs
+% lineWidth = 3;
+% figure; 
+% subplot(1,2,1)
+% boxplot(100*FA_CTR,'Colors',Colors(1,:), 'symbol', 'o k')
+% ylim([0 100])
+% ylabel('False Alarms')
+% xlabel ('Control')
+% 
+% h = findobj(gca,'Tag','Box');
+% for j=1:length(h)
+%     set(h(j),'LineWidth',lineWidth)
+% 
+%     patch(get(h(j),'XData'),get(h(j),'YData'),get(h(j),'Color'),'FaceAlpha',.5);
+% end
+% format_fig
+% 
+% subplot(1,2,2)
+% boxplot(100*FA_ADHD, 'Colors',Colors(2,:), 'symbol', 'o k')
+% ylim([0 100])
+% ylabel('False Alarms')
+% xlabel('ADHD')
+% 
+% h = findobj(gca,'Tag','Box');
+% for j=1:length(h)
+%     set(h(j),'LineWidth',lineWidth)
+%     patch(get(h(j),'XData'),get(h(j),'YData'),get(h(j),'Color'),'FaceAlpha',.5);
+% end
+% format_fig
 
 
 %% Mind States 
@@ -502,11 +512,10 @@ ADHD_state_percentage_distribution = ADHD_state_total_occurrences / sum(ADHD_sta
 
 
 % Plot the distribution
-labels = {'On Task', 'Wandering','Blanking', 'Dont Remember'};
+labels = {'On Task', 'Mind Wandering','Mind Blanking', 'Dont Remember'};
 
 figure('Position',[1955         361         758         413]);
 bar((1:numel(labels))-0.2, Ctr_state_percentage_distribution, 'FaceColor',Colors(1,:),'BarWidth',0.38);
-title('Controls');
 xticks(1:numel(labels));
 xticklabels(labels);
 xtickangle(45);
@@ -521,7 +530,6 @@ format_fig
 hold on;
 bar((1:numel(labels))+0.2, ADHD_state_percentage_distribution, 'FaceColor',Colors(2,:),'BarWidth',0.38);
 ylabel('% of Mind State');
-title('ADHD');
 xticks(1:numel(labels));
 xticklabels(labels);
 xtickangle(45);
@@ -574,7 +582,6 @@ labels = {'Extremely Alert', 'Alert','Sleepy', 'Extremely Sleepy'};
 figure('Position',[1955         361         758         413]);
 bar((1:numel(labels))-0.2, Ctr_vig_percentage_distribution, 'FaceColor',Colors(1,:),'BarWidth',0.38);
 ylabel('% Vigilance Ratings');
-title('Controls');
 xticks(1:numel(labels));
 xticklabels(labels);
 xtickangle(45);
@@ -582,14 +589,13 @@ xtickangle(45);
 for i = 1:numel(labels)
     for j = 1:size(Ctr_vig_percentage_distribution, 1)
         text(i-0.2, Ctr_vig_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_vig_percentage_distribution(j, i)), ...
-            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom','FontSize', 12,'Color',Colors(2,:),'FontWeight','bold');
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom','FontSize', 12,'Color',Colors(1,:),'FontWeight','bold');
     end
 end
 format_fig
 hold on;
 
 bar((1:numel(labels))+0.2, ADHD_vig_percentage_distribution, 'FaceColor',Colors(2,:),'BarWidth',0.38);
-title('ADHD');
 xticks(1:numel(labels));
 xticklabels(labels);
 xtickangle(45);
