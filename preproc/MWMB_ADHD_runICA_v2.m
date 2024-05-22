@@ -117,8 +117,8 @@ for nF=1:length(eeg_files)
         end
         all_std_vec = (reshape(std_vec,1,numel(std_vec)));
         all_kurt_vec = (reshape(kurt_vec,1,numel(kurt_vec)));
-        badCh_std_mat = (std_vec>(mean(all_std_vec)+3*std(all_std_vec)));
-        badCh_kur_mat = (kurt_vec>(mean(all_kurt_vec)+3*std(all_kurt_vec)));
+        badCh_std_mat = (std_vec>(mean(all_std_vec)+4*std(all_std_vec)));
+        badCh_kur_mat = (kurt_vec>(mean(all_kurt_vec)+4*std(all_kurt_vec)));
 
         % we can define a bad channel as a channel with more than 50% of
         % probes above the threshold
@@ -138,8 +138,10 @@ for nF=1:length(eeg_files)
         badChannels_badTrials_info{nF,1}=SubID;
         badChannels_badTrials_info{nF,2}=badCh_std;
         badChannels_badTrials_info{nF,3}=badCh_kur;
-        badChannels_badTrials_info{nF,4}=badTr_std;
-        badChannels_badTrials_info{nF,5}=badTr_kur;
+        badChannels_badTrials_info{nF,4}=badChannels;
+        badChannels_badTrials_info{nF,5}=badTr_std;
+        badChannels_badTrials_info{nF,6}=badTr_kur;
+        badChannels_badTrials_info{nF,7}=badTrials;
         if ~isempty(badChannels)
             fprintf('... ... interpolating %g channels\n',length(badChannels))
             % find neighbours
@@ -182,8 +184,7 @@ for nF=1:length(eeg_files)
 
         ICA_classification=EEG_icalabels.etc.ic_classification.ICLabel.classifications;
         ICA_classification=array2table(ICA_classification,'VariableNames',EEG_icalabels.etc.ic_classification.ICLabel.classes);
-        ICA_classification.SubID=repmat(SubID,size(ICA_classification,1),1);
-        ICA_classification.Comp=(1:size(ICA_classification,1))';
+        
         save([preproc_path filesep 'comp_i_probe_' SubID],'EEG_ica','EEG_icalabels','ICA_classification')
 
         run('../MWMB_ADHD_elec_layout.m')
@@ -197,6 +198,8 @@ for nF=1:length(eeg_files)
         savefig(gcf,[preproc_path filesep 'comp_i_probe_' SubID '.fig'])
         close(gcf)
 
+        ICA_classification.SubID=repmat(SubID,size(ICA_classification,1),1);
+        ICA_classification.Comp=(1:size(ICA_classification,1))';
         all_ICA_classification=[all_ICA_classification ; ICA_classification];
         %         rejected_comps = find(EEG.reject.gcompreject > 0);
         %         EEG = pop_subcomp(EEG, rejected_comps);
