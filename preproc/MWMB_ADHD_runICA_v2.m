@@ -28,7 +28,7 @@ ft_defaults;
 addpath(path_eeglab);
 eeglab;
 
-% select relevant files, here task 
+% select relevant files, here task
 eeg_files=dir([data_path filesep '*.eeg']);
 
 %EEG Layout info
@@ -39,7 +39,7 @@ run ../MWMB_ADHD_elec_layout.m
 RS = ["R1", "R2"];
 
 redo=1;
-
+all_ICA_classification=[];
 for nF=1:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
         continue; %  EP - Jump to the bottom of the loop.
@@ -51,9 +51,9 @@ for nF=1:length(eeg_files)
 
     %%% load the data
     SubInfo=split(eeg_files(nF).name,'-');
-    SubID=SubInfo{2};
+    SubID=SubInfo{2}(1:end-4);
 
-    if redo==1 || exist([preproc_path filesep 'comp2i_' SubID(1:end-4) '.mat'])==0 % To skip already preprocessed files
+    if redo==1 || exist([preproc_path filesep 'comp2i_' SubID '.mat'])==0 % To skip already preprocessed files
         fprintf('... working on %s\n',[eeg_files(nF).name])
 
         %%% minimal preprocessing
@@ -78,7 +78,7 @@ for nF=1:length(eeg_files)
         cfg.refchannel     = 'all';
 
         cfg.trialfun            = 'MWMB_ADHD_probefun';
-%         cfg.table               = table;
+        %         cfg.table               = table;
         cfg.SubID               = SubID;
         cfg.dataset             = [eeg_files(nF).folder filesep eeg_files(nF).name];
         cfg.trialdef.prestim    = 25;
@@ -112,34 +112,36 @@ for nF=1:length(eeg_files)
         std_vec = [];
         kurt_vec = [];
         for k = 1:length(data.trial)
-        std_vec =[std_vec log(std(data.trial{k},[],2))];
-        kurt_vec =[kurt_vec log(kurtosis(data.trial{k},[],2))];
+            std_vec =[std_vec log(std(data.trial{k},[],2))];
+            kurt_vec =[kurt_vec log(kurtosis(data.trial{k},[],2))];
         end
         all_std_vec = (reshape(std_vec,1,numel(std_vec)));
         all_kurt_vec = (reshape(kurt_vec,1,numel(kurt_vec)));
-        badCh_std_mat = (std_vec>(mean(all_std_vec)+3*std(all_std_vec)));
-        badCh_kur_mat = (kurt_vec>(mean(all_kurt_vec)+3*std(all_kurt_vec)));
+        badCh_std_mat = (std_vec>(mean(all_std_vec)+4*std(all_std_vec)));
+        badCh_kur_mat = (kurt_vec>(mean(all_kurt_vec)+4*std(all_kurt_vec)));
 
         % we can define a bad channel as a channel with more than 50% of
         % probes above the threshold
         badCh_std=find(mean(badCh_std_mat')>0.5);
         badCh_kur=find(mean(badCh_kur_mat')>0.5);
-
+        badCh=find(mean(((badCh_std_mat+badCh_kur_mat)~=0)')>0.5);
         % we can define a bad epoch as an epoch in which more than 20% of
         % channels are above threshold
         % probes above the threshold
         badTr_std=find(mean(badCh_std_mat)>0.2);
         badTr_kur=find(mean(badCh_kur_mat)>0.2);
-
+        badTr=find(mean(((badCh_std_mat+badCh_kur_mat)~=0))>0.2);
         %
-        badChannels=unique([badCh_std ; badCh_kur]);
-        badTrials=unique([badTr_std ; badTr_kur]);
+        badChannels=badCh;
+        badTrials=badTr;
 
         badChannels_badTrials_info{nF,1}=SubID;
         badChannels_badTrials_info{nF,2}=badCh_std;
         badChannels_badTrials_info{nF,3}=badCh_kur;
-        badChannels_badTrials_info{nF,4}=badTr_std;
-        badChannels_badTrials_info{nF,5}=badTr_kur;
+        badChannels_badTrials_info{nF,4}=badChannels;
+        badChannels_badTrials_info{nF,5}=badTr_std;
+        badChannels_badTrials_info{nF,6}=badTr_kur;
+        badChannels_badTrials_info{nF,7}=badTrials;
         if ~isempty(badChannels)
             fprintf('... ... interpolating %g channels\n',length(badChannels))
             % find neighbours
@@ -174,17 +176,7 @@ for nF=1:length(eeg_files)
         end
 
         EEG = fieldtrip2eeglab(data);
-        eloc = readlocs([path_fieldtrip '/template/layout/acticap-64ch-standard2.mat']); %%eloc = readlocs('chanlocs.ced'); % Channel location - right now it's 28 channels when we need 64
-        % need to fix line above to make it more streamlined
-        toRemove = false(1, length(eloc));
-        for nCh = 1:length(eloc)
-            if contains(eloc(nCh).labels,'Gnd')|| contains(eloc(nCh).labels,'Ref')
-                toRemove(nCh) = true;
-            end
-        end
-        eloc(toRemove) = []; %Remove Grnd and Ref electrodes
-
-        EEG.chanlocs=eloc;
+        EEG = pop_chanedit(EEG, 'lookup', fullfile(path_eeglab, 'plugins', 'dipfit', 'standard_BESA', 'standard-10-5-cap385.elp'));
         EEG = eeg_checkset(EEG); %This checks if current channel no. has the same amount as channel locations. If not, it deletes channel locations
         EEG_ica = pop_runica(EEG, 'icatype', 'runica'); %Runs ICA
         EEG_icalabels = pop_iclabel(EEG_ica,'default'); %Automates detectio of bad ICA components
@@ -192,41 +184,47 @@ for nF=1:length(eeg_files)
 
         ICA_classification=EEG_icalabels.etc.ic_classification.ICLabel.classifications;
         ICA_classification=array2table(ICA_classification,'VariableNames',EEG_icalabels.etc.ic_classification.ICLabel.classes);
-        save([preproc_path filesep 'comp2i_' eeg_files(nF).name],'EEG_icalabels','ICA_classification')
+        
+        save([preproc_path filesep 'comp_i_probe_' SubID],'EEG_ica','EEG_icalabels','ICA_classification')
 
+        run('../MWMB_ADHD_elec_layout.m')
+        figure;
+        for nComp=1:16% size(EEG_ica.icawinv,2)
+            subplot(4,4,nComp)
+            simpleTopoPlot_ft(EEG_ica.icawinv(:,nComp), layout,'on',[],0,1); colorbar;
+            thisLabel=ICA_classification.Properties.VariableNames(find(table2array(ICA_classification(nComp,:))==max(table2array(ICA_classification(nComp,:)))));
+            title(thisLabel);
+        end
+        savefig(gcf,[preproc_path filesep 'comp_i_probe_' SubID '.fig'])
+        close(gcf)
 
-        %%% run ICA through field trip - not needed here since we're running ICA through EEGlab
-        %         rankICA = rank(data.trial{1,1});
-        %         cfg        = [];
-        %         cfg.method = 'runica'; % this is the default and uses the implementation from EEGLAB
-        %         cfg.numcomponent = rankICA;
-        %         comp = ft_componentanalysis(cfg, data);
+        ICA_classification.SubID=repmat(SubID,size(ICA_classification,1),1);
+        ICA_classification.Comp=(1:size(ICA_classification,1))';
+        all_ICA_classification=[all_ICA_classification ; ICA_classification];
+        %         rejected_comps = find(EEG.reject.gcompreject > 0);
+        %         EEG = pop_subcomp(EEG, rejected_comps);
+        %         EEG = eeg_checkset(EEG);
 
-
-        rejected_comps = find(EEG.reject.gcompreject > 0);
-        EEG = pop_subcomp(EEG, rejected_comps);
-        EEG = eeg_checkset(EEG);
-
-%         % convert back to Fieldtrip
-%         curPath = pwd;
-%         p = fileparts(which('ft_read_header'));
-%         cd(fullfile(p, 'private'));
-%         hdr = read_eeglabheader( EEG );
-%         data = read_eeglabdata( EEG, 'header', hdr );
-%         event = read_eeglabevent( EEG, 'header', hdr );
-% 
-%         OUTEEG = pop_subcomp( EEG, components, plotag);
-% 
-%         EEG_icalabels = pop_iclabel(EEG_ica,'default');
-% 
-%         %defining epochs - moved this after ICA because the script wasn't
-%         %running due to diff trial numbers per block
-%         cfg                     = [];
-%         cfg.trialfun            = 'MWMB_ADHD_blockfun';
-%         cfg.trialdef.prestim    = 1;
-%         cfg.trialdef.poststim   = 1;
-%         cfg                     = ft_definetrial(cfg);
-% 
-%         save([preproc_path filesep 'Icfe_MWADHD_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
+        %         % convert back to Fieldtrip
+        %         curPath = pwd;
+        %         p = fileparts(which('ft_read_header'));
+        %         cd(fullfile(p, 'private'));
+        %         hdr = read_eeglabheader( EEG );
+        %         data = read_eeglabdata( EEG, 'header', hdr );
+        %         event = read_eeglabevent( EEG, 'header', hdr );
+        %
+        %         OUTEEG = pop_subcomp( EEG, components, plotag);
+        %
+        %         EEG_icalabels = pop_iclabel(EEG_ica,'default');
+        %
+        %         %defining epochs - moved this after ICA because the script wasn't
+        %         %running due to diff trial numbers per block
+        %         cfg                     = [];
+        %         cfg.trialfun            = 'MWMB_ADHD_blockfun';
+        %         cfg.trialdef.prestim    = 1;
+        %         cfg.trialdef.poststim   = 1;
+        %         cfg                     = ft_definetrial(cfg);
+        %
+        %         save([preproc_path filesep 'Icfe_MWADHD_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
     end
 end
