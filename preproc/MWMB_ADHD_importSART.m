@@ -23,7 +23,7 @@ files=dir([path_data filesep 'EEG' filesep '*.eeg']);
 redo_block=0; % 1 to force re-import, 0 otherwise
 redo_probe=1; % 1 to force re-import, 0 otherwise
 redo_trial=0; % 1 to force re-import, 0 otherwise
-for nF=44:length(files)
+for nF=1:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
     if isempty(findstr(file_name,'_'))==0

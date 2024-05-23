@@ -110,6 +110,7 @@ for nF=1:length(files)
 
     behavres_mat=[behavres_mat; [nF*ones(size(this_behav,1),1) this_behav]];  % This is making a matrix of the variables obtained and put in this_behav
     behavgroup_cond=[behavgroup_cond; repmat({Group},size(this_behav,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
+    behavSub_ID=repmat({SubID},size(this_behav,1),1); %Repeating the SubID for the length of the data
 
     stateres_mat=[stateres_mat; [nF*ones(size(this_state2,1),1) this_state2]];  % This is making a matrix of the variables obtained and put in this_state
     stategroup_cond=[stategroup_cond; repmat({Group},size(this_state2,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
@@ -200,12 +201,11 @@ for nP=1:size(probe_table,1)
    end
 end
 
-    %% Making a table of the by trial behavioural results per participant
+%     %% Making a table of the by trial behavioural results per participant
     table1=array2table(behavres_mat,'VariableNames',{'SubID','BlockN','TrialN','GoTrials','NoGoTrials','FA','Misses','RT'});
     table1.Group=behavgroup_cond;
     table1.SubID=categorical(table1.SubID);
     table1.Group=categorical(table1.Group);
-%%%% Here we need to add Group and SubID
     % table1.Group=reordercats(table1.Group,[2,1]);
 
 %     writetable(table1,[save_path filesep 'MWMB_ADHD_behav_bytrial.txt']); %%% FLAG: Need to fix "SubID" because right now it's wrong
