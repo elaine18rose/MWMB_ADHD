@@ -87,13 +87,13 @@ for nF=1:length(files)
     RT(RT<0.150)=NaN; warning('removing trials with RT below 150ms')
 
     % Compiling into tables 
-    this_behav=nan(length(test_res),9);
-    this_behav(:,3)=blockN;
-    this_behav(:,4)=nTrial;
-    this_behav(:,5)=go_trials;
-    this_behav(:,6)=nogo_trials;
-    this_behav(:,7)=FA;
-    this_behav(:,8)=Miss;
+    this_behav=nan(length(test_res),7);
+    this_behav(:,1)=blockN;
+    this_behav(:,2)=nTrial;
+    this_behav(:,3)=go_trials;
+    this_behav(:,4)=nogo_trials;
+    this_behav(:,5)=FA;
+    this_behav(:,7)=Miss;
     this_behav(:,9)=RT;
     % nblock this_blockcond thiset ntrial this_seq_trial TargetID thisresp stimonset dur_face_no_rand thisresptime  this_nogo this_go
 
