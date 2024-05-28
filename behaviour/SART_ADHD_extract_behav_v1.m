@@ -45,7 +45,7 @@ behavSub_ID=[];
 stateres_mat=[];
 stategroup_cond=[];
 resblock_mat=[];
-
+behavres_table=[];
 
 for nF=1:length(files)
     File_Name=files(nF).name;
@@ -87,13 +87,13 @@ for nF=1:length(files)
     RT(RT<0.150)=NaN; warning('removing trials with RT below 150ms')
 
     % Compiling into tables 
-    this_behav=nan(length(test_res),7);
-    this_behav(:,1)=blockN;
-    this_behav(:,2)=nTrial;
-    this_behav(:,3)=go_trials;
-    this_behav(:,4)=nogo_trials;
-    this_behav(:,5)=FA;
-    this_behav(:,7)=Miss;
+    this_behav=nan(length(test_res),9);
+    this_behav(:,3)=blockN;
+    this_behav(:,4)=nTrial;
+    this_behav(:,5)=go_trials;
+    this_behav(:,6)=nogo_trials;
+    this_behav(:,7)=FA;
+    this_behav(:,8)=Miss;
     this_behav(:,9)=RT;
     % nblock this_blockcond thiset ntrial this_seq_trial TargetID thisresp stimonset dur_face_no_rand thisresptime  this_nogo this_go
 
@@ -108,8 +108,8 @@ for nF=1:length(files)
     this_state2(:,10)=nan;
     this_state2(:,11)=nan;
 
-    behavres_mat=[behavres_mat; [nF*ones(size(this_behav,1),1) this_behav]];  % This is making a matrix of the variables obtained and put in this_behav
-    behavgroup_cond=[behavgroup_cond; repmat({Group},size(this_behav,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
+%     behavres_mat=[behavres_mat; [nF*ones(size(this_behav,1),1) this_behav]];  % This is making a matrix of the variables obtained and put in this_behav
+%     behavgroup_cond=[behavgroup_cond; repmat({Group},size(this_behav,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
 
     stateres_mat=[stateres_mat; [nF*ones(size(this_state2,1),1) this_state2]];  % This is making a matrix of the variables obtained and put in this_state
     stategroup_cond=[stategroup_cond; repmat({Group},size(this_state2,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
@@ -131,6 +131,7 @@ behav_table.Group=categorical(behav_table.Group);
         behav_table.Group=repmat({SubCond},size(behav_table,1),1);
         writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_C' File_Name(19:21) '.txt']);
     end
+behavres_table=[behavres_table ; behav_table];
 
     probe_table=array2table(this_state2,...
         'VariableNames',{'SubID','Group','ProbeNo','Block','State','Distraction','Intention','Vigilance','Miss','FA','HitRT'});
@@ -201,10 +202,8 @@ for nP=1:size(probe_table,1)
 end
 
     %% Making a table of the by trial behavioural results per participant
-    table1=array2table(behavres_mat,'VariableNames',{'SubID','BlockN','TrialN','GoTrials','NoGoTrials','FA','Misses','RT'});
-    table1.Group=behavgroup_cond;
-    table1.SubID=categorical(table1.SubID);
-    table1.Group=categorical(table1.Group);
+    table1=behavres_table; %array2table(behavres_mat,'VariableNames',{'SubID','BlockN','TrialN','GoTrials','NoGoTrials','FA','Misses','RT'});
+
 %%%% Here we need to add Group and SubID
     % table1.Group=reordercats(table1.Group,[2,1]);
 
