@@ -124,12 +124,13 @@ behav_table.Group=categorical(behav_table.Group);
         behav_table.SubID=repmat({SubID},size(behav_table,1),1);
         behav_table.Group=repmat({SubCond},size(behav_table,1),1);
         writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_' File_Name(19:22) '.txt']);
-    elseif strcmp(SubN , 'wanderIM_behavres_001_20Sep2023-1704') || strcmp(SubN , 'wanderIM_behavres_004_03Oct2023-1131')
-        SubCond='C';
-        SubID=(['C' File_Name(19:21)]);
-               behav_table.SubID=repmat({SubID},size(behav_table,1),1);
-        behav_table.Group=repmat({SubCond},size(behav_table,1),1);
-        writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_C' File_Name(19:21) '.txt']);
+    else %if strcmp(SubN , 'wanderIM_behavres_001_20Sep2023-1704') || strcmp(SubN , 'wanderIM_behavres_004_03Oct2023-1131')
+        error('File does not have a group prefix!!')
+%         SubCond='C';
+%         SubID=(['C' File_Name(19:21)]);
+%                behav_table.SubID=repmat({SubID},size(behav_table,1),1);
+%         behav_table.Group=repmat({SubCond},size(behav_table,1),1);
+%         writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_C' File_Name(19:21) '.txt']);
     end
 behavres_table=[behavres_table ; behav_table];
 
