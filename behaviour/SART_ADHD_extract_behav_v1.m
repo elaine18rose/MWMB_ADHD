@@ -330,72 +330,57 @@ set(gca,'YColor','none') % removes Y-axis
 %figure; gardnerAltmanPlot(Hit_RT_ADHD,Hit_RT_CTR)
 %%
 %% Repeated Measures plot
-% %Miss
-% data_to_plot=[];
-% group_labels={'C','A'};
-% for i = 1:4 % number of repetitions
-%     for j = 1:2 % number of group
-%         data_to_plot{i, j} = all_behav_table.Misses(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
-%     end
-% end
-% 
-% figure; hold on;
-% h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-% set(gca, 'XLim', [0.01 0.08]);
-% xtix = get(gca, 'xtick'); %to change y-axis to percentage
-% set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
-% title(['Misses per Block']);
-% xlabel('Percentage of Misses'); ylabel('Block Number');
-% format_fig;
-% 
-% %False Alarms
-% data_to_plot=[];
-% group_labels={'C','A'};
-% for i = 1:4 % number of repetitions
-%     for j = 1:2 % number of group
-%         data_to_plot{i, j} = all_behav_table.FA(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
-%     end
-% end
-% 
-% figure; hold on;
-% h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-% set(gca, 'XLim', [-0.015 1]);
-% xtix = get(gca, 'xtick'); %to change y-axis to percentage
-% set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
-% title(['False alarms per Block']);
-% xlabel('Percentage of False Alarms'); ylabel('Block Number');
-% format_fig;
-% 
-% %Hit RT
-% data_to_plot=[];
-% group_labels={'C','A'};
-% for i = 1:4 % number of repetitions
-%     for j = 1:2 % number of group
-%         data_to_plot{i, j} = all_behav_table.RT(all_behav_table.BlockN==i  & all_behav_table.Group==group_labels{j});
-%     end
-% end
-% 
-% figure; hold on;
-% h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-% set(gca, 'XLim', [0 .75]);
-% title(['Hit Reaction Times per Block']);
-% xlabel('Reaction Times (seconds)'); ylabel('Block Number');
-% format_fig;
+%Miss
+data_to_plot=[];
+group_labels={'C','A'};
+for i = 1:4 % number of repetitions
+    for j = 1:2 % number of group
+        data_to_plot{i, j} = all_behav_table.Misses(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
+    end
+end
 
-% %stdRT
-% data_to_plot=[];
-% group_labels={'CTR','ADHD'};
-% for i = 1:4 % number of repetitions
-%     for j = 1:2 % number of group
-%         data_to_plot{i, j} = all_behav_table.stdRT(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
-%     end
-% end
-% 
-% figure; hold on;
-% h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-% set(gca, 'XLim', [-0.3 1.6]);
-% title(['stdRTs per block']);
-% format_fig;
+figure; hold on;
+h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+set(gca, 'XLim', [0.01 0.08]);
+xtix = get(gca, 'xtick'); %to change y-axis to percentage
+set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
+title(['Misses per Block']);
+xlabel('Percentage of Misses'); ylabel('Block Number');
+format_fig;
+
+%False Alarms
+data_to_plot=[];
+group_labels={'C','A'};
+for i = 1:4 % number of repetitions
+    for j = 1:2 % number of group
+        data_to_plot{i, j} = all_behav_table.FA(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
+    end
+end
+
+figure; hold on;
+h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+set(gca, 'XLim', [-0.015 1]);
+xtix = get(gca, 'xtick'); %to change y-axis to percentage
+set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
+title(['False alarms per Block']);
+xlabel('Percentage of False Alarms'); ylabel('Block Number');
+format_fig;
+
+%Hit RT
+data_to_plot=[];
+group_labels={'C','A'};
+for i = 1:4 % number of repetitions
+    for j = 1:2 % number of group
+        data_to_plot{i, j} = all_behav_table.RT(all_behav_table.BlockN==i  & all_behav_table.Group==group_labels{j});
+    end
+end
+
+figure; hold on;
+h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+set(gca, 'XLim', [0 .75]);
+title(['Hit Reaction Times per Block']);
+xlabel('Reaction Times (seconds)'); ylabel('Block Number');
+format_fig;
 
 %% plot the inter-probe interval
 % plot(diff(probe_res(:,3)))
@@ -526,7 +511,7 @@ xtickangle(45);
 for i = 1:numel(labels)
     for j = 1:size(Ctr_state_percentage_distribution, 1)
         text(i-0.2, Ctr_state_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_state_percentage_distribution(j, i)), ...
-            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 12,'Color',Colors(1,:),'FontWeight','bold');
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 18,'Color',Colors(1,:),'FontWeight','bold');
     end
 end
 format_fig
@@ -540,7 +525,7 @@ xtickangle(45);
 for i = 1:numel(labels)
     for j = 1:size(ADHD_state_percentage_distribution, 1)
         text(i+0.2, ADHD_state_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_state_percentage_distribution(j, i)), ...
-            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 12,'Color',Colors(2,:),'FontWeight','bold');
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 18,'Color',Colors(2,:),'FontWeight','bold');
     end
 end
 format_fig
@@ -592,7 +577,7 @@ xtickangle(45);
 for i = 1:numel(labels)
     for j = 1:size(Ctr_vig_percentage_distribution, 1)
         text(i-0.2, Ctr_vig_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_vig_percentage_distribution(j, i)), ...
-            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom','FontSize', 12,'Color',Colors(1,:),'FontWeight','bold');
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom','FontSize', 18,'Color',Colors(1,:),'FontWeight','bold');
     end
 end
 format_fig
@@ -606,7 +591,7 @@ xtickangle(45);
 for i = 1:numel(labels)
     for j = 1:size(ADHD_vig_percentage_distribution, 1)
         text(i+0.2, ADHD_vig_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_vig_percentage_distribution(j, i)), ...
-            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 12,'Color',Colors(2,:),'FontWeight','bold');
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 18,'Color',Colors(2,:),'FontWeight','bold');
     end
 end
 format_fig
