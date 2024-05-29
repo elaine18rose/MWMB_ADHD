@@ -108,8 +108,8 @@ for nF=1:length(files)
     this_state2(:,10)=nan;
     this_state2(:,11)=nan;
 
-%     behavres_mat=[behavres_mat; [nF*ones(size(this_behav,1),1) this_behav]];  % This is making a matrix of the variables obtained and put in this_behav
-%     behavgroup_cond=[behavgroup_cond; repmat({Group},size(this_behav,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
+    %     behavres_mat=[behavres_mat; [nF*ones(size(this_behav,1),1) this_behav]];  % This is making a matrix of the variables obtained and put in this_behav
+    %     behavgroup_cond=[behavgroup_cond; repmat({Group},size(this_behav,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
 
     stateres_mat=[stateres_mat; [nF*ones(size(this_state2,1),1) this_state2]];  % This is making a matrix of the variables obtained and put in this_state
     stategroup_cond=[stategroup_cond; repmat({Group},size(this_state2,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
@@ -117,7 +117,7 @@ for nF=1:length(files)
     behav_table=array2table(this_behav,...
         'VariableNames',{'SubID','Group','BlockN','nTrial','GoTrials','NoGoTrials','FA','Misses','RT'});
     behav_table.SubID=categorical(behav_table.SubID);
-behav_table.Group=categorical(behav_table.Group);
+    behav_table.Group=categorical(behav_table.Group);
     if File_Name(19)=='C' || File_Name(19)=='A'
         SubCond=File_Name(19);
         SubID=File_Name(19:22);
@@ -126,13 +126,13 @@ behav_table.Group=categorical(behav_table.Group);
         writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_' File_Name(19:22) '.txt']);
     else %if strcmp(SubN , 'wanderIM_behavres_001_20Sep2023-1704') || strcmp(SubN , 'wanderIM_behavres_004_03Oct2023-1131')
         error('File does not have a group prefix!!')
-%         SubCond='C';
-%         SubID=(['C' File_Name(19:21)]);
-%                behav_table.SubID=repmat({SubID},size(behav_table,1),1);
-%         behav_table.Group=repmat({SubCond},size(behav_table,1),1);
-%         writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_C' File_Name(19:21) '.txt']);
+        %         SubCond='C';
+        %         SubID=(['C' File_Name(19:21)]);
+        %                behav_table.SubID=repmat({SubID},size(behav_table,1),1);
+        %         behav_table.Group=repmat({SubCond},size(behav_table,1),1);
+        %         writetable(behav_table,[save_path filesep 'MWMB_ADHD_behav_C' File_Name(19:21) '.txt']);
     end
-behavres_table=[behavres_table ; behav_table];
+    behavres_table=[behavres_table ; behav_table];
 
     probe_table=array2table(this_state2,...
         'VariableNames',{'SubID','Group','ProbeNo','Block','State','Distraction','Intention','Vigilance','Miss','FA','HitRT'});
@@ -140,24 +140,24 @@ behavres_table=[behavres_table ; behav_table];
     probe_table.Group=categorical(probe_table.Group);
     probe_table.SubID=repmat({SubID},size(probe_table,1),1);
     probe_table.Group=repmat({SubCond},size(probe_table,1),1);
-for nP=1:size(probe_table,1)
+    for nP=1:size(probe_table,1)
         ProbeTrialIndex=probe_res(nP,6);
         BlockIndex=probe_res(nP,4);
         go_trials=test_res(test_res(:,1)==BlockIndex & test_res(:,4)<ProbeTrialIndex & test_res(:,5)~=3,:);
         nogo_trials=test_res(test_res(:,1)==BlockIndex & test_res(:,4)<ProbeTrialIndex & test_res(:,5)==3,:);
         go_trials=go_trials(end-17:end,:);
         nogo_trials=nogo_trials(end-1:end,:);
-        probe_table.Miss(nP)=nanmean(go_trials(:,end)==0); 
+        probe_table.Miss(nP)=nanmean(go_trials(:,end)==0);
         tempRT=go_trials(:,10)-go_trials(:,8); tempRT(tempRT<0.150)=NaN;
-        probe_table.HitRT(nP)=nanmean(tempRT);  
-        probe_table.FA(nP)=nanmean(nogo_trials(:,end-1)==0); 
+        probe_table.HitRT(nP)=nanmean(tempRT);
+        probe_table.FA(nP)=nanmean(nogo_trials(:,end-1)==0);
     end
     if File_Name(19)=='C' || File_Name(19)=='A'
         writetable(probe_table,[save_path filesep 'MWMB_ADHD_probeBehav_' File_Name(19:22) '.txt']);
     elseif strcmp(SubN , 'wanderIM_behavres_001_20Sep2023-1704') || strcmp(SubN , 'wanderIM_behavres_004_03Oct2023-1131')
         writetable(probe_table,[save_path filesep 'MWMB_ADHD_probeBehav_C' File_Name(19:21) '.txt']);
     end
-    
+
     % by block data
     block_table=zeros(4,15);
     block_table=array2table(block_table,...
@@ -178,32 +178,32 @@ for nP=1:size(probe_table,1)
     block_table.MW=grpstats(probe_res(:,19)==2,probe_res(:,4));
     block_table.MB=grpstats(probe_res(:,19)==3,probe_res(:,4));
     block_table.DK=grpstats(probe_res(:,19)==4,probe_res(:,4));
-    
+
     sub_probe_res=probe_res;%(probe_res(:,19)==2,:);
     block_table.Dist=grpstats(sub_probe_res(:,20)==1,sub_probe_res(:,4),'sum')./grpstats(sub_probe_res(:,19)==2,sub_probe_res(:,4),'sum');
     block_table.Perso=grpstats(sub_probe_res(:,20)==2,sub_probe_res(:,4),'sum')./grpstats(sub_probe_res(:,19)==2,sub_probe_res(:,4),'sum');
     block_table.Int=grpstats(sub_probe_res(:,20)==3,sub_probe_res(:,4),'sum')./grpstats(sub_probe_res(:,19)==2,sub_probe_res(:,4),'sum');
-         block_table.SubID=repmat({SubID},size(block_table,1),1);
-        block_table.Group=repmat({SubCond},size(block_table,1),1);
-   if File_Name(19)=='C' || File_Name(19)=='A'
+    block_table.SubID=repmat({SubID},size(block_table,1),1);
+    block_table.Group=repmat({SubCond},size(block_table,1),1);
+    if File_Name(19)=='C' || File_Name(19)=='A'
         writetable(block_table,[save_path filesep 'MWMB_ADHD_blockBehav_' File_Name(19:22) '.txt']);
     elseif strcmp(SubN , 'wanderIM_behavres_001_20Sep2023-1704') || strcmp(SubN , 'wanderIM_behavres_004_03Oct2023-1131')
         writetable(block_table,[save_path filesep 'MWMB_ADHD_blockBehav_C' File_Name(19:21) '.txt']);
-   end
-   
-   if exist('all_behav_table')==0
-       all_behav_table=behav_table;
-       all_probe_table=probe_table;
-       all_block_table=block_table;
-   else
-       all_behav_table=[all_behav_table ; behav_table];
-       all_probe_table=[all_probe_table ; probe_table];
-       all_block_table=[all_block_table ; block_table];
-   end
+    end
+
+    if exist('all_behav_table')==0
+        all_behav_table=behav_table;
+        all_probe_table=probe_table;
+        all_block_table=block_table;
+    else
+        all_behav_table=[all_behav_table ; behav_table];
+        all_probe_table=[all_probe_table ; probe_table];
+        all_block_table=[all_block_table ; block_table];
+    end
 end
 
-    %% Making a table of the by trial behavioural results per participant
-    table1=behavres_table; %array2table(behavres_mat,'VariableNames',{'SubID','BlockN','TrialN','GoTrials','NoGoTrials','FA','Misses','RT'});
+%% Making a table of the by trial behavioural results per participant
+table1=behavres_table; %array2table(behavres_mat,'VariableNames',{'SubID','BlockN','TrialN','GoTrials','NoGoTrials','FA','Misses','RT'});
 
 %%%% Here we need to add Group and SubID
     % table1.Group=reordercats(table1.Group,[2,1]);
@@ -333,9 +333,10 @@ set(gca,'YColor','none') % removes Y-axis
 %Miss
 data_to_plot=[];
 group_labels={'C','A'};
+all_block_table.Group=categorical(all_block_table.Group);
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
-        data_to_plot{i, j} = all_behav_table.Misses(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
+        data_to_plot{i, j} = all_block_table.Miss(all_block_table.Block==i & all_block_table.Group==group_labels{j});
     end
 end
 
@@ -353,7 +354,7 @@ data_to_plot=[];
 group_labels={'C','A'};
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
-        data_to_plot{i, j} = all_behav_table.FA(all_behav_table.BlockN==i & all_behav_table.Group==group_labels{j});
+        data_to_plot{i, j} = all_block_table.FA(all_block_table.Block==i & all_block_table.Group==group_labels{j});
     end
 end
 
@@ -371,7 +372,7 @@ data_to_plot=[];
 group_labels={'C','A'};
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
-        data_to_plot{i, j} = all_behav_table.RT(all_behav_table.BlockN==i  & all_behav_table.Group==group_labels{j});
+        data_to_plot{i, j} = all_block_table.HitRT(all_block_table.Block==i  & all_block_table.Group==group_labels{j});
     end
 end
 
@@ -565,7 +566,7 @@ ADHD_vig_percentage_distribution = ADHD_vig_total_occurrences / sum(ADHD_vig_tot
 
 
 % Plot the distribution
-labels = {'Extremely Alert', 'Alert','Sleepy', 'Extremely Sleepy'};
+labels = {'Alert ++', 'Alert +','Sleepy +', 'Sleepy ++'};
 
 figure('Position',[1955         361         758         413]);
 bar((1:numel(labels))-0.2, Ctr_vig_percentage_distribution, 'FaceColor',Colors(1,:),'BarWidth',0.38);
@@ -596,3 +597,16 @@ for i = 1:numel(labels)
 end
 format_fig
 xlim([0.5 4.5])
+
+%%
+%%%%% EXAMPLE OF STATS
+% trial-level performance
+all_behav_table.Group=categorical(all_behav_table.Group);
+all_behav_table.SubID=categorical(all_behav_table.SubID);
+mdl=fitlme(all_behav_table,'FA~1+BlockN*Group+(1|SubID)'); % you can do this for miss and RT
+
+% block-level stats
+all_block_table.Group=categorical(all_block_table.Group);
+all_block_table.SubID=categorical(all_block_table.SubID);
+mdl=fitlme(all_block_table,'FA~1+Block*Group+(1|SubID)');
+mdl=fitlme(all_block_table,'ON~1+Block*Group+(1|SubID)');

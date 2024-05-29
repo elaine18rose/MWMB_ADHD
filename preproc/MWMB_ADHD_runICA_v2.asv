@@ -188,8 +188,6 @@ for nF=1:length(eeg_files)
         save([preproc_path filesep 'comp_i_probe_' SubID],'EEG_ica','EEG_icalabels','ICA_classification')
     else
         load([preproc_path filesep 'comp_i_probe_' SubID])
-        ICA_classification=EEG_icalabels.etc.ic_classification.ICLabel.classifications;
-        ICA_classification=array2table(ICA_classification,'VariableNames',EEG_icalabels.etc.ic_classification.ICLabel.classes);
     end
     run('../MWMB_ADHD_elec_layout.m')
     figure('visible','off');
@@ -197,7 +195,7 @@ for nF=1:length(eeg_files)
         subplot(4,4,nComp)
         simpleTopoPlot_ft(EEG_ica.icawinv(:,nComp), layout,'on',[],0,1); colorbar;
         thisLabel=ICA_classification.Properties.VariableNames(find(table2array(ICA_classification(nComp,:))==max(table2array(ICA_classification(nComp,:)))));
-        title(sprintf('%s: %1.3f',thisLabel{1},max(table2array(ICA_classification(nComp,:)))));
+        title(sptrinf(thisLabel);
     end
     savefig(gcf,[preproc_path filesep 'comp_i_probe_' SubID '.fig'])
     close(gcf)
@@ -232,6 +230,3 @@ for nF=1:length(eeg_files)
     %         save([preproc_path filesep 'Icfe_MWADHD_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
 end
 set(gcf,'Visible','on')
-writetable(all_ICA_classification,[preproc_path filesep 'ICA_classification_allSubs.csv'])
-figure;
-histogram(all_ICA_classification.Eye,0:0.05:1)
