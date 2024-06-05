@@ -38,7 +38,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 
-redo=1;
+redo=0;
 all_ICA_classification=[];
 for nF=1:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
@@ -202,6 +202,8 @@ for nF=1:length(eeg_files)
     savefig(gcf,[preproc_path filesep 'comp_i_probe_' SubID '.fig'])
     close(gcf)
 
+    ICA_classification.SubID=nan(size(ICA_classification,1),1);
+    ICA_classification.SubID=categorical(ICA_classification.SubID);
     ICA_classification.SubID=repmat(SubID,size(ICA_classification,1),1);
     ICA_classification.Comp=(1:size(ICA_classification,1))';
     all_ICA_classification=[all_ICA_classification ; ICA_classification];
