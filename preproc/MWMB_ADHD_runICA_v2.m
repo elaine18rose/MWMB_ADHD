@@ -38,7 +38,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 
-redo=0;
+redo=1;
 all_ICA_classification=[];
 for nF=1:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
@@ -185,11 +185,14 @@ for nF=1:length(eeg_files)
         ICA_classification=EEG_icalabels.etc.ic_classification.ICLabel.classifications;
         ICA_classification=array2table(ICA_classification,'VariableNames',EEG_icalabels.etc.ic_classification.ICLabel.classes);
 
+         ICA_classification.SubID=nan(size(ICA_classification,1),1);
+    ICA_classification.SubID=categorical(ICA_classification.SubID);
+    ICA_classification.SubID=repmat(SubID,size(ICA_classification,1),1);
+    ICA_classification.Comp=(1:size(ICA_classification,1))';
+
         save([preproc_path filesep 'comp_i_probe_' SubID],'EEG_ica','EEG_icalabels','ICA_classification')
     else
         load([preproc_path filesep 'comp_i_probe_' SubID])
-        ICA_classification=EEG_icalabels.etc.ic_classification.ICLabel.classifications;
-        ICA_classification=array2table(ICA_classification,'VariableNames',EEG_icalabels.etc.ic_classification.ICLabel.classes);
     end
     run('../MWMB_ADHD_elec_layout.m')
     figure('visible','off');
@@ -202,10 +205,7 @@ for nF=1:length(eeg_files)
     savefig(gcf,[preproc_path filesep 'comp_i_probe_' SubID '.fig'])
     close(gcf)
 
-    ICA_classification.SubID=nan(size(ICA_classification,1),1);
-    ICA_classification.SubID=categorical(ICA_classification.SubID);
-    ICA_classification.SubID=repmat(SubID,size(ICA_classification,1),1);
-    ICA_classification.Comp=(1:size(ICA_classification,1))';
+   
     all_ICA_classification=[all_ICA_classification ; ICA_classification];
     %         rejected_comps = find(EEG.reject.gcompreject > 0);
     %         EEG = pop_subcomp(EEG, rejected_comps);
