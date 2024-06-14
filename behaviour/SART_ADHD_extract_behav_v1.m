@@ -74,7 +74,7 @@ for nF=1:length(files)
     intentional_resp=probe_res(:,21); % Note: 1 = Entirely intentional to 4 = Entirely unintentional
     vigilance_resp=probe_res(:,22); % Note: 1 = Extremely alert to 4 = Extremely sleepy
 
-    blockN = test_res(:,1);
+    BlockN = test_res(:,1);
     nTrial=test_res(:,4);
     go_trials = test_res(:,12); 
     nogo_trials = test_res(:,11); % 1 = reacted (when they shouldn't have); 0 = didn't react (correct resp);
@@ -88,7 +88,7 @@ for nF=1:length(files)
 
     % Compiling into tables 
     this_behav=nan(length(test_res),9);
-    this_behav(:,3)=blockN;
+    this_behav(:,3)=BlockN;
     this_behav(:,4)=nTrial;
     this_behav(:,5)=go_trials;
     this_behav(:,6)=nogo_trials;
@@ -165,7 +165,7 @@ for nF=1:length(files)
     block_table.SubID=categorical(block_table.SubID);
     block_table.Group=categorical(block_table.Group);
 
-    block_table.Block=(1:4)';
+    block_table.BlockN=(1:4)';
     block_table.Miss=1-grpstats(test_res(:,12),test_res(:,1));
     block_table.FA=1-grpstats(test_res(:,11),test_res(:,1));
     all_RT=test_res(:,10)-test_res(:,8);
@@ -201,6 +201,11 @@ for nF=1:length(files)
         all_block_table=[all_block_table ; block_table];
     end
 end
+
+%% Saving table of all data 
+writetable(all_behav_table,[save_path filesep 'MWMB_ADHD_all_behav_byTrial.txt']);
+writetable(all_probe_table, [save_path filesep 'MWMB_ADHD_all_probe.txt']);
+writetable(all_probe_table, [save_path filesep 'MWMB_ADHD_all_block.txt']);
 
 %% Making a table of the by trial behavioural results per participant
 table1=behavres_table; %array2table(behavres_mat,'VariableNames',{'SubID','BlockN','TrialN','GoTrials','NoGoTrials','FA','Misses','RT'});
@@ -280,8 +285,9 @@ format_fig; title('MISS'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
 set(gca,'YColor','none') % removes Y-axis 
 
 [h,p,ci,stats] = ttest2(Miss_CTR,Miss_ADHD);
-Misseffect = meanEffectSize(Miss_CTR,Miss_ADHD);
-figure; gardnerAltmanPlot(Miss_ADHD,Miss_CTR);
+% Misseffect = meanEffectSize(Miss_CTR,Miss_ADHD);
+% figure; gardnerAltmanPlot(Miss_ADHD,Miss_CTR);
+
 %% FA
 figure;
 h1 = raincloud_plot(100*FA_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
@@ -296,8 +302,8 @@ format_fig; title('FA'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
 set(gca,'YColor','none') % removes Y-axis 
 
 [h,p,ci,stats] = ttest2(FA_CTR,FA_ADHD);
-FAeffect = meanEffectSize(FA_CTR,FA_ADHD);
-figure; gardnerAltmanPlot(FA_ADHD,FA_CTR);
+% FAeffect = meanEffectSize(FA_CTR,FA_ADHD);
+% figure; gardnerAltmanPlot(FA_ADHD,FA_CTR);
 
 %%
 % %stdRT
@@ -328,7 +334,7 @@ set(gca,'YColor','none') % removes Y-axis
 
 %RTeffect = meanEffectSize(Hit_RT_CTR,Hit_RT_ADHD);
 %figure; gardnerAltmanPlot(Hit_RT_ADHD,Hit_RT_CTR)
-%%
+
 %% Repeated Measures plot
 %Miss
 data_to_plot=[];
@@ -336,13 +342,13 @@ group_labels={'C','A'};
 all_block_table.Group=categorical(all_block_table.Group);
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
-        data_to_plot{i, j} = all_block_table.Miss(all_block_table.Block==i & all_block_table.Group==group_labels{j});
+        data_to_plot{i, j} = all_block_table.Miss(all_block_table.BlockN==i & all_block_table.Group==group_labels{j});
     end
 end
 
 figure; hold on;
 h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-set(gca, 'XLim', [0.01 0.08]);
+set(gca, 'XLim', [0.01 0.4]);
 xtix = get(gca, 'xtick'); %to change y-axis to percentage
 set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
 title(['Misses per Block']);
@@ -354,7 +360,7 @@ data_to_plot=[];
 group_labels={'C','A'};
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
-        data_to_plot{i, j} = all_block_table.FA(all_block_table.Block==i & all_block_table.Group==group_labels{j});
+        data_to_plot{i, j} = all_block_table.FA(all_block_table.BlockN==i & all_block_table.Group==group_labels{j});
     end
 end
 
@@ -372,7 +378,7 @@ data_to_plot=[];
 group_labels={'C','A'};
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
-        data_to_plot{i, j} = all_block_table.HitRT(all_block_table.Block==i  & all_block_table.Group==group_labels{j});
+        data_to_plot{i, j} = all_block_table.HitRT(all_block_table.BlockN==i  & all_block_table.Group==group_labels{j});
     end
 end
 
@@ -598,6 +604,7 @@ end
 format_fig
 xlim([0.5 4.5])
 
+
 %%
 %%%%% EXAMPLE OF STATS
 % trial-level performance
@@ -608,5 +615,5 @@ mdl=fitlme(all_behav_table,'FA~1+BlockN*Group+(1|SubID)'); % you can do this for
 % block-level stats
 all_block_table.Group=categorical(all_block_table.Group);
 all_block_table.SubID=categorical(all_block_table.SubID);
-mdl=fitlme(all_block_table,'FA~1+Block*Group+(1|SubID)');
-mdl=fitlme(all_block_table,'ON~1+Block*Group+(1|SubID)');
+mdl=fitlme(all_block_table,'FA~1+BlockN*Group+(1|SubID)');
+mdl=fitlme(all_block_table,'ON~1+BlockN*Group+(1|SubID)');
