@@ -62,36 +62,36 @@ for nF=1:length(eeg_files)
         end
 
         load([preproc_path filesep 'comp_i_probe_' SubID])
-      
-            rejected_comps = ICA_classification.Comp(ICA_classification.Eye>0.95 | ICA_classification.Heart>0.8); % reject eye component with proba over 0.95. You could add heart compo as well.
-                     fprintf('... ... %g bad components rejected\n',length(rejected_comps))
-   EEG_clean = pop_subcomp(EEG_ica, rejected_comps);
-            EEG_clean = eeg_checkset(EEG_clean);
-            badCompo=ICA_classification(rejected_comps,:);
-%             figure;
-%             plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'Fp1'),:,1))','r');
-%             hold on
-%             plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'Fp2'),:,1))','b');
-%             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fp1'),:,1))','r--');
-%             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fp2'),:,1))','b--');
-% 
-%                 figure;
-%             plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'O1'),:,1))','r');
-%             hold on
-%             plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'O2'),:,1))','b');
-%             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'O1'),:,1))','r--');
-%             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'O2'),:,1))','b--');
 
-data = eeglab2fieldtrip( EEG_clean, 'raw');
-%  figure;
-%             plot(squeeze(data.trial{1}(match_str(data.label,'Fz'),:)),'r');
-%             hold on
-%             plot(squeeze(data.trial{1}(match_str(data.label,'Cz'),:)),'b');
-%             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fz'),:,1)),'m--');
-%             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Cz'),:,1)),'c--');        
-%     
-            save([preproc_path filesep 'clean_i_probe_' SubID '.mat'],'data','badCompo');
-            all_badCompo=[all_badCompo ; badCompo];
+        rejected_comps = ICA_classification.Comp(ICA_classification.Eye>0.95 | ICA_classification.Heart>0.8); % reject eye component with proba over 0.95. You could add heart compo as well.
+        fprintf('... ... %g bad components rejected\n',length(rejected_comps))
+        EEG_clean = pop_subcomp(EEG_ica, rejected_comps);
+        EEG_clean = eeg_checkset(EEG_clean);
+        badCompo=ICA_classification(rejected_comps,:);
+        %             figure;
+        %             plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'Fp1'),:,1))','r');
+        %             hold on
+        %             plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'Fp2'),:,1))','b');
+        %             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fp1'),:,1))','r--');
+        %             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fp2'),:,1))','b--');
+        %
+        %                 figure;
+        %             plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'O1'),:,1))','r');
+        %             hold on
+        %             plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'O2'),:,1))','b');
+        %             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'O1'),:,1))','r--');
+        %             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'O2'),:,1))','b--');
+
+        data = eeglab2fieldtrip( EEG_clean, 'raw');
+        %  figure;
+        %             plot(squeeze(data.trial{1}(match_str(data.label,'Fz'),:)),'r');
+        %             hold on
+        %             plot(squeeze(data.trial{1}(match_str(data.label,'Cz'),:)),'b');
+        %             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fz'),:,1)),'m--');
+        %             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Cz'),:,1)),'c--');
+        %
+        save([preproc_path filesep 'clean_i_probe_' SubID '.mat'],'data','badCompo');
+        all_badCompo=[all_badCompo ; badCompo];
     end
 end
 writetable(all_badCompo,[preproc_path filesep 'ICA_classification_allSubs_badComponents.csv'])
