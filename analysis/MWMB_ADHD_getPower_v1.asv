@@ -38,8 +38,9 @@ run ../MWMB_ADHD_elec_layout.m
 
 
 %% Loop across files
+RS = ["R1", "R2"];
 all_badCompo=[];
-redo=1;
+redo=0;
 all_pow=[];
 all_frac=[];
 all_osci=[];
@@ -54,7 +55,7 @@ for nF=1:length(eeg_files)
     if contains(eeg_files(nF).name,RS) %To skip resting state files
         continue
     end
-nFc=nFc+1;
+    nFc=nFc+1;
     %%% load the data
     SubInfo=split(eeg_files(nF).name,'-');
     SubID=SubInfo{2}(1:end-4);
@@ -65,6 +66,9 @@ nFc=nFc+1;
     else
         GroupID='undefined';
     end
+    if exist([preproc_path filesep 'clean_i_probe_' SubID '.mat'])==0
+        continue;
+    end
     if redo==1 || exist([preproc_path filesep 'TF_clean_i_probe_' SubID '.mat'])==0 % To skip already preprocessed files
         load([preproc_path filesep 'clean_i_probe_' SubID '.mat']);
 
@@ -72,7 +76,7 @@ nFc=nFc+1;
         cfg=[];
         cfg.toilim    = [-20 0];
         data          = ft_redefinetrial(cfg, data);
-        
+
         cfg                             = [];
         cfg.foilim                      = [1 30];
         cfg.pad                         = 'nextpow2';
@@ -83,15 +87,15 @@ nFc=nFc+1;
         cfg.fooof.proximity_threshold   = 1;
         cfg.keeptrials                  = 'no';
         fractal = ft_freqanalysis(cfg, data);
-        
+
         cfg.keeptrials                  = 'yes';
         cfg.output                      = 'pow';
         pow = ft_freqanalysis(cfg, data);
-        
+
         cfg.keeptrials                  = 'no';
         cfg.output                      = 'fooof_peaks';
         pow_peaks = ft_freqanalysis(cfg, data);
-                
+
         save([preproc_path filesep 'TF_clean_i_probe_' SubID '.mat'],'pow','fractal','pow_peaks');
     else
         load([preproc_path filesep 'TF_clean_i_probe_' SubID '.mat']);
@@ -99,14 +103,14 @@ nFc=nFc+1;
     all_pow(nFc,:,:,:)=log10(pow.powspctrm);
     all_frac(nFc,:,:)=fractal.powspctrm;
     all_osci(nFc,:,:)=pow_peaks.powspctrm;
-    
+
 
     aperiodic_params=[];
     for nE=1:length(fractal.label)
         aperiodic_params(nE,:)=fractal.fooofparams(nE).aperiodic_params;
     end
     all_aperiodic(nFc,:,:) = aperiodic_params;
-    
+
     peaks_params=[];
     for nE=1:length(fractal.label)
         temp_peaks=fractal.fooofparams(nE).peak_params;
@@ -118,8 +122,63 @@ nFc=nFc+1;
         end
     end
     all_alphapeak(nFc,:,:) = peaks_params;
-    
-
 end
 
+%%
+figure;
+subplot(1,3,1);
+plot(pow.freq,squeeze(mean(mean(all_pow,1),2))');
+format_fig;
+xlabel('Freq (Hz)'); title('Full Power');
 
+subplot(1,3,2);
+plot(pow.freq,squeeze(mean(all_osci,1))');
+format_fig;
+xlabel('Freq (Hz)'); title('Periodic');
+
+subplot(1,3,3);
+plot(pow.freq,squeeze(mean(all_frac,1))');
+format_fig;
+xlabel('Freq (Hz)'); title('Aperiodic');
+
+%%
+cfg = [];
+cfg.layout = 'EEG1010.lay';
+cfg.channel=data.label;
+cfg.center      = 'yes';
+layout=ft_prepare_layout(cfg);
+
+freq_bands=[1 4;4 8;8 12];
+name_bands={'\delta','\theta','\alpha'};
+for nF=1:size(freq_bands,1)
+    temp_topo{nF}=[];
+    for nCh=1:length(layout.label)-2
+        temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(nanmean(all_pow(:,:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),4),2),1));
+        %         temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_osci(:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
+    end
+end
+
+cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+cmap(cmap<0)=0;
+figure;
+for nF=1:size(freq_bands,1)
+    subplot(1,size(freq_bands,1),nF);
+
+    simpleTopoPlot_ft(temp_topo{nF}', layout,'on',[],0,1);
+    colormap(cmap); colorbar;
+    title(name_bands{nF});
+    format_fig;
+end
+
+%%
+figure;
+subplot(1,2,1);
+temp_topo=[];
+for nCh=1:length(layout.label)-2
+    temp_topo(nCh)=squeeze(nanmean(nanmean(nanmean(all_aperiodic(:,:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),4),2),1));
+    %         temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_osci(:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
+end
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+colormap(cmap); colorbar;
+title('offset');
+format_fig;

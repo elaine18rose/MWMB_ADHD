@@ -40,7 +40,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 all_badCompo=[];
-redo=1;
+redo=0;
 all_threshold_SW=array2table(zeros(0,5),'VariableNames',{'SubID','Group','Elec','Thr_PC','Thr_EG'});
 all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
 all_threshold_SW.Group=categorical(all_threshold_SW.Group);
@@ -151,3 +151,34 @@ figure;
 simpleCorPlot(all_threshold_SW.Thr_PC,all_threshold_SW.Thr_EG);
 xlabel('Percentile threshold')
 ylabel('Ex-Gaussian threshold')
+
+%%
+labels=unique(this_thr.Elec);
+cfg = [];
+cfg.layout = 'EEG1010.lay';
+cfg.channel=labels;
+cfg.center      = 'yes';
+layout=ft_prepare_layout(cfg);
+
+
+figure;
+subplot(2,1,1);
+cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+cmap(cmap<0)=0;
+temp_topo=[];
+for nCh=1:length(layout.label)-2
+    temp_topo(nCh)=squeeze(nanmean(all_threshold_SW.Thr_PC(all_threshold_SW.Elec==layout.label{nCh})));
+end
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+colormap(cmap); colorbar;
+
+subplot(2,1,2);
+cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+cmap(cmap<0)=0;
+temp_topo=[];
+for nCh=1:length(layout.label)-2
+    temp_topo(nCh)=squeeze(nanmean(all_threshold_SW.Thr_EG(all_threshold_SW.Elec==layout.label{nCh})));
+end
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+colormap(cmap); colorbar;
+
