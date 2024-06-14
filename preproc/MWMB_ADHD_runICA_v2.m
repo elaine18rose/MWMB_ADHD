@@ -38,7 +38,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 
-redo=1;
+redo=0;
 all_ICA_classification=[];
 for nF=1:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
@@ -199,8 +199,11 @@ for nF=1:length(eeg_files)
     for nComp=1:16% size(EEG_ica.icawinv,2)
         subplot(4,4,nComp)
         simpleTopoPlot_ft(EEG_ica.icawinv(:,nComp), layout,'on',[],0,1); colorbar;
-        thisLabel=ICA_classification.Properties.VariableNames(find(table2array(ICA_classification(nComp,1:7))==max(table2array(ICA_classification(nComp,1:7)))));
-        title(sprintf('%s: %1.3f',thisLabel{1},max(table2array(ICA_classification(nComp,:)))));
+        [maxValue, maxIndex] = max(table2array(ICA_classification(nComp, 1:7))); %EP
+        thisLabel = ICA_classification.Properties.VariableNames{maxIndex};
+        %thisLabel=ICA_classification.Properties.VariableNames(find(table2array(ICA_classification(nComp,1:7))==max(table2array(ICA_classification(nComp,1:7)))));
+         title(sprintf('%s: %1.3f', thisLabel, maxValue));
+         %title(sprintf('%s: %1.3f',thisLabel{1},max(table2array(ICA_classification(nComp,:)))));
     end
     savefig(gcf,[preproc_path filesep 'comp_i_probe_' SubID '.fig'])
     close(gcf)
