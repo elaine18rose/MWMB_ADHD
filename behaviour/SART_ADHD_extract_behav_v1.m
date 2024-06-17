@@ -204,8 +204,8 @@ end
 
 %% Saving table of all data 
 writetable(all_behav_table,[save_path filesep 'MWMB_ADHD_all_behav_byTrial.txt']);
-writetable(all_probe_table, [save_path filesep 'MWMB_ADHD_all_probe.txt']);
-writetable(all_probe_table, [save_path filesep 'MWMB_ADHD_all_block.txt']);
+writetable(all_probe_table, [save_path filesep 'MWMB_ADHD_all_probe_behav.txt']);
+writetable(all_block_table, [save_path filesep 'MWMB_ADHD_all_block.txt']);
 
 %% Making a table of the by trial behavioural results per participant
 table1=behavres_table; %array2table(behavres_mat,'VariableNames',{'SubID','BlockN','TrialN','GoTrials','NoGoTrials','FA','Misses','RT'});
