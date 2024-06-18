@@ -38,7 +38,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 all_badCompo=[];
-redo=1;
+redo=0;
 all_ICA_classification=[];
 for nF=1:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
@@ -63,7 +63,7 @@ for nF=1:length(eeg_files)
 
         load([preproc_path filesep 'comp_i_probe_' SubID])
 
-        rejected_comps = ICA_classification.Comp(ICA_classification.Eye>0.95 | ICA_classification.Heart>0.8); % reject eye component with proba over 0.95. You could add heart compo as well.
+        rejected_comps = ICA_classification.Comp(ICA_classification.Eye>0.95 | ICA_classification.Heart>0.8); % reject eye component with proba over 0.95 and heart over 0.8
         fprintf('... ... %g bad components rejected\n',length(rejected_comps))
         EEG_clean = pop_subcomp(EEG_ica, rejected_comps);
         EEG_clean = eeg_checkset(EEG_clean);
@@ -92,6 +92,9 @@ for nF=1:length(eeg_files)
         %
         save([preproc_path filesep 'clean_i_probe_' SubID '.mat'],'data','badCompo');
         all_badCompo=[all_badCompo ; badCompo];
+    else %EP
+        load([preproc_path filesep 'clean_i_probe_' SubID '.mat']) %EP
+        all_badCompo=[all_badCompo ; badCompo]; %EP
     end
 end
-writetable(all_badCompo,[preproc_path filesep 'ICA_classification_allSubs_badComponents.csv'])
+writetable(all_badCompo,[preproc_path filesep 'ICA_classification_allSubs_badComponents.csv'])% EP - note we need to change this because now we always have to redo the whole detection or it won't save in all_threshold_SW.csv

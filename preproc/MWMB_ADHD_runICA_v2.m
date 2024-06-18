@@ -185,15 +185,19 @@ for nF=1:length(eeg_files)
         ICA_classification=EEG_icalabels.etc.ic_classification.ICLabel.classifications;
         ICA_classification=array2table(ICA_classification,'VariableNames',EEG_icalabels.etc.ic_classification.ICLabel.classes);
 
-         ICA_classification.SubID=nan(size(ICA_classification,1),1);
-    ICA_classification.SubID=categorical(ICA_classification.SubID);
-    ICA_classification.SubID=repmat(SubID,size(ICA_classification,1),1);
-    ICA_classification.Comp=(1:size(ICA_classification,1))';
+        ICA_classification.SubID=nan(size(ICA_classification,1),1);
+        ICA_classification.SubID=categorical(ICA_classification.SubID);
+        ICA_classification.SubID=repmat(SubID,size(ICA_classification,1),1);
+        ICA_classification.Comp=(1:size(ICA_classification,1))';
 
         save([preproc_path filesep 'comp_i_probe_' SubID],'EEG_ica','EEG_icalabels','ICA_classification')
+        all_ICA_classification=[all_ICA_classification ; ICA_classification]; %EP - moved this 
     else
-        load([preproc_path filesep 'comp_i_probe_' SubID])
+        load([preproc_path filesep 'comp_i_probe_' SubID]) %EP
+        fprintf('... working on %s\n',[eeg_files(nF).name]) %EP
+        all_ICA_classification=[all_ICA_classification ; ICA_classification]; %EP
     end
+end
     run('../MWMB_ADHD_elec_layout.m')
     figure('visible','off');
     for nComp=1:16% size(EEG_ica.icawinv,2)
@@ -202,14 +206,13 @@ for nF=1:length(eeg_files)
         [maxValue, maxIndex] = max(table2array(ICA_classification(nComp, 1:7))); %EP
         thisLabel = ICA_classification.Properties.VariableNames{maxIndex};
         %thisLabel=ICA_classification.Properties.VariableNames(find(table2array(ICA_classification(nComp,1:7))==max(table2array(ICA_classification(nComp,1:7)))));
-         title(sprintf('%s: %1.3f', thisLabel, maxValue));
-         %title(sprintf('%s: %1.3f',thisLabel{1},max(table2array(ICA_classification(nComp,:)))));
+        title(sprintf('%s: %1.3f', thisLabel, maxValue));
+        %title(sprintf('%s: %1.3f',thisLabel{1},max(table2array(ICA_classification(nComp,:)))));
     end
     savefig(gcf,[preproc_path filesep 'comp_i_probe_' SubID '.fig'])
     close(gcf)
-
    
-    all_ICA_classification=[all_ICA_classification ; ICA_classification];
+
     %         rejected_comps = find(EEG.reject.gcompreject > 0);
     %         EEG = pop_subcomp(EEG, rejected_comps);
     %         EEG = eeg_checkset(EEG);
@@ -235,8 +238,8 @@ for nF=1:length(eeg_files)
     %         cfg                     = ft_definetrial(cfg);
     %
     %         save([preproc_path filesep 'Icfe_MWADHD_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
-end
+
 set(gcf,'Visible','on')
-writetable(all_ICA_classification,[preproc_path filesep 'ICA_classification_allSubs.csv'])
+%writetable(all_ICA_classification,[preproc_path filesep 'ICA_classification_allSubs.csv'])
 figure;
 histogram(all_ICA_classification.Eye,0:0.05:1)
