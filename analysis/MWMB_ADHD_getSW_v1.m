@@ -59,7 +59,7 @@ for nF=1:length(eeg_files)
     SubID=SubInfo{2}(1:end-4);
     if SubID(1)=='A'
         GroupID='ADHD';
-    elseif SubID(2)=='C'
+    elseif SubID(1)=='C'
         GroupID='Control';
     else
         GroupID='undefined';

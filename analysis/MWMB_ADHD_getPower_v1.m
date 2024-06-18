@@ -40,7 +40,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 all_badCompo=[];
-redo=0;
+redo=1;
 all_pow=[];
 all_frac=[];
 all_osci=[];
@@ -61,7 +61,7 @@ for nF=1:length(eeg_files)
     SubID=SubInfo{2}(1:end-4);
     if SubID(1)=='A'
         GroupID='ADHD';
-    elseif SubID(2)=='C'
+    elseif SubID(1)=='C'
         GroupID='Control';
     else
         GroupID='undefined';
@@ -88,7 +88,7 @@ for nF=1:length(eeg_files)
         cfg.keeptrials                  = 'no';
         fractal = ft_freqanalysis(cfg, data);
 
-        cfg.keeptrials                  = 'yes';
+        cfg.keeptrials                  = 'no';
         cfg.output                      = 'pow';
         pow = ft_freqanalysis(cfg, data);
 
@@ -100,7 +100,7 @@ for nF=1:length(eeg_files)
     else
         load([preproc_path filesep 'TF_clean_i_probe_' SubID '.mat']);
     end
-    all_pow(nFc,:,:,:)=log10(pow.powspctrm);
+    all_pow(nFc,:,:)=log10(pow.powspctrm);
     all_frac(nFc,:,:)=fractal.powspctrm;
     all_osci(nFc,:,:)=pow_peaks.powspctrm;
 
@@ -127,7 +127,7 @@ end
 %%
 figure;
 subplot(1,3,1);
-plot(pow.freq,squeeze(mean(mean(all_pow,1),2))');
+plot(pow.freq,squeeze(mean(all_pow,1))');
 format_fig;
 xlabel('Freq (Hz)'); title('Full Power');
 
@@ -153,7 +153,7 @@ name_bands={'\delta','\theta','\alpha'};
 for nF=1:size(freq_bands,1)
     temp_topo{nF}=[];
     for nCh=1:length(layout.label)-2
-        temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(nanmean(all_pow(:,:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),4),2),1));
+        temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_pow(:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
         %         temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_osci(:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
     end
 end
