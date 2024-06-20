@@ -19,6 +19,8 @@ else
     path_detectSW = '/Volumes/Seagate/MWMB_ADHD_SART/SW_detection/';
     path_eeglab='/Users/elaine/desktop/MATLAB_Functions/eeglab/';
     path_ICAlabel='/Users/elaine/desktop/MATLAB_Functions/ICLabel/';
+    path_ExGauss='/Users/elaine/desktop/MATLAB_Functions/exgauss';
+    path_FMINSEARCHBND='/Users/elaine/desktop/MATLAB_Functions/FMINSEARCHBND';
 
     %     mkdir(path_detectSW)
 end
@@ -40,7 +42,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 all_badCompo=[];
-redo=0;
+redo=1;
 all_threshold_SW=array2table(zeros(0,5),'VariableNames',{'SubID','Group','Elec','Thr_PC','Thr_EG'});
 all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
 all_threshold_SW.Group=categorical(all_threshold_SW.Group);
@@ -157,9 +159,11 @@ writetable(all_threshold_SW,[preproc_path filesep 'all_threshold_SW.csv'])
 
 %%
 figure;
-simpleCorPlot(all_threshold_SW.Thr_PC(all_threshold_SW.SubID~='C017'),all_threshold_SW.Thr_EG(all_threshold_SW.SubID~='C017'));
+simpleCorPlot(all_threshold_SW.Thr_PC,all_threshold_SW.Thr_EG);
+%simpleCorPlot(all_threshold_SW.Thr_PC(all_threshold_SW.SubID~='C017'),all_threshold_SW.Thr_EG(all_threshold_SW.SubID~='C017'));
 xlabel('Percentile threshold')
 ylabel('Ex-Gaussian threshold')
+%title('without C017')
 
 %%
 cfg = [];

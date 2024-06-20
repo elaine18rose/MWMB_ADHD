@@ -38,7 +38,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 all_badCompo=[];
-redo=0;
+redo=1;
 all_ICA_classification=[];
 for nF=1:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.

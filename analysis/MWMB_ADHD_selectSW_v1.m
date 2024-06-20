@@ -19,6 +19,8 @@ else
     path_detectSW = '/Volumes/Seagate/MWMB_ADHD_SART/SW_detection/';
     path_eeglab='/Users/elaine/desktop/MATLAB_Functions/eeglab/';
     path_ICAlabel='/Users/elaine/desktop/MATLAB_Functions/ICLabel/';
+    path_ExGauss='/Users/elaine/desktop/MATLAB_Functions/exgauss';
+    path_FMINSEARCHBND='/Users/elaine/desktop/MATLAB_Functions/FMINSEARCHBND';
 
     %     mkdir(path_detectSW)
 end
@@ -206,6 +208,7 @@ end
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 colormap(cmap); colorbar;
 caxis([0 16])
+title('ADHD')
 
 subplot(2,1,2)
 temp_topo=[];
@@ -215,6 +218,7 @@ end
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 colormap(cmap); colorbar;
 caxis([0 16])
+title('Control')
 %%
 figure;
 cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
