@@ -191,54 +191,54 @@ for nF=1:length(eeg_files)
         ICA_classification.Comp=(1:size(ICA_classification,1))';
 
         save([preproc_path filesep 'comp_i_probe_' SubID],'EEG_ica','EEG_icalabels','ICA_classification')
-        all_ICA_classification=[all_ICA_classification ; ICA_classification]; %EP - moved this 
+        all_ICA_classification=[all_ICA_classification ; ICA_classification]; %EP - moved this
     else
         load([preproc_path filesep 'comp_i_probe_' SubID]) %EP
         fprintf('... working on %s\n',[eeg_files(nF).name]) %EP
         all_ICA_classification=[all_ICA_classification ; ICA_classification]; %EP
     end
 end
-        save([preproc_path filesep 'all_badChannels_badProbes'],'badChannels_badTrials_info')
-    run('../MWMB_ADHD_elec_layout.m')
-    figure('visible','off');
-    for nComp=1:16% size(EEG_ica.icawinv,2)
-        subplot(4,4,nComp)
-        simpleTopoPlot_ft(EEG_ica.icawinv(:,nComp), layout,'on',[],0,1); colorbar;
-        [maxValue, maxIndex] = max(table2array(ICA_classification(nComp, 1:7))); %EP
-        thisLabel = ICA_classification.Properties.VariableNames{maxIndex};
-        %thisLabel=ICA_classification.Properties.VariableNames(find(table2array(ICA_classification(nComp,1:7))==max(table2array(ICA_classification(nComp,1:7)))));
-        title(sprintf('%s: %1.3f', thisLabel, maxValue));
-        %title(sprintf('%s: %1.3f',thisLabel{1},max(table2array(ICA_classification(nComp,:)))));
-    end
-    savefig(gcf,[preproc_path filesep 'comp_i_probe_' SubID '.fig'])
-    close(gcf)
-   
+save([preproc_path filesep 'all_badChannels_badProbes'],'badChannels_badTrials_info')
+run('../MWMB_ADHD_elec_layout.m')
+figure('visible','off');
+for nComp=1:16% size(EEG_ica.icawinv,2)
+    subplot(4,4,nComp)
+    simpleTopoPlot_ft(EEG_ica.icawinv(:,nComp), layout,'on',[],0,1); colorbar;
+    [maxValue, maxIndex] = max(table2array(ICA_classification(nComp, 1:7))); %EP
+    thisLabel = ICA_classification.Properties.VariableNames{maxIndex};
+    %thisLabel=ICA_classification.Properties.VariableNames(find(table2array(ICA_classification(nComp,1:7))==max(table2array(ICA_classification(nComp,1:7)))));
+    title(sprintf('%s: %1.3f', thisLabel, maxValue));
+    %title(sprintf('%s: %1.3f',thisLabel{1},max(table2array(ICA_classification(nComp,:)))));
+end
+savefig(gcf,[preproc_path filesep 'comp_i_probe_' SubID '.fig'])
+close(gcf)
 
-    %         rejected_comps = find(EEG.reject.gcompreject > 0);
-    %         EEG = pop_subcomp(EEG, rejected_comps);
-    %         EEG = eeg_checkset(EEG);
 
-    %         % convert back to Fieldtrip
-    %         curPath = pwd;
-    %         p = fileparts(which('ft_read_header'));
-    %         cd(fullfile(p, 'private'));
-    %         hdr = read_eeglabheader( EEG );
-    %         data = read_eeglabdata( EEG, 'header', hdr );
-    %         event = read_eeglabevent( EEG, 'header', hdr );
-    %
-    %         OUTEEG = pop_subcomp( EEG, components, plotag);
-    %
-    %         EEG_icalabels = pop_iclabel(EEG_ica,'default');
-    %
-    %         %defining epochs - moved this after ICA because the script wasn't
-    %         %running due to diff trial numbers per block
-    %         cfg                     = [];
-    %         cfg.trialfun            = 'MWMB_ADHD_blockfun';
-    %         cfg.trialdef.prestim    = 1;
-    %         cfg.trialdef.poststim   = 1;
-    %         cfg                     = ft_definetrial(cfg);
-    %
-    %         save([preproc_path filesep 'Icfe_MWADHD_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
+%         rejected_comps = find(EEG.reject.gcompreject > 0);
+%         EEG = pop_subcomp(EEG, rejected_comps);
+%         EEG = eeg_checkset(EEG);
+
+%         % convert back to Fieldtrip
+%         curPath = pwd;
+%         p = fileparts(which('ft_read_header'));
+%         cd(fullfile(p, 'private'));
+%         hdr = read_eeglabheader( EEG );
+%         data = read_eeglabdata( EEG, 'header', hdr );
+%         event = read_eeglabevent( EEG, 'header', hdr );
+%
+%         OUTEEG = pop_subcomp( EEG, components, plotag);
+%
+%         EEG_icalabels = pop_iclabel(EEG_ica,'default');
+%
+%         %defining epochs - moved this after ICA because the script wasn't
+%         %running due to diff trial numbers per block
+%         cfg                     = [];
+%         cfg.trialfun            = 'MWMB_ADHD_blockfun';
+%         cfg.trialdef.prestim    = 1;
+%         cfg.trialdef.poststim   = 1;
+%         cfg                     = ft_definetrial(cfg);
+%
+%         save([preproc_path filesep 'Icfe_MWADHD_' SubID(1:end-4) '.mat'],'data','comp','rankICA','badChannels');
 
 set(gcf,'Visible','on')
 %writetable(all_ICA_classification,[preproc_path filesep 'ICA_classification_allSubs.csv'])
