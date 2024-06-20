@@ -19,6 +19,8 @@ else
     path_detectSW = '/Volumes/Seagate/MWMB_ADHD_SART/SW_detection/';
     path_eeglab='/Users/elaine/desktop/MATLAB_Functions/eeglab/';
     path_ICAlabel='/Users/elaine/desktop/MATLAB_Functions/ICLabel/';
+    path_ExGauss='/Users/elaine/desktop/MATLAB_Functions/exgauss';
+    path_FMINSEARCHBND='/Users/elaine/desktop/MATLAB_Functions/FMINSEARCHBND';
 
     %     mkdir(path_detectSW)
 end
@@ -40,7 +42,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 all_badCompo=[];
-redo=0;
+redo=1;
 all_threshold_SW=array2table(zeros(0,5),'VariableNames',{'SubID','Group','Elec','Thr_PC','Thr_EG'});
 all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
 all_threshold_SW.Group=categorical(all_threshold_SW.Group);
@@ -105,7 +107,7 @@ for nF=1:length(SW_files)
 
         %%% clean detection
         paramSW.prticle_Thr=90; % 80 or 90 or 95
-        paramSW.LimFrqW=[1 4]; % [1 4] or [4 10]
+        paramSW.LimFrqW=[1 7]; % [1 4] or [4 10]
         paramSW.AmpCriterionIdx=4; % 9 (MaxNegpkAmp) or 11 (MaxPosPeakAmp) or 4 (P2P)
         paramSW.fixThr=[];
         paramSW.art_ampl=150;
@@ -114,12 +116,12 @@ for nF=1:length(SW_files)
 
         all_Waves=double(all_Waves);
         all_onset=all_Waves(:,5)/fsample-25;
-        all_Waves(all_onset>-20 & all_onset<0,:)=[];
         all_freq=1./(abs((all_Waves(:,5)-all_Waves(:,7)))./fsample);
+        fprintf('... ... %g %% waves discarded because of onset\n',mean(all_onset<-20 | all_onset>0)*100)
         fprintf('... ... %g %% waves discarded because of frequency\n',mean(all_freq>paramSW.max_Freq)*100)
         fprintf('... ... %g %% waves discarded because of max P2P ampl\n',mean(all_Waves(:,paramSW.AmpCriterionIdx)>paramSW.art_ampl)*100)
         fprintf('... ... %g %% waves discarded because of max pos ampl\n',mean(all_Waves(:,11)>paramSW.max_posampl | all_Waves(:,14)>paramSW.art_ampl| abs(all_Waves(:,15))>paramSW.art_ampl)*100)
-        all_Waves(all_freq>paramSW.max_Freq | all_Waves(:,paramSW.AmpCriterionIdx)>paramSW.art_ampl | all_Waves(:,11)>paramSW.max_posampl| all_Waves(:,14)>paramSW.art_ampl| abs(all_Waves(:,15))>paramSW.art_ampl,:)=[];
+        all_Waves(all_onset<-20 | all_onset>0 | all_freq>paramSW.max_Freq | all_Waves(:,paramSW.AmpCriterionIdx)>paramSW.art_ampl | all_Waves(:,11)>paramSW.max_posampl| all_Waves(:,14)>paramSW.art_ampl| abs(all_Waves(:,15))>paramSW.art_ampl,:)=[];
 
         thr_Wave_pc=[];
         thr_Wave_eg=[];
@@ -157,7 +159,8 @@ writetable(all_threshold_SW,[preproc_path filesep 'all_threshold_SW.csv'])
 
 %%
 figure;
-simpleCorPlot(all_threshold_SW.Thr_PC(all_threshold_SW.SubID~='C017'),all_threshold_SW.Thr_EG(all_threshold_SW.SubID~='C017'));
+simpleCorPlot(all_threshold_SW.Thr_PC,all_threshold_SW.Thr_EG(;
+%simpleCorPlot(all_threshold_SW.Thr_PC(all_threshold_SW.SubID~='C017'),all_threshold_SW.Thr_EG(all_threshold_SW.SubID~='C017'));
 xlabel('Percentile threshold')
 ylabel('Ex-Gaussian threshold')
 

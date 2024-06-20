@@ -161,7 +161,7 @@ for nF=1:length(files)
     % by block data
     block_table=zeros(4,15);
     block_table=array2table(block_table,...
-        'VariableNames',{'SubID','Group','Block','ON','MW','MB','DK','Dist','Perso','Int','Intention','Vigilance','Miss','FA','HitRT'});
+        'VariableNames',{'SubID','Group','BlockN','ON','MW','MB','DK','Dist','Perso','Int','Intention','Vigilance','Miss','FA','HitRT'});
     block_table.SubID=categorical(block_table.SubID);
     block_table.Group=categorical(block_table.Group);
 

@@ -19,6 +19,8 @@ else
     path_detectSW = '/Volumes/Seagate/MWMB_ADHD_SART/SW_detection/';
     path_eeglab='/Users/elaine/desktop/MATLAB_Functions/eeglab/';
     path_ICAlabel='/Users/elaine/desktop/MATLAB_Functions/ICLabel/';
+    path_ExGauss='/Users/elaine/desktop/MATLAB_Functions/exgauss';
+    path_FMINSEARCHBND='/Users/elaine/desktop/MATLAB_Functions/FMINSEARCHBND';
 
     %     mkdir(path_detectSW)
 end
