@@ -46,7 +46,7 @@ all_threshold_SW=readtable([preproc_path filesep 'all_threshold_SW.csv']);
 all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
 all_threshold_SW.Group=categorical(all_threshold_SW.Group);
 all_threshold_SW.Elec=categorical(all_threshold_SW.Elec);
-CTR_threshold_SW=all_threshold_SW(all_threshold_SW.SubID~='C017',:);
+CTR_threshold_SW=all_threshold_SW(all_threshold_SW.Group=='Control' & all_threshold_SW.SubID~='C017',:);
 
 [Elec_group, ~, idx] = unique(CTR_threshold_SW.Elec);
 mean_Thr = splitapply(@mean, CTR_threshold_SW.Thr_EG, idx);
