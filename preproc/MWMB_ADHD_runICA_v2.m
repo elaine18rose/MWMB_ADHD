@@ -39,6 +39,7 @@ run ../MWMB_ADHD_elec_layout.m
 RS = ["R1", "R2"];
 
 redo=1;
+nFc=0;
 all_ICA_classification=[];
 for nF=1:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
@@ -133,18 +134,19 @@ for nF=1:length(eeg_files)
         badTr=find(mean(((badCh_std_mat+badCh_kur_mat)~=0))>0.2);
         %
         if strcmp(SubID, 'C017')==1 %EP
-            badCh(:,2)= 17; %This is forcing an interpolation of TP9 by adding it into the vector
+            badCh = [badCh 17]; %This is forcing an interpolation of TP9 by adding it into the vector
         end
         badChannels=badCh;
         badTrials=badTr;
 
-        badChannels_badTrials_info{nF,1}=SubID;
-        badChannels_badTrials_info{nF,2}=badCh_std;
-        badChannels_badTrials_info{nF,3}=badCh_kur;
-        badChannels_badTrials_info{nF,4}=badChannels;
-        badChannels_badTrials_info{nF,5}=badTr_std;
-        badChannels_badTrials_info{nF,6}=badTr_kur;
-        badChannels_badTrials_info{nF,7}=badTrials;
+        nFc=nFc+1;
+        badChannels_badTrials_info{nFc,1}=SubID;
+        badChannels_badTrials_info{nFc,2}=badCh_std;
+        badChannels_badTrials_info{nFc,3}=badCh_kur;
+        badChannels_badTrials_info{nFc,4}=badChannels;
+        badChannels_badTrials_info{nFc,5}=badTr_std;
+        badChannels_badTrials_info{nFc,6}=badTr_kur;
+        badChannels_badTrials_info{nFc,7}=badTrials;
         if ~isempty(badChannels)
             fprintf('... ... interpolating %g channels\n',length(badChannels))
             % find neighbours

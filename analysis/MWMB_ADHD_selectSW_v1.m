@@ -68,6 +68,8 @@ end
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 colormap(cmap); colorbar;
 
+load ../preproc/all_badChannels_badProbes.mat
+
 %%
 SW_table=array2table(zeros(0,17),'VariableNames',{'SubID','Group','Block','Elec','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope','SW_threshold','SW_peakneg','SW_peakpos','Probe_MS','Probe_Vig','Behav_Miss','Behav_FA','Behav_RT'});
 SW_table.SubID=categorical(SW_table.SubID);
@@ -115,6 +117,11 @@ for nF=1:length(SW_files)
     labels={'Fp1'	'Fp2'	'F7'	'F3'	'Fz'	'F4'	'F8'	'FC5'	'FC1'	'FC2'	'FC6'	'T7'	'C3'	'Cz'	'C4'	'T8'	'TP9'	'CP5'	'CP1'	'CP2'	'CP6'	'TP10'	'P7'	'P3'	'Pz'	'P4'	'P8'	'PO9'	'O1'	'Oz'	'O2'	'PO10'	'AF7'	'AF3'	'AF4'	'AF8'	'F5'	'F1'	'F2'	'F6'	'FT9'	'FT7'	'FC3'	'FC4'	'FT8'	'FT10'	'C5'	'C1'	'C2'	'C6'	'TP7'	'CP3'	'CPz'	'CP4'	'TP8'	'P5'	'P1'	'P2'	'P6'	'PO7'	'PO3'	'POz'	'PO4'	'PO8'};
     load([preproc_path filesep 'SW_clean_i_probe_' SubID]);
 
+    if ~isempty(badChannels_badTrials_info{match_str(badChannels_badTrials_info(:,1),SubID),7})
+        probe_res(badChannels_badTrials_info{match_str(badChannels_badTrials_info(:,1),SubID),7},:)=[];
+    elseif strcmp(SubID,'A008')
+        probe_res(25,:)=[];
+    end
     if size(probe_res,1)~=length(unique(all_Waves(:,2)))
         FilesPbme=[FilesPbme ; {SubID} , {'Different Numbers of Blocks'}];
         continue;
@@ -147,15 +154,15 @@ for nF=1:length(SW_files)
 
         this_thr=av_CTR_threshold_SW.mean_Thr(av_CTR_threshold_SW.Elec==labels{nE});
 
-%         [X,fVal,exitFlag,solverOutput] = exgauss_fit(temp_p2p); % Fits an ex-Gauss distribution to data
-%         bins=0:0.1:paramSW.art_ampl;                            % Creating variable to be used for the function below; from 0 to value set above (paramSW.art_ampl) in increments of 0.1
-%         eg_pdf=exgauss_pdf(bins,X);                             % Computes the probability density; "X" here gives the values for [Mu, Sigma, Tau]
-%         end_gaussian=2*bins(find(eg_pdf==max(eg_pdf)));
-%         this_thr_ind=end_gaussian;
-%         thr_Wave_eg(nE)=this_thr_ind;
+        %         [X,fVal,exitFlag,solverOutput] = exgauss_fit(temp_p2p); % Fits an ex-Gauss distribution to data
+        %         bins=0:0.1:paramSW.art_ampl;                            % Creating variable to be used for the function below; from 0 to value set above (paramSW.art_ampl) in increments of 0.1
+        %         eg_pdf=exgauss_pdf(bins,X);                             % Computes the probability density; "X" here gives the values for [Mu, Sigma, Tau]
+        %         end_gaussian=2*bins(find(eg_pdf==max(eg_pdf)));
+        %         this_thr_ind=end_gaussian;
+        %         thr_Wave_eg(nE)=this_thr_ind;
         slow_Waves=[slow_Waves ; thisE_Waves(thisE_Waves(:,paramSW.AmpCriterionIdx)>this_thr,:)];
     end
-%     save([preproc_path filesep 'selectSW_clean_i_probe_' SubID],'slow_Waves')
+    %     save([preproc_path filesep 'selectSW_clean_i_probe_' SubID],'slow_Waves')
 
     for nBl=unique(slow_Waves(:,2))'
         slow_Waves_perE=[];

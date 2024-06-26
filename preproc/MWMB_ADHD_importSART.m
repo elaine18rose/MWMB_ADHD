@@ -35,9 +35,9 @@ for nF=1:length(files)
     end
     
     tic;
-    %     if ~strcmp(SubID,'A084') %%re-add this if you need to clip the data
-    %         continue;
-    %     end
+        if ~strcmp(SubID,'A008') %%re-add this if you need to clip the data
+            continue;
+        end
     fprintf('... working on %s (%g/%g)\n',file_name,nF,length(files))
     
     if redo_block==1 || exist([path_data filesep 'Preproc' filesep 'feblock_ft_' SubID '.mat'])==0
