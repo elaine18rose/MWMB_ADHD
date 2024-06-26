@@ -63,7 +63,7 @@ for nF=1:length(eeg_files)
 
         load([preproc_path filesep 'comp_i_probe_' SubID])
 
-        rejected_comps = ICA_classification.Comp(ICA_classification.Eye>0.95 | ICA_classification.Heart>0.8); % reject eye component with proba over 0.95 and heart over 0.8
+        rejected_comps = ICA_classification.Comp(ICA_classification.Eye>0.9 | ICA_classification.Heart>0.8); % reject eye component with proba over 0.95 and heart over 0.8
         fprintf('... ... %g bad components rejected\n',length(rejected_comps))
         EEG_clean = pop_subcomp(EEG_ica, rejected_comps);
         EEG_clean = eeg_checkset(EEG_clean);

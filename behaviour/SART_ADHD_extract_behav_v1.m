@@ -235,7 +235,10 @@ all_behav_table.SubID=categorical(all_behav_table.SubID);
 ctrs=unique(all_behav_table.SubID(all_behav_table.Group=='C' ));
 Miss_CTR=[];
 for nc=1:length(ctrs)
-    Miss_CTR(nc)=nanmean(all_behav_table.Misses(all_behav_table.SubID==ctrs(nc)));
+    if strcmp(ctrs(nc), 'C015')
+        continue; % Skipping C015 'cause ppt didn't understand instructions
+    end
+    Miss_CTR(nc) = nanmean(all_behav_table.Misses(all_behav_table.SubID == ctrs(nc)));
 end
 adhds=unique(all_behav_table.SubID(all_behav_table.Group=='A' ));
 Miss_ADHD=[];
@@ -245,6 +248,9 @@ end
 
 FA_CTR=[];
 for nc=1:length(ctrs)
+    if strcmp(ctrs(nc), 'C015')
+        continue; % Skipping C015 'cause ppt didn't understand instructions
+    end
     FA_CTR(nc)=nanmean(all_behav_table.FA(all_behav_table.SubID==ctrs(nc)));
 end
 FA_ADHD=[];
@@ -263,6 +269,9 @@ end
 
 Hit_RT_CTR=[];
 for nc=1:length(ctrs)
+    if strcmp(ctrs(nc), 'C015')
+        continue; % Skipping C015 'cause ppt didn't understand instructions
+    end
     Hit_RT_CTR(nc)=nanmean(all_behav_table.RT(all_behav_table.SubID==ctrs(nc)));
 end
 Hit_RT_ADHD=[];
@@ -476,15 +485,21 @@ format_fig;
 numbers_of_interest = [1, 2, 3, 4];
 ADHD_state = [];
 Control_state =[];
-Control_state = zeros(length(ctrs), length(numbers_of_interest));
+%Control_state = zeros(length(ctrs), length(numbers_of_interest));
 ADHD_state = zeros(length(adhds), length(numbers_of_interest));
 
 clear state_values
+index = 1; % Initialize a separate index for Control_state
 for nc = 1:length(ctrs)
+    if ctrs(nc) == 'C015'
+        disp('Skipping C015')
+        continue; % Skipping C015 'cause ppt didn't understand instructions
+    end
     % Extract the State column for the current participant
     state_values = all_probe_table.State(all_probe_table.SubID == ctrs(nc));
     % Count occurrences of each number (1, 2, 3, 4) for the current participant
-    Control_state(nc, :) = histcounts(state_values, [numbers_of_interest, Inf]);
+    Control_state(index, :) = histcounts(state_values, [numbers_of_interest, Inf]);
+    index = index + 1; % Increment the Control_state index only when valid data is added
 end
 
 % Calculate the total occurrences of each number across all participants
@@ -518,7 +533,7 @@ xtickangle(45);
 for i = 1:numel(labels)
     for j = 1:size(Ctr_state_percentage_distribution, 1)
         text(i-0.2, Ctr_state_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_state_percentage_distribution(j, i)), ...
-            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 18,'Color',Colors(1,:),'FontWeight','bold');
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 25,'Color',Colors(1,:),'FontWeight','bold');
     end
 end
 format_fig
@@ -532,25 +547,32 @@ xtickangle(45);
 for i = 1:numel(labels)
     for j = 1:size(ADHD_state_percentage_distribution, 1)
         text(i+0.2, ADHD_state_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_state_percentage_distribution(j, i)), ...
-            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 18,'Color',Colors(2,:),'FontWeight','bold');
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 25,'Color',Colors(2,:),'FontWeight','bold');
     end
 end
 format_fig
+set(gca,'FontSize',30,'FontWeight','bold')
 xlim([0.5 4.5])
 
 %% Vigilance
 numbers_of_interest = [1, 2, 3, 4];
 ADHD_vig = [];
 Control_vig =[];
-Control_vig = zeros(length(ctrs), length(numbers_of_interest));
+%Control_vig = zeros(length(ctrs), length(numbers_of_interest));
 ADHD_vig = zeros(length(adhds), length(numbers_of_interest));
 
 clear vig_values
+index = 1; % Initialize a separate index for Control_vig
 for nc = 1:length(ctrs)
+    if ctrs(nc) == 'C015'
+        disp('Skipping C015')
+        continue; % Skipping C015 'cause ppt didn't understand instructions
+    end
     % Extract the State column for the current participant
     vig_values = all_probe_table.Vigilance(all_probe_table.SubID == ctrs(nc));
     % Count occurrences of each number (1, 2, 3, 4) for the current participant
-    Control_vig(nc, :) = histcounts(vig_values, [numbers_of_interest, Inf]);
+    Control_vig(index, :) = histcounts(vig_values, [numbers_of_interest, Inf]);
+    index = index + 1; % Increment the Control_state index only when valid data is added
 end
 
 % Calculate the total occurrences of each number across all participants
