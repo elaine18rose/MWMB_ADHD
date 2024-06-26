@@ -1,0 +1,146 @@
+---
+title: "MWMB-SART-Behav-v1"
+author: "Elaine P."
+made: "2024-06-24"
+updated: "2024-06-24"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r} 
+rm(list=ls())
+#---- Packages ----
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(reshape2)
+library(stringr)
+library(ggplot2)
+library(gridExtra)
+library(RColorBrewer)
+library(lme4)
+library(ggpubr)
+library(stats)
+library(rstatix)
+library(ppcor)
+library(lme4)
+library(lmerTest)
+library(tidyverse)
+library(data.table)
+
+# ---- Import files -----
+#full dataset:
+dataset <- read.table('/Users/elaine/Desktop/Git_Studies/MWMB_ADHD/tables/MWMB_ADHD_all_behav_byTrial.txt', header = TRUE, sep = ",", dec = ".")
+
+# Excluding C015 as they didn't understand instructions:
+dataset <- dataset[!dataset$SubID=="C015",]
+
+# To Check how many participants in each group 
+num_participants_adhd <- dataset %>%
+  filter(Group == "A") %>%
+  summarize(num_participants = n_distinct(SubID))
+
+num_participants_control <- dataset %>%
+  filter(Group == "C") %>%
+  summarize(num_participants = n_distinct(SubID))
+```
+
+``` {r}
+# ---- Averaging Behaviour ---- 
+AvrData <- dataset %>%
+  group_by(SubID) %>%
+  summarise( MeanFA = mean(FA, na.rm=TRUE),
+            MeanMiss = mean(Misses, na.rm=TRUE),
+            MeanRT = mean(RT, na.rm=TRUE),)
+
+#Labelling data as ADHD and Control
+AvrData <- AvrData %>% 
+  mutate(Group = case_when(
+    startsWith(SubID, "A") ~ "ADHD", 
+    startsWith(SubID, "C") ~ "CONTROL"
+  ))
+
+```
+
+
+```{r}
+#LMEs for group & block effects on performance
+# ---- LMEs Misses ----
+lm.Miss0 <- lmer(Misses ~ 1 + (1|SubID), data = dataset, REML = FALSE)
+
+##Effects of group on misses
+lm.Miss1 <- lmer(Misses ~ 1 + Group + (1|SubID), data =  dataset, REML = FALSE)
+
+##Added effects of block number on misses 
+lm.Miss2 <- lmer(Misses ~ 1 + Group  + BlockN + (1+BlockN|SubID), data =  dataset, REML = FALSE) 
+# Note: we added block as a random slope i.e., the model now takes into account differing baselines for block
+
+##Added effects of block number as an interaction on misses 
+lm.Miss3 <- lmer(Misses ~ 1 + Group*BlockN + (1+BlockN|SubID), data =  dataset, REML = FALSE)
+
+##Anova to see which one has the most interaction
+anova(lm.Miss0,lm.Miss1,lm.Miss2,lm.Miss3)
+
+summary(lm.Miss2)
+confint(lm.Miss2, method = "Wald", oldNames = FALSE)
+
+# ---- LMEs FAs ----
+lm.FA0 <- lmer(FA ~ 1 + (1|SubID), data = dataset, REML = FALSE)
+
+##Effects of group on FAs
+lm.FA1 <- lmer(FA ~ 1 + Group + (1|SubID), data = dataset, REML = FALSE)
+
+##Added effects of block number on FA 
+lm.FA2 <- lmer(FA ~ 1 + Group + BlockN + (1+BlockN|SubID), data =  dataset, REML = FALSE) 
+# Note: we added block as a random slope i.e., the model now takes into account differing baselines for block
+
+##Added effects of block number as an interaction on misses 
+lm.FA3 <- lmer(FA ~ 1 + Group*BlockN + (1+BlockN|SubID), data =  dataset, REML = FALSE)
+
+##Anova to see which one has the most interaction
+anova(lm.FA0,lm.FA1,lm.FA2,lm.FA3)
+
+summary(lm.FA2)
+confint(lm.FA2, method = "Wald", oldNames = FALSE)
+```
+```{r}
+#Mean performance scores by group and BARPLOTS with error bars and individual datapoints----
+Colors = c( "#56B4E9", "#E69F00")
+
+#Boxplots by behaviour and group
+#Misses ----
+  ggplot(AvrData, aes(fill = Group, y = MeanMiss*100, x = Group)) +
+  geom_boxplot(fill = Colors, outlier.shape = NA, fatten=4) +
+  xlab("") + ylab("Omission Errors (%)") + 
+  stat_summary(fun.data = mean_sdl, geom = "errorbar", color ="darkgrey", position = position_dodge(0.8), width = 0.2, linewidth = 3)   + geom_point(position = position_jitterdodge(0.3, dodge.width = .8), alpha = 0.8, size = 4) +
+  theme_classic() + coord_cartesian(ylim = c(0,20)) +
+  theme(text=element_text(size = 40), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"), 
+  legend.position = "none")
+
+  # ggsave(file="../Figures/SART_BoxPlot_Miss_2024.png", 
+  #     width = 60,
+  #     height = 35,
+  #     units = c("cm"))
+ 
+
+ #FA ---- 
+  ggplot(AvrData, aes(fill = Group, y = MeanFA*100, x = Group)) +
+  geom_boxplot(fill = Colors, outlier.shape = NA, fatten=4) +
+  xlab("") + ylab("Commission Errors (%)") + 
+  stat_summary(fun.data = mean_sdl, geom = "errorbar", color = "darkgrey", position = position_dodge(0.8), width = 0.2, linewidth = 3) +
+  geom_point(position = position_jitterdodge(0.3, dodge.width = .8), alpha = 0.8, size = 4) +
+  theme_classic() +  coord_cartesian(ylim = c(0.2,100)) +
+  theme(text=element_text(size = 40), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"), 
+  legend.position = "none")  
+    
+    # ggsave(file="../Figures/SART_BoxPlot_FA_2024.png", 
+    #   width = 60,
+    #   height = 35,
+    #   units = c("cm"))    
+```
+
+
