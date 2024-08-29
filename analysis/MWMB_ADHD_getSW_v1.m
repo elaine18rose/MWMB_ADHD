@@ -42,7 +42,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 all_badCompo=[];
-redo=1;
+redo=0;
 all_threshold_SW=array2table(zeros(0,5),'VariableNames',{'SubID','Group','Elec','Thr_PC','Thr_EG'});
 all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
 all_threshold_SW.Group=categorical(all_threshold_SW.Group);
@@ -66,6 +66,11 @@ for nF=1:length(SW_files)
     else
         GroupID='undefined';
     end
+
+    if contains(SW_files(nF).name,'C038') %To skip a subject; skipping this subject cause it was causing an error
+        continue
+    end
+
     if redo==1 || exist([preproc_path filesep 'SW_clean_i_probe_' SubID '.mat'])==0 % To skip already preprocessed files
         load([preproc_path filesep 'clean_i_probe_' SubID '.mat']);
 

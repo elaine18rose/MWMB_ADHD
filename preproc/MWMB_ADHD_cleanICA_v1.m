@@ -68,19 +68,19 @@ for nF=1:length(eeg_files)
         EEG_clean = pop_subcomp(EEG_ica, rejected_comps);
         EEG_clean = eeg_checkset(EEG_clean);
         badCompo=ICA_classification(rejected_comps,:);
-        %             figure;
-        %             plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'Fp1'),:,1))','r');
-        %             hold on
-        %             plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'Fp2'),:,1))','b');
-        %             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fp1'),:,1))','r--');
-        %             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fp2'),:,1))','b--');
-        %
-        %                 figure;
-        %             plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'O1'),:,1))','r');
-        %             hold on
-        %             plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'O2'),:,1))','b');
-        %             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'O1'),:,1))','r--');
-        %             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'O2'),:,1))','b--');
+%                     figure;
+%                     plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'Fp1'),:,1))','r');
+%                     hold on
+%                     plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'Fp2'),:,1))','b');
+%                     plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fp1'),:,1))','r--');
+%                     plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fp2'),:,1))','b--');
+%         
+%                         figure;
+%                     plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'O1'),:,1))','r');
+%                     hold on
+%                     plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'O2'),:,1))','b');
+%                     plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'O1'),:,1))','r--');
+%                     plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'O2'),:,1))','b--');
 
         data = eeglab2fieldtrip( EEG_clean, 'raw');
         %  figure;
