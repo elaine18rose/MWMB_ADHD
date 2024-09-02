@@ -41,7 +41,7 @@ run ../MWMB_ADHD_elec_layout.m
 
 %% Loop across files
 RS = ["R1", "R2"];
-redo=1;
+redo=0;
 all_threshold_SW=readtable([preproc_path filesep 'all_threshold_SW.csv']);
 all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
 all_threshold_SW.Group=categorical(all_threshold_SW.Group);

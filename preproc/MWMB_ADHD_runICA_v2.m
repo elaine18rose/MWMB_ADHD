@@ -34,12 +34,19 @@ eeg_files=dir([data_path filesep '*.eeg']);
 %EEG Layout info
 run ../MWMB_ADHD_elec_layout.m
 
+if exist('../preproc/all_badChannels_badProbes.mat', 'file') %EP - load bad channels table 
+    load([preproc_path filesep 'all_badChannels_badProbes.mat']);
+    startIndex = size(badChannels_badTrials_info, 1) + 1;
+else
+    badChannels_badTrials_info = {};
+    startIndex = 1;
+end 
 
 %% Loop across files
 RS = ["R1", "R2"];
 
 redo=1;
-nFc=0;
+nFc = startIndex-1;
 all_ICA_classification=[];
 for nF=1:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
@@ -49,12 +56,15 @@ for nF=1:length(eeg_files)
     if contains(eeg_files(nF).name,RS) %To skip resting state files
         continue
     end
+%         if ~contains(eeg_files(nF).name,'ID-C038') %To redo specific a subject
+%         continue
+%     end
 
     %%% load the data
     SubInfo=split(eeg_files(nF).name,'-');
     SubID=SubInfo{2}(1:end-4);
 
-    if redo==1 || exist([preproc_path filesep 'comp_i_probe_' SubID '.mat'])==0 % To skip already preprocessed files
+    if redo==1 || exist([preproc_path filesep 'comp_i_probe_' SubID '.mat'])==0 || ~any(strcmp(badChannels_badTrials_info(:,1), SubID))% To skip already preprocessed files
         fprintf('... working on %s\n',[eeg_files(nF).name])
 
         %%% minimal preprocessing
@@ -118,8 +128,8 @@ for nF=1:length(eeg_files)
         end
         all_std_vec = (reshape(std_vec,1,numel(std_vec)));
         all_kurt_vec = (reshape(kurt_vec,1,numel(kurt_vec)));
-        badCh_std_mat = (std_vec>(mean(all_std_vec)+4*std(all_std_vec)));
-        badCh_kur_mat = (kurt_vec>(mean(all_kurt_vec)+4*std(all_kurt_vec)));
+        badCh_std_mat = (std_vec>(mean(all_std_vec)+4*std(all_std_vec))); % in version 1, ths was 3* std
+        badCh_kur_mat = (kurt_vec>(mean(all_kurt_vec)+4*std(all_kurt_vec))); % in version 1, ths was 3* std
 
         % we can define a bad channel as a channel with more than 50% of
         % probes above the threshold
@@ -140,13 +150,17 @@ for nF=1:length(eeg_files)
         badTrials=badTr;
 
         nFc=nFc+1;
-        badChannels_badTrials_info{nFc,1}=SubID;
+        badChannels_badTrials_info{nFc,1}=SubID; % need to edit to load this info up if it has been processed already
         badChannels_badTrials_info{nFc,2}=badCh_std;
         badChannels_badTrials_info{nFc,3}=badCh_kur;
         badChannels_badTrials_info{nFc,4}=badChannels;
         badChannels_badTrials_info{nFc,5}=badTr_std;
         badChannels_badTrials_info{nFc,6}=badTr_kur;
         badChannels_badTrials_info{nFc,7}=badTrials;
+
+        fprintf('Processing %s\n', SubID); % EP - debugging to check which participant is being processed
+        disp(badChannels_badTrials_info(:, 1));; % EP - debugging to see if variable is being updated
+        
         if ~isempty(badChannels)
             fprintf('... ... interpolating %g channels\n',length(badChannels))
             % find neighbours
@@ -166,7 +180,7 @@ for nF=1:length(eeg_files)
             cfg.trials         = 'all';
             cfg.layout         = layout;
             cfg.channel = layout.label;
-            [data] = ft_channelrepair(cfg, data); %crashing here
+            [data] = ft_channelrepair(cfg, data); 
         end
 
         cfg=[];
@@ -184,7 +198,7 @@ for nF=1:length(eeg_files)
         EEG = pop_chanedit(EEG, 'lookup', fullfile(path_eeglab, 'plugins', 'dipfit', 'standard_BESA', 'standard-10-5-cap385.elp'));
         EEG = eeg_checkset(EEG); %This checks if current channel no. has the same amount as channel locations. If not, it deletes channel locations
         EEG_ica = pop_runica(EEG, 'icatype', 'runica'); %Runs ICA
-        EEG_icalabels = pop_iclabel(EEG_ica,'default'); %Automates detectio of bad ICA components
+        EEG_icalabels = pop_iclabel(EEG_ica,'default'); %Automates detection of bad ICA components
 
 
         ICA_classification=EEG_icalabels.etc.ic_classification.ICLabel.classifications;
