@@ -124,7 +124,7 @@ for nF=1:length(SW_files)
         probe_res(25,:)=[];
     end
     if size(probe_res,1)~=length(unique(all_Waves(:,2)))
-        FilesPbme=[FilesPbme ; {SubID} , {'Different Numbers of Blocks'}];
+        FilesPbme=[FilesPbme ; {SubID} , {'Different Numbers of Probes'}];
         continue;
     end
 
