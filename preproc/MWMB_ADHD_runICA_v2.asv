@@ -123,10 +123,10 @@ for nF=1:length(eeg_files)
         all_std_vec_nonfront = (reshape(std_vec(setdiff(1:length(newlabels),find_trials(newlabels,'F*')),:),1,numel(std_vec(setdiff(1:length(newlabels),find_trials(newlabels,'F*')),:))));
         all_kurt_vec_nonfront = (reshape(kurt_vec(setdiff(1:length(newlabels),find_trials(newlabels,'F*')),:),1,numel(kurt_vec(setdiff(1:length(newlabels),find_trials(newlabels,'F*')),:))));
 
-        thr_badElec_std=(mean(all_std_vec_nonfront)+3*std(all_std_vec_nonfront))*ones(length(newlabels),length(data.trial));
-        thr_badElec_std(find_trials(newlabels,'F*'),:)=mean(all_std_vec_frontal)+3*std(all_std_vec_frontal);
-        thr_badElec_kurt=(mean(all_kurt_vec_nonfront)+3*std(all_kurt_vec_nonfront))*ones(length(newlabels),length(data.trial));
-        thr_badElec_kurt(find_trials(newlabels,'F*'),:)=mean(all_kurt_vec_frontal)+3*std(all_kurt_vec_frontal);
+        thr_badElec_std=(mean(all_std_vec)+3*std(all_std_vec))*ones(length(newlabels),length(data.trial));
+        thr_badElec_std(find_trials(newlabels,'F*'),:)=mean(all_std_vec(find_trials(newlabels,'F*')))+3*std(all_std_vec(find_trials(newlabels,'F*')));
+        thr_badElec_kurt=(mean(all_std_vec)+3*std(all_std_vec))*ones(length(newlabels),length(data.trial));
+        thr_badElec_kurt(find_trials(newlabels,'F*'),:)=mean(all_std_vec(find_trials(newlabels,'F*')))+3*std(all_std_vec(find_trials(newlabels,'F*')));
         badCh_std_mat = (std_vec>thr_badElec_std);
         badCh_kur_mat = (kurt_vec>thr_badElec_kurt);
 
