@@ -16,21 +16,23 @@ rm(list=ls())
 #---- Packages ----
 library(plyr)
 library(dplyr)
-library(tidyr)
+#library(tidyr)
 library(reshape2)
 library(stringr)
 library(ggplot2)
 library(gridExtra)
 library(RColorBrewer)
 library(lme4)
-library(ggpubr)
+#library(ggpubr)
 library(stats)
-library(rstatix)
+#library(rstatix)
 library(ppcor)
 library(lme4)
 library(lmerTest)
-library(tidyverse)
+#library(tidyverse)
 library(data.table)
+library(vioplot)
+#library(introdataviz)
 
 # ---- Import files -----
 #full dataset:
@@ -69,7 +71,7 @@ AvrData <- AvrData %>%
 
 ```{r}
 #LMEs for group & block effects on performance
-# ---- LMEs Misses ----
+# ---- LMEs Misses/Omission Errors ----
 lm.Miss0 <- lmer(Misses ~ 1 + (1|SubID), data = dataset, REML = FALSE)
 
 ##Effects of group on misses
@@ -108,7 +110,7 @@ summary(lm.FA2)
 confint(lm.FA2, method = "Wald", oldNames = FALSE)
 ```
 ```{r}
-#Mean performance scores by group and BARPLOTS with error bars and individual datapoints----
+#Mean performance scores by group and BOXPLOTS with error bars and individual datapoints----
 Colors = c( "#56B4E9", "#E69F00")
 
 #Boxplots by behaviour and group
@@ -142,5 +144,78 @@ Colors = c( "#56B4E9", "#E69F00")
     #   height = 35,
     #   units = c("cm"))    
 ```
+
+```{r}
+#Mean performance scores by group and Split VIOLIN PLOTS ----
+Colors = c( "#56B4E9", "#E69F00")
+
+#split violin function ----
+GeomSplitViolin <- ggproto("GeomSplitViolin", GeomViolin, 
+                           draw_group = function(self, data, ..., draw_quantiles = NULL) {
+  data <- transform(data, xminv = x - violinwidth * (x - xmin), xmaxv = x + violinwidth * (xmax - x))
+  grp <- data[1, "group"]
+  newdata <- plyr::arrange(transform(data, x = if (grp %% 2 == 1) xminv else xmaxv), if (grp %% 2 == 1) y else -y)
+  newdata <- rbind(newdata[1, ], newdata, newdata[nrow(newdata), ], newdata[1, ])
+  newdata[c(1, nrow(newdata) - 1, nrow(newdata)), "x"] <- round(newdata[1, "x"])
+
+  if (length(draw_quantiles) > 0 & !scales::zero_range(range(data$y))) {
+    stopifnot(all(draw_quantiles >= 0), all(draw_quantiles <=
+      1))
+    quantiles <- ggplot2:::create_quantile_segment_frame(data, draw_quantiles)
+    aesthetics <- data[rep(1, nrow(quantiles)), setdiff(names(data), c("x", "y")), drop = FALSE]
+    aesthetics$alpha <- rep(1, nrow(quantiles))
+    both <- cbind(quantiles, aesthetics)
+    quantile_grob <- GeomPath$draw_panel(both, ...)
+    ggplot2:::ggname("geom_split_violin", grid::grobTree(GeomPolygon$draw_panel(newdata, ...), quantile_grob))
+  }
+  else {
+    ggplot2:::ggname("geom_split_violin", GeomPolygon$draw_panel(newdata, ...))
+  }
+})
+
+geom_split_violin <- function(mapping = NULL, data = NULL, stat = "ydensity", position = "identity", ..., 
+                              draw_quantiles = NULL, trim = TRUE, scale = "area", na.rm = FALSE, 
+                              show.legend = NA, inherit.aes = TRUE) {
+  layer(data = data, mapping = mapping, stat = stat, geom = GeomSplitViolin, 
+        position = position, show.legend = show.legend, inherit.aes = inherit.aes, 
+        params = list(trim = trim, scale = scale, draw_quantiles = draw_quantiles, na.rm = na.rm, ...))
+}
+
+ggplot(AvrData, aes(fill = Group, x = Group, y = MeanMiss*100)) + geom_split_violin()
+
+
+
+#Misses/Omission Errors----
+#Violin plots----
+ggplot(AvrData, aes(fill = Group, x = Group, y = MeanMiss*100)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=Colors) +
+  geom_jitter(shape=16, position=position_jitter(0.1), size = 5) +
+  theme_classic() + theme(legend.position="none") +
+  xlab("") + ylab("Omission Errors (%)") +
+  theme(text=element_text(size = 40), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"))
+#+stat_summary(fun.y=median, geom="point", size=2, color="red")
+
+
+#Split violin plots ----
+Avr_ADHD <- AvrData[AvrData$Group =="ADHD", ]
+Avr_CTR <- AvrData[AvrData$Group == "CONTROL", ]
+
+
+vioplot(MeanMiss*100~Group, data=Avr_ADHD, col = "#56B4E9", plotCentre = "line", side = "left", xlab = "", ylab = substitute(paste(bold("% of Omission Errors"))), ylim = c(0,  20), xaxt = 'n', lty="blank",
+        cex.lab=2, cex.axis=2, cex.main=2, cex.sub=2) 
+vioplot(MeanMiss*100~Group, data=Avr_CTR, col = "#E69F00", plotCentre = "line", side = "right", add = T, lty="blank") 
+
+
+
+
+#FA/Commission Errors ----
+vioplot(MeanFA*100~Group, data=Avr_ADHD, col = "#56B4E9", plotCentre = "line", side = "left", xlab = "", ylab = substitute(paste(bold("% of Commission Errors"))), ylim = c(0,  100), xaxt = 'n', lty="blank",
+        cex.lab=2, cex.axis=2, cex.main=2, cex.sub=2)
+vioplot(MeanFA*100~Group, data=Avr_CTR, col = "#E69F00", plotCentre = "line", side = "right", add = T, lty="blank") 
+
+
+```
+
+
 
 
