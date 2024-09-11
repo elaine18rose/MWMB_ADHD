@@ -1,6 +1,5 @@
 %% Changes from v2 - flagging of badChannels (changed from 4std to 3std) and therefore saved files all have ver2 in them
 %% 04/09/24 - EP: Using this script to debug/investigate why where probes are going missing but NOTE: v2 Thomas fixed so that there's a different threshold for frontal electrodes 
-%% NOT USING THIS SCRIPT FOR RUNNING ICAs!!
 clear all;
 close all;
 %%

@@ -63,6 +63,8 @@ for nF=1:length(eeg_files)
     else
         GroupID='undefined';
     end
+
+
     if redo==1 || exist([preproc_path filesep 'SW_clean_i_probe_' SubID '.mat'])==0 % To skip already preprocessed files
         load([preproc_path filesep 'clean_i_probe_' SubID '.mat']);
 

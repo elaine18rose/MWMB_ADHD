@@ -82,9 +82,10 @@ for nF=1:length(files)
     FA=(1-CR); % Thomas changed this so now it only counts the number of times participants react to a NoGo
     Hits = (test_res(:,12)); 
     Miss=(1-Hits); %Thomas also changes this so for Hits, it counts responses for Gos and then for Misses it counts how many are missed
-    RT_all = test_res(:,10)-test_res(:,8); %FLAG: I just copied this from the general code to check the behav data. This doesn't exclude RTs for FAs
-    RT = RT_all; RT(isnan(test_res(:,12)))=NaN;
-    RT(RT<0.150)=NaN; warning('removing trials with RT below 150ms')
+    RT_all = test_res(:,10)-test_res(:,8); 
+        RT = RT_all; 
+        RT(isnan(test_res(:,12)))=NaN;
+        RT(RT<0.150)=NaN; warning('removing trials with RT below 150ms')
 
     % Compiling into tables 
     this_behav=nan(length(test_res),9);
@@ -95,7 +96,19 @@ for nF=1:length(files)
     this_behav(:,7)=FA;
     this_behav(:,8)=Miss;
     this_behav(:,9)=RT;
-    % nblock this_blockcond thiset ntrial this_seq_trial TargetID thisresp stimonset dur_face_no_rand thisresptime  this_nogo this_go
+    this_behav(:,10)=CR; % Correct Rejection column; i.e. participant didn't respond to 3
+
+    % d prime and criterion
+    hit_trials = this_behav((isnan(this_behav(:,5)) == 0), 5); %%% Get the right column from this_behav (column 5) - added isnan
+    FA_trials = this_behav((isnan(this_behav(:,7)) == 0), 7);  %%%
+    [dprime, crit] = calc_dprime(hit_trials, FA_trials);
+    % Display results
+    disp(['dprime: ', num2str(dprime)]);
+    disp(['Criterion: ', num2str(crit)]);
+    % Saving it in correct row
+    this_behav(:,11) = dprime;
+    this_behav(:,12) = crit;
+
 
     this_state2=nan(length(probe_res),11);
     this_state2(:,3)=this_probe;
@@ -115,7 +128,7 @@ for nF=1:length(files)
     stategroup_cond=[stategroup_cond; repmat({Group},size(this_state2,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
     %% Saving the data by trial per participant
     behav_table=array2table(this_behav,...
-        'VariableNames',{'SubID','Group','BlockN','nTrial','GoTrials','NoGoTrials','FA','Misses','RT'});
+        'VariableNames',{'SubID','Group','BlockN','nTrial','GoTrials','NoGoTrials','FA','Misses','RT','CR','dprime','crit'});
     behav_table.SubID=categorical(behav_table.SubID);
     behav_table.Group=categorical(behav_table.Group);
     if File_Name(19)=='C' || File_Name(19)=='A'
@@ -159,9 +172,9 @@ for nF=1:length(files)
     end
 
     % by block data
-    block_table=zeros(4,15);
+    block_table=zeros(4,17);
     block_table=array2table(block_table,...
-        'VariableNames',{'SubID','Group','BlockN','ON','MW','MB','DK','Dist','Perso','Int','Intention','Vigilance','Miss','FA','HitRT'});
+        'VariableNames',{'SubID','Group','BlockN','ON','MW','MB','DK','Dist','Perso','Int','Intention','Vigilance','Miss','FA','HitRT','dprime','criterion'});
     block_table.SubID=categorical(block_table.SubID);
     block_table.Group=categorical(block_table.Group);
 
@@ -171,6 +184,24 @@ for nF=1:length(files)
     all_RT=test_res(:,10)-test_res(:,8);
     all_RT(test_res(:,5)==3)=NaN;
     block_table.HitRT=grpstats(all_RT,test_res(:,1));
+
+    % D-Prime and Criterion 
+    for nbl=1:4
+        hit_trials_perB = this_behav((this_behav(:,3) == nbl) & isnan(this_behav(:,5)) == 0, 5); %%% Get the right column from this_behav (column 5) - added isnan
+        FA_trials_perB = this_behav((this_behav(:,3) == nbl) & isnan(this_behav(:,7)) == 0, 7);  %%%
+        [dprime, crit] = calc_dprime(hit_trials_perB, FA_trials_perB);
+
+        % Display results
+        disp(['dprime: ', num2str(dprime)]);
+        disp(['Criterion: ', num2str(crit)]);
+
+        % Saving it in correct row
+        block_table{block_table{:, 3} == nbl, 16} = dprime;
+        block_table{block_table{:, 3} == nbl, 17} = crit;
+
+    end
+
+
     block_table.Intention=grpstats(probe_res(:,21),probe_res(:,4));
     block_table.Vigilance=grpstats(probe_res(:,22),probe_res(:,4));
 
@@ -202,27 +233,12 @@ for nF=1:length(files)
     end
 end
 
+
 %% Saving table of all data 
 writetable(all_behav_table,[save_path filesep 'MWMB_ADHD_all_behav_byTrial.txt']);
 writetable(all_probe_table, [save_path filesep 'MWMB_ADHD_all_probe_behav.txt']);
 writetable(all_block_table, [save_path filesep 'MWMB_ADHD_all_block.txt']);
 
-%% Making a table of the by trial behavioural results per participant
-table1=behavres_table; %array2table(behavres_mat,'VariableNames',{'SubID','BlockN','TrialN','GoTrials','NoGoTrials','FA','Misses','RT'});
-
-%%%% Here we need to add Group and SubID
-    % table1.Group=reordercats(table1.Group,[2,1]);
-
-%     writetable(table1,[save_path filesep 'MWMB_ADHD_behav_bytrial.txt']); %%% FLAG: Need to fix "SubID" because right now it's wrong
-
-
-%     table2=array2table(stateres_mat,'VariableNames',{'SubID','ProbeN','BlockN','State','Distraction','Intention','Vigilance'});
-%     table2.Group=stategroup_cond;
-%     table2.SubID=categorical(table2.SubID);
-%     table2.Group=categorical(table2.Group);
-%     % table1.Group=reordercats(table1.Group,[2,1]);
-% 
-%     writetable(table2,[save_path filesep 'MWMB_ADHD_state_bytrial.txt']); %%% FLAG: Need to fix "SubID" because right now it's wrong
 
 
 %% Figures
@@ -279,6 +295,17 @@ for nc=1:length(adhds)
     Hit_RT_ADHD(nc)=nanmean(all_behav_table.RT(all_behav_table.SubID==adhds(nc)));
 end
 
+dprime_CTR=[];
+for nc=1:length(ctrs)
+    if strcmp(ctrs(nc), 'C015')
+        continue; % Skipping C015 'cause ppt didn't understand instructions
+    end
+    dprime_CTR(nc)=nanmean(all_behav_table.dprime(all_behav_table.SubID==ctrs(nc))); %NOTE though we don't need to calculat mean here cause it's the same across all trials cause it needs all to calculate
+end
+dprime_ADHD=[];
+for nc=1:length(adhds)
+    dprime_ADHD(nc)=nanmean(all_behav_table.dprime(all_behav_table.SubID==adhds(nc)));
+end
 
 flag_figures = input('Plot figures? (0 for no and 1 for yes) ');
 if flag_figures == 1
@@ -300,7 +327,7 @@ if flag_figures == 1
     % Misseffect = meanEffectSize(Miss_CTR,Miss_ADHD);
     % figure; gardnerAltmanPlot(Miss_ADHD,Miss_CTR);
 
-    %% FA
+    % FA
     figure;
     h1 = raincloud_plot(100*FA_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
         'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',5,'bound_data',[0 100]);
@@ -343,7 +370,20 @@ if flag_figures == 1
     format_fig; title('RT (s)'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
     set(gca,'YColor','none') % removes Y-axis
 
+    % d prime
+    figure;
+    h1 = raincloud_plot(dprime_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
+        'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',5);
+    h2 = raincloud_plot(dprime_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
+        'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',5);
 
+    set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+    set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+    set(gca,'XLim', [-1 6], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [0 6], 'YLim', ylim.*[0.5 1.7]);
+    format_fig; title('d prime'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
+    set(gca,'YColor','none') % removes Y-axis
+
+    [h,p,ci,stats] = ttest2(dprime_CTR,dprime_ADHD);
     %RTeffect = meanEffectSize(Hit_RT_CTR,Hit_RT_ADHD);
     %figure; gardnerAltmanPlot(Hit_RT_ADHD,Hit_RT_CTR)
 
@@ -399,6 +439,38 @@ if flag_figures == 1
     set(gca, 'XLim', [0 .75]);
     title(['Hit Reaction Times per Block']);
     xlabel('Reaction Times (seconds)'); ylabel('Block Number');
+    format_fig;
+
+    % D prime
+    data_to_plot=[];
+    group_labels={'C','A'};
+    for i = 1:4 % number of repetitions
+        for j = 1:2 % number of group
+            data_to_plot{i, j} = all_block_table.dprime(all_block_table.BlockN==i  & all_block_table.Group==group_labels{j});
+        end
+    end
+
+    figure; hold on;
+    h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+    %set(gca, 'XLim', [0 .75]);
+    title(['D prime per Block']);
+    xlabel('D Prime'); ylabel('Block Number');
+    format_fig;
+
+    % Criterion 
+        data_to_plot=[];
+    group_labels={'C','A'};
+    for i = 1:4 % number of repetitions
+        for j = 1:2 % number of group
+            data_to_plot{i, j} = all_block_table.criterion(all_block_table.BlockN==i  & all_block_table.Group==group_labels{j});
+        end
+    end
+
+    figure; hold on;
+    h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+    %set(gca, 'XLim', [0 .75]);
+    title(['Criterion per Block']);
+    xlabel('Criterion'); ylabel('Block Number');
     format_fig;
 
     %% plot the inter-probe interval
