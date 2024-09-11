@@ -24,24 +24,21 @@ evt(find(cellfun(@isempty,{evt.value})==1)) = []; %% Elaine - added to remove em
 evt(find_trials({evt.type},'New Segment')) = []; %% Elaine - added to remove empty cells in evt.value
 startProbeIdx=find_trials({evt.value},'S 13');
 if strcmp(cfg.SubID,'A015')
-    startProbeIdx=[startProbeIdx 1012]; % wrong triggers
-    startProbeIdx=sort(startProbeIdx);
+startProbeIdx=[startProbeIdx 1012]; % wrong triggers
+startProbeIdx=sort(startProbeIdx);
 elseif strcmp(cfg.SubID,'A050')
-    startProbeIdx=[startProbeIdx 1207]; % probed occured during a buffer overload
-    startProbeIdx=sort(startProbeIdx);
+startProbeIdx=[startProbeIdx 1207]; % probed occured during a buffer overload
+startProbeIdx=sort(startProbeIdx);
 elseif strcmp(cfg.SubID,'C042')
-    startProbeIdx=[startProbeIdx 2009]; % probed occured during a buffer overload
-    startProbeIdx=sort(startProbeIdx);
+startProbeIdx=[startProbeIdx 2009]; % probed occured during a buffer overload
+startProbeIdx=sort(startProbeIdx);
 elseif strcmp(cfg.SubID,'A038')
-    startProbeIdx=[startProbeIdx 377 443 486]; % probed occured during a buffer overload
-    startProbeIdx=sort(startProbeIdx);
+startProbeIdx=[startProbeIdx 377 443 486]; % probed occured during a buffer overload
+startProbeIdx=sort(startProbeIdx);
 elseif strcmp(cfg.SubID,'A039')
-    startProbeIdx=[startProbeIdx 1301]; % probed occured during a buffer overload
-    startProbeIdx=sort(startProbeIdx);
-    % load('/Users/thandrillon/Data/ADHD_MW/Behaviour/wanderIM_behavres_A039_29May2024-1210.mat')
-    % diff_probeend=diff(probe_res(:,3));
-    % evt_samples=[evt.sample];
-    % [diff(evt_samples(startProbeIdx))/hdr.Fs ; diff_probeend']
+startProbeIdx=[startProbeIdx 1301]; % probed occured during a buffer overload
+startProbeIdx=sort(startProbeIdx);
+% [diff(evt_samples(startProbeIdx))/hdr.Fs ; diff_probeend']
 end
 evt_samples=[evt.sample];
 for i=1:length(startProbeIdx)
