@@ -16,6 +16,7 @@ else
     preproc_path='/Volumes/Seagate/MWMB_ADHD_SART/preproc/';
     path_detectSW = '/Volumes/Seagate/MWMB_ADHD_SART/SW_detection/';
     save_path = '/Users/elaine/desktop/Git_Studies/MWMB_ADHD/tables';
+    path_data = '/Volumes/Seagate/MWMB_ADHD_SART/';
 
     %     mkdir(path_detectSW)
 end
@@ -39,6 +40,77 @@ flaggedIndex = byBlock.Miss > 0.8;
 flaggedppt = byBlock(flaggedIndex, :);
 disp(flaggedppt)
 
+%% Checking participants
 
+Check=byBlock(strcmp(byBlock.SubID, 'A021'),:);
+disp(Check)
+
+%% The following code below is checking participants who have <40 probes in their EEG recording 
+%List of participants: 
+% A015
+% A021
+% A038
+% A039
+% A050
+% A053
+% C036
+% C042
+
+% List of probes from SART
+% trig_start          =1;  %S
+% trig_end            =4;  %E
+% trig_startBlock     =5;  %B
+% trig_endBlock       =8;  %K
+% trig_startGO        =9;  %T
+% trig_startNOGO      =10; %T
+% trig_startQuestion  =12; %Q
+% trig_probestart     =13; %P
+% trig_probeend       =16;
+
+EEG_files=dir([path_data filesep 'EEG' filesep '*.eeg']);
+folder_name = EEG_files.folder;
+
+file_name = 'ID-A038.eeg'; %% !! Change to whatever ppt you want to check !!
+
+behav_files=dir([behav_path filesep 'wanderIM_behavres_*.mat']);
+for nF=1:length(behav_files)
+    behav_File_Name=behav_files(nF).name;
+    if contains(behav_File_Name, "AUTOSAVE") ==1 %Skips autosaves per block
+        continue;
+    end
+    if ~contains(behav_File_Name, "A038") ==1 %%!! Change to whatever ppt you want to check !!
+        continue;
+    end 
+    fprintf('... loading %s\n',behav_File_Name);
+    load(behav_File_Name)
+end
+
+% load EEG data and events
+data=ft_read_data([folder_name filesep file_name]);
+hdr=ft_read_header([folder_name filesep file_name]);
+evt=ft_read_event([folder_name filesep file_name]);
+evt(match_str({evt.type},'New Segment'))=[];
+
+% checky types of probes and number of probe starts (13) and end (16)
+unique({evt.value})
+length(find_trials({evt.value},'S 13'))
+length(find_trials({evt.value},'S 16'))
+
+% check if probe ends are aligned in eeg and probe_res
+evt_samples=[evt.sample];
+diff_probeend_evt=diff(evt_samples(find_trials({evt.value},'S 16')))/hdr.Fs;
+diff_probeend=diff(probe_res(:,18));
+diff_probeend_evt
+diff_probeend'
+
+% reconstruct probe start using the first 8s (triggers for endBlock) of a series
+diff_probe_evt2=diff(evt_samples(find_trials({evt.value},'S  8')))/hdr.Fs; 
+diff_probe_evt2(diff_probe_evt2<30)=[]; 
+diff_probe_evt1=diff(evt_samples(find_trials({evt.value},'S 13')))/hdr.Fs;
+diff_probe_evt=[diff_probe_evt1 diff_probe_evt2];
+diff_probe=diff(probe_res(:,3));
+
+[diff_probe_evt ; diff_probe' ; diff_probe_evt-diff_probe'] 
+% crashes for A015, A021, A038, A050, A053, C036, C042 'cause different array sizes
 
 

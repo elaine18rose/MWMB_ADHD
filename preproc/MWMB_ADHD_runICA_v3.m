@@ -1,4 +1,6 @@
 %% Changes from v2 - flagging of badChannels (changed from 4std to 3std) and therefore saved files all have ver2 in them
+%% 04/09/24 - EP: Using this script to debug/investigate why where probes are going missing but NOTE: v2 Thomas fixed so that there's a different threshold for frontal electrodes 
+%% NOT USING THIS SCRIPT FOR RUNNING ICAs!!
 clear all;
 close all;
 %%
@@ -63,6 +65,10 @@ for nF=1:length(eeg_files)
     %%% load the data
     SubInfo=split(eeg_files(nF).name,'-');
     SubID=SubInfo{2}(1:end-4);
+
+        if ~contains(SubID,'A039') %To debug - looking for participants who had probes where no SW were detected
+        continue
+    end
 
     if redo==1 || exist([preproc_path filesep 'comp2_i_probe_' SubID '.mat'])==0 || ~any(strcmp(badChannels_badTrials_info_v2(:,1), SubID))% To skip already preprocessed files
         fprintf('... working on %s\n',[eeg_files(nF).name])

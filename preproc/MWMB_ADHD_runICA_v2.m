@@ -1,4 +1,4 @@
-l%% Init
+%% Init
 clear all;
 close all;
 %%
@@ -34,12 +34,21 @@ eeg_files=dir([data_path filesep '*.eeg']);
 %EEG Layout info
 run ../MWMB_ADHD_elec_layout.m
 
+if exist([preproc_path filesep 'all_badChannels_badProbes.mat'])%EP - load bad channels table 
+    load([preproc_path filesep 'all_badChannels_badProbes.mat']);
+    startIndex = size(badChannels_badTrials_info, 1) + 1;
+else
+    badChannels_badTrials_info = {};
+    startIndex = 1;
+end 
+
+
 
 %% Loop across files
 RS = ["R1", "R2"];
 
-redo=1;
-nFc=0;
+redo=0;
+nFc = startIndex-1;
 all_ICA_classification=[];
 for nF=1:length(eeg_files)
     if startsWith(eeg_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
@@ -54,7 +63,7 @@ for nF=1:length(eeg_files)
     SubInfo=split(eeg_files(nF).name,'-');
     SubID=SubInfo{2}(1:end-4);
 
-    if redo==1 || exist([preproc_path filesep 'comp_i_probe_' SubID '.mat'])==0 % To skip already preprocessed files
+    if redo==1 || exist([preproc_path filesep 'comp_i_probe_' SubID '.mat'])==0 || ~any(strcmp(badChannels_badTrials_info(:,1), SubID)) % To skip already preprocessed files
         fprintf('... working on %s\n',[eeg_files(nF).name])
 
         %%% minimal preprocessing
@@ -156,6 +165,10 @@ for nF=1:length(eeg_files)
         badChannels_badTrials_info{nFc,5}=badTr_std;
         badChannels_badTrials_info{nFc,6}=badTr_kur;
         badChannels_badTrials_info{nFc,7}=badTrials;
+
+        fprintf('Processing %s\n', SubID); % EP - debugging to check which participant is being processed
+        disp(badChannels_badTrials_info(:, 1)); % EP - debugging to see if variable is being updated
+
         if ~isempty(badChannels)
             fprintf('... ... interpolating %g channels\n',length(badChannels))
             % find neighbours
