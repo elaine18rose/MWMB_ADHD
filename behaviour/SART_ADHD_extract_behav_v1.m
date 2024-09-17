@@ -105,9 +105,15 @@ for nF=1:length(files)
     % Display results
     disp(['dprime: ', num2str(dprime)]);
     disp(['Criterion: ', num2str(crit)]);
-    % Saving it in correct row
+    % Saving it in correct column
     this_behav(:,11) = dprime;
     this_behav(:,12) = crit;
+
+    % Reaction Time Variability (standard deviation of RTs)
+    valid_RT = RT(~isnan(RT));  % Only use non-NaN RT values
+    stdRT = std(valid_RT); % Calculate the standard deviation of valid RTs
+    % Adding as a new column
+    this_behav(:,13) = stdRT;
 
 
     this_state2=nan(length(probe_res),11);
@@ -128,7 +134,7 @@ for nF=1:length(files)
     stategroup_cond=[stategroup_cond; repmat({Group},size(this_state2,1),1)]; % This is putting the group condition (whether control or ADHD) in a variable for the length of trials
     %% Saving the data by trial per participant
     behav_table=array2table(this_behav,...
-        'VariableNames',{'SubID','Group','BlockN','nTrial','GoTrials','NoGoTrials','FA','Misses','RT','CR','dprime','crit'});
+        'VariableNames',{'SubID','Group','BlockN','nTrial','GoTrials','NoGoTrials','FA','Misses','RT','CR','dprime','crit','stdRT'});
     behav_table.SubID=categorical(behav_table.SubID);
     behav_table.Group=categorical(behav_table.Group);
     if File_Name(19)=='C' || File_Name(19)=='A'
@@ -172,9 +178,9 @@ for nF=1:length(files)
     end
 
     % by block data
-    block_table=zeros(4,17);
+    block_table=zeros(4,18);
     block_table=array2table(block_table,...
-        'VariableNames',{'SubID','Group','BlockN','ON','MW','MB','DK','Dist','Perso','Int','Intention','Vigilance','Miss','FA','HitRT','dprime','criterion'});
+        'VariableNames',{'SubID','Group','BlockN','ON','MW','MB','DK','Dist','Perso','Int','Intention','Vigilance','Miss','FA','HitRT','dprime','criterion','stdRT'});
     block_table.SubID=categorical(block_table.SubID);
     block_table.Group=categorical(block_table.Group);
 
@@ -200,6 +206,9 @@ for nF=1:length(files)
         block_table{block_table{:, 3} == nbl, 17} = crit;
 
     end
+
+    % Reaction Time Variability
+    block_table.stdRT = grpstats(all_RT, test_res(:,1), 'std');
 
 
     block_table.Intention=grpstats(probe_res(:,21),probe_res(:,4));
@@ -274,14 +283,23 @@ for nc=1:length(adhds)
     FA_ADHD(nc)=nanmean(all_behav_table.FA(all_behav_table.SubID==adhds(nc)));
 end
 
-% stdRT_CTR=[];
-% for nc=1:length(ctrs)
-%     stdRT_CTR(nc)=nanmean(table1.stdRT(table1.SubID==ctrs(nc)))./nanmean(table1.Hit_RT(table2.SubID==ctrs(nc)));
-% end
-% stdRT_ADHD=[];
-% for nc=1:length(adhds)
-%     stdRT_ADHD(nc)=nanmean(table1.stdRT(table1.SubID==adhds(nc)))./nanmean(table1.Hit_RT(table2.SubID==adhds(nc)));
-% end
+stdRT_CTR=[];
+for nc=1:length(ctrs)
+    stdRT_CTR(nc)=nanmean(all_behav_table.stdRT(all_behav_table.SubID==ctrs(nc)));
+end
+stdRT_ADHD=[];
+for nc=1:length(adhds)
+    stdRT_ADHD(nc)=nanmean(all_behav_table.stdRT(all_behav_table.SubID==adhds(nc)));
+end
+
+CV_CTR=[];
+for nc=1:length(ctrs)
+    CV_CTR(nc)=nanmean(all_behav_table.stdRT(all_behav_table.SubID==ctrs(nc)))./nanmean(all_behav_table.RT(all_behav_table.SubID==ctrs(nc)));
+end
+CV_ADHD=[];
+for nc=1:length(adhds)
+    CV_ADHD(nc)=nanmean(all_behav_table.stdRT(all_behav_table.SubID==adhds(nc)))./nanmean(all_behav_table.RT(all_behav_table.SubID==adhds(nc)));
+end
 
 Hit_RT_CTR=[];
 for nc=1:length(ctrs)
@@ -344,18 +362,31 @@ if flag_figures == 1
     % FAeffect = meanEffectSize(FA_CTR,FA_ADHD);
     % figure; gardnerAltmanPlot(FA_ADHD,FA_CTR);
 
-    %%
-    % %stdRT
-    % figure;
-    % h1 = raincloud_plot(stdRT_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
-    %     'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',.02);
-    % h2 = raincloud_plot(stdRT_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
-    %     'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',.02);
-    %
-    % set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
-    % set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
-    % set(gca,'XLim', [0.0 0.4], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [0.0 0.3], 'YLim', ylim.*[0.5 1.7]);
-    % format_fig; title('stdRT/meanRT'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
+    %stdRT
+    figure;
+    h1 = raincloud_plot(stdRT_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
+        'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',.02);
+    h2 = raincloud_plot(stdRT_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
+        'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',.02);
+
+    set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+    set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+    set(gca,'XLim', [0.0 0.4], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [0.0 0.3], 'YLim', ylim.*[0.5 1.7]);
+    set(gca,'YColor','none') % removes Y-axis
+    format_fig; title('stdRT'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
+
+    %Coefficient of Variation (CV - stdRT/meanRT)
+    figure;
+    h1 = raincloud_plot(CV_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
+        'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',.02);
+    h2 = raincloud_plot(CV_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
+        'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',.02);
+
+    set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+    set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+    %set(gca,'XLim', [0.0 0.4], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [0.0 0.3], 'YLim', ylim.*[0.5 1.7]);
+    set(gca,'YColor','none') % removes Y-axis
+    format_fig; title('Coefficient of Variation (stdRT/meanRT)'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
 
     %Hit_RT
     figure;
@@ -423,6 +454,22 @@ if flag_figures == 1
     set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
     title(['False alarms per Block']);
     xlabel('Percentage of False Alarms'); ylabel('Block Number');
+    format_fig;
+
+    %StdRT
+    data_to_plot=[];
+    group_labels={'C','A'};
+    for i = 1:4 % number of repetitions
+        for j = 1:2 % number of group
+            data_to_plot{i, j} = all_block_table.stdRT(all_block_table.BlockN==i  & all_block_table.Group==group_labels{j});
+        end
+    end
+
+    figure; hold on;
+    h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+    set(gca, 'XLim', [0 .45]);
+    title(['Standard Deviation of Hit Reaction Times per Block']);
+    xlabel('Standard Deviation of Reaction Times (seconds)'); ylabel('Block Number');
     format_fig;
 
     %Hit RT
@@ -711,12 +758,14 @@ all_behav_table.SubID=categorical(all_behav_table.SubID);
 
 mdlFA=fitlme(all_behav_table,'FA~1+BlockN*Group+(1|SubID)'); % you can do this for miss and RT
 mdlMiss=fitlme(all_behav_table,'Misses~1+BlockN*Group+(1|SubID)'); 
+mdlstdRT=fitlme(all_behav_table,'stdRT~1+BlockN*Group+(1|SubID)'); 
 
 % block-level stats
 all_block_table.Group=categorical(all_block_table.Group);
 all_block_table.SubID=categorical(all_block_table.SubID);
 
 mdlblockFA=fitlme(all_block_table,'FA~1+BlockN*Group+(1|SubID)');
+mdlblockstdRT=fitlme(all_block_table,'stdRT~1+BlockN*Group+(1|SubID)');
 
 mdlON=fitlme(all_block_table,'ON~1+BlockN*Group+(1|SubID)');
 mdlMW=fitlme(all_block_table,'MW~1+BlockN*Group+(1|SubID)');

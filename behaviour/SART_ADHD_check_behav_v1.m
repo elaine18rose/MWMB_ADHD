@@ -70,7 +70,7 @@ disp(Check)
 EEG_files=dir([path_data filesep 'EEG' filesep '*.eeg']);
 folder_name = EEG_files.folder;
 
-file_name = 'ID-A038.eeg'; %% !! Change to whatever ppt you want to check !!
+file_name = 'ID-A039.eeg'; %% !! Change to whatever ppt you want to check !!
 
 behav_files=dir([behav_path filesep 'wanderIM_behavres_*.mat']);
 for nF=1:length(behav_files)
@@ -78,39 +78,53 @@ for nF=1:length(behav_files)
     if contains(behav_File_Name, "AUTOSAVE") ==1 %Skips autosaves per block
         continue;
     end
-    if ~contains(behav_File_Name, "A038") ==1 %%!! Change to whatever ppt you want to check !!
+    if ~contains(behav_File_Name, "A039") ==1 %%!! Change to whatever ppt you want to check !!
         continue;
     end 
     fprintf('... loading %s\n',behav_File_Name);
     load(behav_File_Name)
 end
 
-% load EEG data and events
-data=ft_read_data([folder_name filesep file_name]);
-hdr=ft_read_header([folder_name filesep file_name]);
+% Code for fixing A039 (retreiving the 35 missing EEG triggers for the probes)
+diff_probeend=diff(probe_res(:,3));
 evt=ft_read_event([folder_name filesep file_name]);
-evt(match_str({evt.type},'New Segment'))=[];
-
-% checky types of probes and number of probe starts (13) and end (16)
-unique({evt.value})
-length(find_trials({evt.value},'S 13'))
-length(find_trials({evt.value},'S 16'))
-
-% check if probe ends are aligned in eeg and probe_res
+hdr=ft_read_header([folder_name filesep file_name]);
 evt_samples=[evt.sample];
-diff_probeend_evt=diff(evt_samples(find_trials({evt.value},'S 16')))/hdr.Fs;
-diff_probeend=diff(probe_res(:,18));
-diff_probeend_evt
-diff_probeend'
+evt(find(cellfun(@isempty,{evt.value})==1)) = []; %% added to remove empty cells in evt.value
+evt(find_trials({evt.type},'New Segment')) = []; %% added to remove empty cells in evt.value
+startProbeIdx=find_trials({evt.value},'S 13');
+startProbeIdx=[startProbeIdx 428 481 529 587 647 ...
+    693 740 799 854 916 976 1083 1138 1184 1236 ...
+    1301 1366 1411 1478 1534 1585 1641 1689 1794 1860 ...
+    1921 1975 2036 2099 2167 2235 2343 2391 2436 2490];
+[diff(evt_samples(startProbeIdx))/hdr.Fs ; diff_probeend']
 
-% reconstruct probe start using the first 8s (triggers for endBlock) of a series
-diff_probe_evt2=diff(evt_samples(find_trials({evt.value},'S  8')))/hdr.Fs; 
-diff_probe_evt2(diff_probe_evt2<30)=[]; 
-diff_probe_evt1=diff(evt_samples(find_trials({evt.value},'S 13')))/hdr.Fs;
-diff_probe_evt=[diff_probe_evt1 diff_probe_evt2];
-diff_probe=diff(probe_res(:,3));
-
-[diff_probe_evt ; diff_probe' ; diff_probe_evt-diff_probe'] 
-% crashes for A015, A021, A038, A050, A053, C036, C042 'cause different array sizes
+% % load EEG data and events
+% data=ft_read_data([folder_name filesep file_name]);
+% hdr=ft_read_header([folder_name filesep file_name]);
+% evt=ft_read_event([folder_name filesep file_name]);
+% evt(match_str({evt.type},'New Segment'))=[];
+% 
+% % checky types of probes and number of probe starts (13) and end (16)
+% unique({evt.value})
+% length(find_trials({evt.value},'S 13'))
+% length(find_trials({evt.value},'S 16'))
+% 
+% % check if probe ends are aligned in eeg and probe_res
+% evt_samples=[evt.sample];
+% diff_probeend_evt=diff(evt_samples(find_trials({evt.value},'S 16')))/hdr.Fs;
+% diff_probeend=diff(probe_res(:,18));
+% diff_probeend_evt
+% diff_probeend'
+% 
+% % reconstruct probe start using the first 8s (triggers for endBlock) of a series
+% diff_probe_evt2=diff(evt_samples(find_trials({evt.value},'S  8')))/hdr.Fs; 
+% diff_probe_evt2(diff_probe_evt2<30)=[]; 
+% diff_probe_evt1=diff(evt_samples(find_trials({evt.value},'S 13')))/hdr.Fs;
+% diff_probe_evt=[diff_probe_evt1 diff_probe_evt2];
+% diff_probe=diff(probe_res(:,3));
+% 
+% [diff_probe_evt ; diff_probe' ; diff_probe_evt-diff_probe'] 
+% % crashes for A015, A021, A038, A050, A053, C036, C042 'cause different array sizes
 
 

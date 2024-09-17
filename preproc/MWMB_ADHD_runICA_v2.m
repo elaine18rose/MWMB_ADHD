@@ -34,7 +34,7 @@ eeg_files=dir([data_path filesep '*.eeg']);
 %EEG Layout info
 run ../MWMB_ADHD_elec_layout.m
 
-if exist([preproc_path filesep 'all_badChannels_badProbes.mat'])%EP - load bad channels table 
+if exist([preproc_path filesep 'all_badChannels_badProbes.mat'])%EP - load bad channels table NOTE: need to change this because when we want to redo a specific participant, it just writes another row
     load([preproc_path filesep 'all_badChannels_badProbes.mat']);
     startIndex = size(badChannels_badTrials_info, 1) + 1;
 else
@@ -47,7 +47,7 @@ end
 %% Loop across files
 RS = ["R1", "R2"];
 
-redo=0;
+redo=1;
 nFc = startIndex-1;
 all_ICA_classification=[];
 for nF=1:length(eeg_files)
