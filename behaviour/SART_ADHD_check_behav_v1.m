@@ -70,7 +70,7 @@ disp(Check)
 EEG_files=dir([path_data filesep 'EEG' filesep '*.eeg']);
 folder_name = EEG_files.folder;
 
-file_name = 'ID-A039.eeg'; %% !! Change to whatever ppt you want to check !!
+file_name = 'ID-A031.eeg'; %% !! Change to whatever ppt you want to check !!
 
 behav_files=dir([behav_path filesep 'wanderIM_behavres_*.mat']);
 for nF=1:length(behav_files)
@@ -78,7 +78,7 @@ for nF=1:length(behav_files)
     if contains(behav_File_Name, "AUTOSAVE") ==1 %Skips autosaves per block
         continue;
     end
-    if ~contains(behav_File_Name, "A039") ==1 %%!! Change to whatever ppt you want to check !!
+    if ~contains(behav_File_Name, "A031") ==1 %%!! Change to whatever ppt you want to check !!
         continue;
     end 
     fprintf('... loading %s\n',behav_File_Name);

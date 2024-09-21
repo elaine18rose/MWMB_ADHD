@@ -47,7 +47,8 @@ run ../MWMB_ADHD_elec_layout.m
 % layout=ft_prepare_layout(cfg);
 
 
-load([pwd filesep '..' filesep 'Preproc' filesep 'all_badChannels_badProbes.mat']);
+%load([pwd filesep '..' filesep 'Preproc' filesep 'all_badChannels_badProbes.mat']);
+load([preproc_path filesep 'all_badChannels_badProbes.mat']);
 
 %%
 SW_table=array2table(zeros(0,17),'VariableNames',{'SubID','Group','Block','Elec','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope','SW_threshold','SW_peakneg','SW_peakpos','Probe_MS','Probe_Vig','Behav_Miss','Behav_FA','Behav_RT'});
