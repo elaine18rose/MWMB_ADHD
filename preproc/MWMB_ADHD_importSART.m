@@ -21,8 +21,8 @@ files=dir([path_data filesep 'EEG' filesep '*.eeg']);
 
 %% loop on subjects
 redo_block=0; % 1 to force re-import, 0 otherwise
-redo_probe=1; % 1 to force re-import, 0 otherwise
-redo_trial=0; % 1 to force re-import, 0 otherwise
+redo_probe=0; % 1 to force re-import, 0 otherwise
+redo_trial=1; % 1 to force re-import, 0 otherwise
 for nF=1:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
@@ -35,9 +35,9 @@ for nF=1:length(files)
     end
     
     tic;
-        if ~strcmp(SubID,'A039') %%re-add this if you need to clip the data
-            continue;
-        end
+%         if ~strcmp(SubID,'A039') %%re-add this if you need to clip the data
+%             continue;
+%         end
     fprintf('... working on %s (%g/%g)\n',file_name,nF,length(files))
     
 %     if redo_block==1 || exist([path_data filesep 'Preproc' filesep 'feblock_ft_' SubID '.mat'])==0

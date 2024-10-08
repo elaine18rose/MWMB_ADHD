@@ -42,7 +42,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 all_badCompo=[];
-redo=1;
+redo=0;
 all_pow=[];
 all_frac=[];
 all_osci=[];
@@ -124,6 +124,15 @@ for nF=1:length(eeg_files)
         end
     end
     all_alphapeak(nFc,:,:) = peaks_params;
+
+    % Copied from CTET script: 
+        if SubID(1)=='C'
+        group_PowData{nFc}='Control';
+        design_PowData(1,nFc)=0;
+    elseif SubID(1)=='A'
+        group_PowData{nFc}='ADHD';
+        design_PowData(1,nFc)=1;
+    end
 end
 
 %%
@@ -146,7 +155,8 @@ xlabel('Freq (Hz)'); title('Aperiodic');
 %%
 cfg = [];
 cfg.layout = 'EEG1010.lay';
-cfg.channel=data.label;
+%cfg.channel=data.label;
+cfg.channel=pow.label;
 cfg.center      = 'yes';
 layout=ft_prepare_layout(cfg);
 
@@ -155,7 +165,8 @@ name_bands={'\delta','\theta','\alpha'};
 for nF=1:size(freq_bands,1)
     temp_topo{nF}=[];
     for nCh=1:length(layout.label)-2
-        temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_pow(:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
+         temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_pow(:,match_str(pow.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
+%         temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_pow(:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
         %         temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_osci(:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
     end
 end
@@ -193,3 +204,65 @@ simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 colormap(cmap); colorbar;
 title('slope');
 format_fig;
+
+%% PS by group 
+Colors=[253,174,97;
+    171,217,233;
+    44,123,182]/256;
+
+faxis = pow.freq;
+chLabels=pow.label;
+
+figure;
+subplot(2,2,1);
+hp=[];
+[~,hp(1)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'Control'),match_str(chLabels,'Cz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Cz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+hold on;
+xlim([1 30]) %xlim([1 10])
+legend(hp,{'Controls','ADHD'})
+title('Power spectrum at electrode Cz');
+xlabel('Frequency (Hz)')
+ylabel('Log Pow')
+format_fig;
+
+subplot(2,2,2);
+hp=[];
+[~,hp(1)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'Control'),match_str(chLabels,'Fz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Fz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+hold on;
+xlim([1 30])
+legend(hp,{'Controls','ADHD'})
+title('Power spectrum at electrode Fz');
+xlabel('Frequency (Hz)')
+ylabel('Log Pow')
+format_fig;
+
+subplot(2,2,3);
+hp=[];
+[~,hp(1)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'Control'),match_str(chLabels,'Pz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Pz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+hold on;
+xlim([1 30])
+legend(hp,{'Controls','ADHD'})
+title('Power spectrum at electrode Pz');
+xlabel('Frequency (Hz)')
+ylabel('Log Pow')
+format_fig;
+
+subplot(2,2,4);
+hp=[];
+[~,hp(1)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'Control'),match_str(chLabels,'Oz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Oz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+hold on;
+xlim([1 30])
+legend(hp,{'Controls','ADHD'})
+title('Power spectrum at electrode Oz');
+xlabel('Frequency (Hz)')
+ylabel('Log Pow')
+format_fig;
+

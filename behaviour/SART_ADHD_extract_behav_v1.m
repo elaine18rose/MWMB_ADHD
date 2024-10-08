@@ -166,9 +166,9 @@ for nF=1:length(files)
         nogo_trials=test_res(test_res(:,1)==BlockIndex & test_res(:,4)<ProbeTrialIndex & test_res(:,5)==3,:);
         go_trials=go_trials(end-17:end,:);
         nogo_trials=nogo_trials(end-1:end,:);
-        probe_table.Miss(nP)=nanmean(go_trials(:,end)==0);
+        probe_table.Misses(nP)=nanmean(go_trials(:,end)==0);
         tempRT=go_trials(:,10)-go_trials(:,8); tempRT(tempRT<0.150)=NaN;
-        probe_table.HitRT(nP)=nanmean(tempRT);
+        probe_table.RT(nP)=nanmean(tempRT);
         probe_table.FA(nP)=nanmean(nogo_trials(:,end-1)==0);
     end
     if File_Name(19)=='C' || File_Name(19)=='A'
@@ -185,11 +185,11 @@ for nF=1:length(files)
     block_table.Group=categorical(block_table.Group);
 
     block_table.BlockN=(1:4)';
-    block_table.Miss=1-grpstats(test_res(:,12),test_res(:,1));
+    block_table.Misses=1-grpstats(test_res(:,12),test_res(:,1));
     block_table.FA=1-grpstats(test_res(:,11),test_res(:,1));
     all_RT=test_res(:,10)-test_res(:,8);
     all_RT(test_res(:,5)==3)=NaN;
-    block_table.HitRT=grpstats(all_RT,test_res(:,1));
+    block_table.RT=grpstats(all_RT,test_res(:,1));
 
     % D-Prime and Criterion 
     for nbl=1:4
@@ -318,11 +318,23 @@ for nc=1:length(ctrs)
     if strcmp(ctrs(nc), 'C015')
         continue; % Skipping C015 'cause ppt didn't understand instructions
     end
-    dprime_CTR(nc)=nanmean(all_behav_table.dprime(all_behav_table.SubID==ctrs(nc))); %NOTE though we don't need to calculat mean here cause it's the same across all trials cause it needs all to calculate
+    dprime_CTR(nc)=nanmean(all_behav_table.dprime(all_behav_table.SubID==ctrs(nc))); %NOTE though we don't need to calculate mean here cause it's the same across all trials cause it needs all to calculate
 end
 dprime_ADHD=[];
 for nc=1:length(adhds)
     dprime_ADHD(nc)=nanmean(all_behav_table.dprime(all_behav_table.SubID==adhds(nc)));
+end
+
+crit_CTR=[];
+for nc=1:length(ctrs)
+    if strcmp(ctrs(nc), 'C015')
+        continue; % Skipping C015 'cause ppt didn't understand instructions
+    end
+    crit_CTR(nc)=nanmean(all_behav_table.crit(all_behav_table.SubID==ctrs(nc))); %NOTE though we don't need to calculate mean here cause it's the same across all trials cause it needs all to calculate
+end
+crit_ADHD=[];
+for nc=1:length(adhds)
+    crit_ADHD(nc)=nanmean(all_behav_table.crit(all_behav_table.SubID==adhds(nc)));
 end
 
 flag_figures = input('Plot figures? (0 for no and 1 for yes) ');
@@ -418,6 +430,20 @@ if flag_figures == 1
     %RTeffect = meanEffectSize(Hit_RT_CTR,Hit_RT_ADHD);
     %figure; gardnerAltmanPlot(Hit_RT_ADHD,Hit_RT_CTR)
 
+
+    % criterion
+    figure;
+    h1 = raincloud_plot(crit_CTR, 'box_on', 1, 'color', Colors(1,:), 'alpha', 0.5,...
+        'box_dodge', 1, 'box_dodge_amount', .15, 'dot_dodge_amount', .15, 'box_col_match', 0,'band_width',5);
+    h2 = raincloud_plot(crit_ADHD, 'box_on', 1, 'color', Colors(2,:), 'alpha', 0.5,...
+        'box_dodge', 1, 'box_dodge_amount', .35, 'dot_dodge_amount', .35, 'box_col_match', 0,'band_width',5);
+
+    set(h1{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+    set(h2{2},'LineWidth',2,'SizeData',72,'MarkerFaceAlpha',0.7);
+    set(gca,'XLim', [-2 0.1], 'YLim', ylim.*[1 1.5]); %set(gca,'XLim', [0 6], 'YLim', ylim.*[0.5 1.7]);
+    format_fig; title('criterion'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
+    set(gca,'YColor','none') % removes Y-axis
+
     %% Repeated Measures plot
     %Miss
     data_to_plot=[];
@@ -425,13 +451,13 @@ if flag_figures == 1
     all_block_table.Group=categorical(all_block_table.Group);
     for i = 1:4 % number of repetitions
         for j = 1:2 % number of group
-            data_to_plot{i, j} = all_block_table.Miss(all_block_table.BlockN==i & all_block_table.Group==group_labels{j});
+            data_to_plot{i, j} = all_block_table.Misses(all_block_table.BlockN==i & all_block_table.Group==group_labels{j});
         end
     end
 
     figure; hold on;
     h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-    set(gca, 'XLim', [0.01 0.4]);
+    set(gca, 'XLim', [0.01 0.25]);
     xtix = get(gca, 'xtick'); %to change y-axis to percentage
     set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
     title(['Misses per Block']);
@@ -477,7 +503,7 @@ if flag_figures == 1
     group_labels={'C','A'};
     for i = 1:4 % number of repetitions
         for j = 1:2 % number of group
-            data_to_plot{i, j} = all_block_table.HitRT(all_block_table.BlockN==i  & all_block_table.Group==group_labels{j});
+            data_to_plot{i, j} = all_block_table.RT(all_block_table.BlockN==i  & all_block_table.Group==group_labels{j});
         end
     end
 
@@ -519,6 +545,22 @@ if flag_figures == 1
     title(['Criterion per Block']);
     xlabel('Criterion'); ylabel('Block Number');
     format_fig;
+
+    % Coefficient of Variation (CV) using Hit RT - !!need to fix code!! 
+%     data_to_plot=[];
+%     group_labels={'C','A'};
+%     for i = 1:4 % number of repetitions
+%         for j = 1:2 % number of group
+%             data_to_plot{i, j} = all_block_table.criterion(all_block_table.BlockN==i  & all_block_table.Group==group_labels{j});
+%         end
+%     end
+% 
+%     figure; hold on;
+%     h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+%     %set(gca, 'XLim', [0 .75]);
+%     title(['Coefficient of Variation per Block']);
+%     xlabel('CV'); ylabel('Block Number');
+%     format_fig;
 
     %% plot the inter-probe interval
     % plot(diff(probe_res(:,3)))
