@@ -48,14 +48,14 @@ all_threshold_SW=array2table(zeros(0,5),'VariableNames',{'SubID','Group','Elec',
 all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
 all_threshold_SW.Group=categorical(all_threshold_SW.Group);
 all_threshold_SW.Elec=categorical(all_threshold_SW.Elec);
-for nF=1:length(eeg_files)
-    if contains(eeg_files(nF).name,RS) %To skip resting state files
-        continue
-    end
+for nF=1:length(SW_files)
+%     if contains(eeg_files(nF).name,RS) %To skip resting state files
+%         continue
+%     end
 
     %%% load the data
-    SubInfo=split(eeg_files(nF).name,'_');
-    SubID=SubInfo{end}(4:end-4);
+    SubInfo=split(SW_files(nF).name,'_');
+    SubID=SubInfo{end}(1:end-4);
     if SubID(1)=='A'
         GroupID='ADHD';
     elseif SubID(1)=='C'
@@ -105,7 +105,7 @@ for nF=1:length(eeg_files)
     end
 
         %%% clean detection
-        paramSW.prticle_Thr=90; % 80 or 90 or 95
+        paramSW.prticle_Thr=80; % 80 or 90 or 95
         paramSW.LimFrqW=[1 7]; % [1 4] or [4 10]
         paramSW.AmpCriterionIdx=4; % 9 (MaxNegpkAmp) or 11 (MaxPosPeakAmp) or 4 (P2P)
         paramSW.fixThr=[];
