@@ -31,7 +31,7 @@ end
 % adding relevant toolboxes to the path
 % spm12 and LSCPtools
 addpath(genpath(path_LSCPtools))
-addpath(genpath(path_RainCloudPlot));
+% addpath(genpath(path_RainCloudPlot));
 addpath(path_fieldtrip)
 ft_defaults;
 addpath(genpath(path_ExGauss))
@@ -44,7 +44,7 @@ addpath(genpath(path_LSCPtools));
 % NOTE: I'm using trial data 
 files=dir([preproc_path filesep 'fetrial_ft_*.mat']);
 
-load([preproc_path filesep 'all_badChannels_badProbes.mat']);
+load([pwd filesep '..' filesep 'Preproc' filesep 'all_badChannels_badProbes.mat']);
 
 %EEG Layout info
 run ../MWMB_ADHD_elec_layout.m
@@ -132,11 +132,11 @@ for nF=1:length(files)
         % COMPUTE BOTH ONSET AND OFFSET ERP
         cfgerp        = [];
         %     cfgerp.latency        = [-0.2 0.8];
-        cfgerp.trials = find(table.test_res(:,11)==1); % EP  - Here looking for NoGos
+        cfgerp.trials = find_trials({events.value},'S  9'); % EP  - Here looking for NoGos
         av_data_NG = ft_timelockanalysis(cfgerp, data_clean); % av_data_NG = ft_timelockanalysis(cfgerp, data);
 
         cfgerp        = [];
-        cfgerp.trials = find(table.test_res(:,12)==1); % EP - Here looking for Gos
+        cfgerp.trials = find_trials({events.value},'S 10'); % EP - Here looking for Gos
         av_data_G = ft_timelockanalysis(cfgerp, data_clean); % av_data_G = ft_timelockanalysis(cfgerp, data);
 
         ERP_NG=av_data_NG.avg-repmat(nanmean(av_data_NG.avg(:,av_data_NG.time>-0.2 & av_data_NG.time<0),2),1,length(av_data_NG.time));
