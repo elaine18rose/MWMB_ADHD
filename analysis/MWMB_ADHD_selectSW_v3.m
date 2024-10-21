@@ -454,16 +454,28 @@ hb=colorbar('Position',[0.94    0.6    0.05    0.33]);
 colormap(cmap2);
 
 %% Correlation with behaviour
+SW_table.Probe_ON=double(SW_table.Probe_ON);
+SW_table.Probe_MW=double(SW_table.Probe_MW);
+SW_table.Probe_MB=double(SW_table.Probe_MB);
+SW_table.Probe_DR=double(SW_table.Probe_DR);
+
+SW_table.Probe_MW(SW_table.Probe_MW==0 & SW_table.Probe_ON==0)=NaN;
+SW_table.Probe_MB(SW_table.Probe_MB==0 & SW_table.Probe_ON==0)=NaN;
+SW_table.Probe_DR(SW_table.Probe_DR==0 & SW_table.Probe_ON==0)=NaN;
+
 clear topo_*
 clear sub_table
 clear temp_mdl_*
 SW_table.Group=categorical(SW_table.Group);
 SW_table.Group=reordercats(SW_table.Group,["Control" "ADHD"]);
 VOI={'Behav_FA','Behav_Miss','Behav_RT','Probe_Vig','Probe_MW','Probe_MB'};
-figure;
+f1=figure;
+f2=figure;
 for nV=1:length(VOI)
     topo_tV=[];
     topo_pV=[];
+    topo_comp_tV=[];
+    topo_comp_pV=[];
     for nE=1:length(layout.label)-2
         fprintf('... %g/%g\n',nE,length(layout.label)-2)
         sub_table=SW_table(SW_table.Elec==layout.label(nE),:);
@@ -471,15 +483,32 @@ for nV=1:length(VOI)
 
         topo_tV(nE)=temp_mdl_byBehav.Coefficients.tStat(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
         topo_pV(nE)=temp_mdl_byBehav.Coefficients.pValue(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
+
+        temp_mdl_byBehav2=fitlme(sub_table,sprintf('SW_density~1+Group*%s+Block+(1|SubID)',VOI{nV}));
+        mod_comp=compare(temp_mdl_byBehav,temp_mdl_byBehav2);
+        topo_comp_tV(nE)=mod_comp.LRStat(end);
+        topo_comp_pV(nE)=mod_comp.pValue(end);
+
     end
+    figure(f1);
     subplot(2,3,nV)
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
     simpleTopoPlot_ft(topo_tV', layout,'on',[],0,1);
     ft_plot_lay_me(layout, 'chanindx', find(topo_pV<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     colormap(cmap2);
-    colorbar('Ticks',[-5:5]);
     title(VOI{nV})
     caxis([-1 1]*max(abs(topo_tV)))
+    format_fig;
+
+    figure(f2);
+    subplot(2,3,nV)
+    cmap2=cbrewer('seq','PuBu',64); %cmap2=flipud(cmap2);
+    simpleTopoPlot_ft(topo_comp_tV', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(topo_comp_pV<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    colormap(cmap2);
+    title({VOI{nV},'Mod Comp'})
+    caxis([0 1]*max((topo_comp_tV)))
     format_fig;
 end
