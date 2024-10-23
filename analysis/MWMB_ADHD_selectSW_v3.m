@@ -225,31 +225,31 @@ for nF=1:length(SW_files)
             nanmean(slow_Waves(slow_Waves(:,3)==nE,12)) nanmean(slow_Waves(slow_Waves(:,3)==nE,13)) this_thr nanmean(slow_Waves(slow_Waves(:,3)==nE,9)) nanmean(slow_Waves(slow_Waves(:,3)==nE,11))]];
     end
 
-    table_length=size(SW_table,1);
-    SW_table.SubID(table_length+(1:length(labels)))=repmat({SubID},length(labels),1);
-    SW_table.Group(table_length+(1:length(labels)))=repmat({GroupID},length(labels),1);
-    SW_table.Elec(table_length+(1:length(labels)))=labels;
-    SW_table.SW_density(table_length+(1:length(labels)))=slow_Waves_perE(:,1);
-    SW_table.SW_amplitude(table_length+(1:length(labels)))=slow_Waves_perE(:,2);
-    SW_table.SW_frequency(table_length+(1:length(labels)))=slow_Waves_perE(:,3);
-    SW_table.SW_downslope(table_length+(1:length(labels)))=slow_Waves_perE(:,4);
-    SW_table.SW_upslope(table_length+(1:length(labels)))=slow_Waves_perE(:,5);
-    SW_table.SW_threshold(table_length+(1:length(labels)))=slow_Waves_perE(:,6);
-    SW_table.SW_peakneg(table_length+(1:length(labels)))=slow_Waves_perE(:,7);
-    SW_table.SW_peakpos(table_length+(1:length(labels)))=slow_Waves_perE(:,8);
+    table_length=size(SW_table_perS,1);
+    SW_table_perS.SubID(table_length+(1:length(labels)))=repmat({SubID},length(labels),1);
+    SW_table_perS.Group(table_length+(1:length(labels)))=repmat({GroupID},length(labels),1);
+    SW_table_perS.Elec(table_length+(1:length(labels)))=labels;
+    SW_table_perS.SW_density(table_length+(1:length(labels)))=slow_Waves_perE(:,1);
+    SW_table_perS.SW_amplitude(table_length+(1:length(labels)))=slow_Waves_perE(:,2);
+    SW_table_perS.SW_frequency(table_length+(1:length(labels)))=slow_Waves_perE(:,3);
+    SW_table_perS.SW_downslope(table_length+(1:length(labels)))=slow_Waves_perE(:,4);
+    SW_table_perS.SW_upslope(table_length+(1:length(labels)))=slow_Waves_perE(:,5);
+    SW_table_perS.SW_threshold(table_length+(1:length(labels)))=slow_Waves_perE(:,6);
+    SW_table_perS.SW_peakneg(table_length+(1:length(labels)))=slow_Waves_perE(:,7);
+    SW_table_perS.SW_peakpos(table_length+(1:length(labels)))=slow_Waves_perE(:,8);
 
-    SW_table.Rate_ON(table_length+(1:length(labels)))=repmat(nanmean(probe_res(:,19)==1),length(labels),1);
-    SW_table.Rate_MW(table_length+(1:length(labels)))=repmat(nanmean(probe_res(:,19)==2),length(labels),1);
-    SW_table.Rate_MB(table_length+(1:length(labels)))=repmat(nanmean(probe_res(:,19)==3),length(labels),1);
-    SW_table.Rate_DR(table_length+(1:length(labels)))=repmat(nanmean(probe_res(:,19)==4),length(labels),1);
-    SW_table.Probe_Vig(table_length+(1:length(labels)))=repmat(nanmean(probe_res(:,22)),length(labels),1);
+    SW_table_perS.Rate_ON(table_length+(1:length(labels)))=repmat(nanmean(probe_res(:,19)==1),length(labels),1);
+    SW_table_perS.Rate_MW(table_length+(1:length(labels)))=repmat(nanmean(probe_res(:,19)==2),length(labels),1);
+    SW_table_perS.Rate_MB(table_length+(1:length(labels)))=repmat(nanmean(probe_res(:,19)==3),length(labels),1);
+    SW_table_perS.Rate_DR(table_length+(1:length(labels)))=repmat(nanmean(probe_res(:,19)==4),length(labels),1);
+    SW_table_perS.Probe_Vig(table_length+(1:length(labels)))=repmat(nanmean(probe_res(:,22)),length(labels),1);
 
 
     temp_gos=test_res(test_res(:,5)~=3,:);
     temp_nogos=test_res(test_res(:,5)==3,:);
-    SW_table.Behav_Miss(table_length+(1:length(labels)))=repmat(nanmean(temp_gos(:,12)==0),length(labels),1);
-    SW_table.Behav_RT(table_length+(1:length(labels)))=repmat(nanmean(temp_gos(:,10)-temp_gos(:,8)),length(labels),1);
-    SW_table.Behav_FA(table_length+(1:length(labels)))=repmat(nanmean(temp_nogos(:,11)==0),length(labels),1);
+    SW_table_perS.Behav_Miss(table_length+(1:length(labels)))=repmat(nanmean(temp_gos(:,12)==0),length(labels),1);
+    SW_table_perS.Behav_RT(table_length+(1:length(labels)))=repmat(nanmean(temp_gos(:,10)-temp_gos(:,8)),length(labels),1);
+    SW_table_perS.Behav_FA(table_length+(1:length(labels)))=repmat(nanmean(temp_nogos(:,11)==0),length(labels),1);
 
 end
 % writetable(SW_table,[preproc_path filesep 'all_SW_perProbe_exGaussCTR_v2.csv'])
@@ -332,24 +332,22 @@ f2=figure;
 clear temp*
 
 Groups={'ADHD','Control'};
-VOI={'SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope'};
+VOI={'SW_density'}; %,'SW_amplitude','SW_frequency','SW_downslope','SW_upslope'};
 cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
 
 for nP=1:length(VOI)
     minmax_val=[];
     for nGroup=1:2
         figure(f2);
-        %sgtitle('Control v ADHD')
+        sgtitle('Control v ADHD')
         subplot(2,length(VOI),nP+(nGroup-1)*length(VOI))
+
 
         temp_topo=[];
         for nE=1:length(layout.label)-2
             temp=SW_table.(VOI{nP})(SW_table.Elec==layout.label{nE} & SW_table.Group==Groups{nGroup}); %Getting the values per electrode by group
             temp_topo(nE)=nanmean(temp); % Getting the means per electrode by group
         end
-        minmax_val=[minmax_val ; min(temp_topo) max(temp_topo)]; % min and max values from this group's topography
-        overall_min = min(minmax_val(:, 1));
-        overall_max = max(minmax_val(:, 2));
 
         simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
         colorbar;
@@ -357,28 +355,13 @@ for nP=1:length(VOI)
         colormap(cmap);
         title({VOI{nP}(4:end),Groups{nGroup}})
         minmax_val=[minmax_val ; min(temp_topo) max(temp_topo)];
-        %caxis([5 18])
-        caxis([overall_min overall_max]);
+        caxis([5 18])
         format_fig;
     end
 
 end
 
-
 %% Topos of the relationship between Group and SWDens using LMEs with BlockN as random slope
-% mdlSWD0  = fitlme(SW_table,'SW_density~1+Block+Group+(1|SubID)');
-% mdlSWD1  = fitlme(SW_table,'SW_density~1+Block*Group+(1|SubID)'); 
-% mdlSWD2  = fitlme(SW_table,'SW_density~1+Block*Group+(Block|SubID)'); % Winning AIC and BIC model - Group: p = .02, BlockN p <.001
-%  %%% Extract fit statistics for each model
-% AIC_values = [mdlSWD0.ModelCriterion.AIC, mdlSWD1.ModelCriterion.AIC, mdlSWD2.ModelCriterion.AIC];
-% BIC_values = [mdlSWD0.ModelCriterion.BIC, mdlSWD1.ModelCriterion.BIC, mdlSWD2.ModelCriterion.BIC];
-% % Display results in a table
-% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
-% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
-% disp(fit_table);
-% 
-% anova(mdlSWD2)
-
 clear topo_*
 clear sub_table
 clear temp_mdl_*
@@ -388,8 +371,7 @@ SW_table.Group=reordercats(SW_table.Group,["Control" "ADHD"]);
 for nE=1:length(layout.label)-2
     fprintf('... %g/%g\n',nE,length(layout.label)-2)
     sub_table=SW_table(SW_table.Elec==layout.label(nE),:);
-    % temp_mdl_byG=fitlme(sub_table,sprintf('SW_density~1+%s+Block+(1|SubID)','Group'));
-    temp_mdl_byG=fitlme(sub_table,sprintf('SW_density~1+%s*Block+(Block|SubID)','Group'));
+    temp_mdl_byG=fitlme(sub_table,sprintf('SW_density~1+%s+Block+(1|SubID)','Group'));
 
     topo_tV_byGroup(nE)=temp_mdl_byG.Coefficients.tStat(match_str(temp_mdl_byG.Coefficients.Name,"Group_ADHD"));
     topo_pV_byGroup(nE)=temp_mdl_byG.Coefficients.pValue(match_str(temp_mdl_byG.Coefficients.Name,"Group_ADHD"));
@@ -420,17 +402,6 @@ for nCh=1:length(layout.label)-2
     SWdens_est{1}=[SWdens_est{1} ; [nCh real_out]];
     SWdens_est{2}=[SWdens_est{2} ; [nCh*ones(totperm,1) perm_out]];
 end
-% for nCh=1:length(layout.label)-2
-%     sub_table=SW_table(SW_table.Elec==layout.label(nCh),:);
-%     if nCh==1
-%         out_pred_perm=[];
-%         [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_bygroup(sub_table,'Group','SW_density~1+Block+pred+(Block|SubID)',totperm);
-%     else
-%         [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_bygroup(sub_table,'Group','SW_density~1+Block+pred+(Block|SubID)',totperm,out_pred_perm);
-%     end
-%     SWdens_est{1}=[SWdens_est{1} ; [nCh real_out]];
-%     SWdens_est{2}=[SWdens_est{2} ; [nCh*ones(totperm,1) perm_out]];
-% end
 
 %%
 clus_alpha=0.1;
@@ -479,25 +450,18 @@ if ~isempty(temp_clus)
         ft_plot_lay_me(layout, 'chanindx',match_str(layout.label,temp_clus{nclus}{2}),'pointsymbol','o','pointcolor','k','pointsize',96,'box','no','label','no')
     end
 end
-% hb=colorbar('Position',[0.94    0.6    0.05    0.33]);
-hb=colorbar('Position',[0.84    0.6    0.05    0.33]);
+hb=colorbar('Position',[0.94    0.6    0.05    0.33]);
 colormap(cmap2);
 
 %% Correlation with behaviour
+SW_table.Probe_ON=double(SW_table.Probe_ON);
+SW_table.Probe_MW=double(SW_table.Probe_MW);
+SW_table.Probe_MB=double(SW_table.Probe_MB);
+SW_table.Probe_DR=double(SW_table.Probe_DR);
 
-%Checking winning models
-% mdlSWD0  = fitlme(SW_table,'SW_density~1+Block+Group+Probe_MB+(1|SubID)');
-% mdlSWD1  = fitlme(SW_table,'SW_density~1+Block*Group+Probe_MB+(1|SubID)'); 
-% mdlSWD2  = fitlme(SW_table,'SW_density~1+Block*Group+Probe_MB+(Block|SubID)'); % Winning AIC and BIC model across all VOI variables listed below
-% %%% Extract fit statistics for each model
-% AIC_values = [mdlSWD0.ModelCriterion.AIC, mdlSWD1.ModelCriterion.AIC, mdlSWD2.ModelCriterion.AIC];
-% BIC_values = [mdlSWD0.ModelCriterion.BIC, mdlSWD1.ModelCriterion.BIC, mdlSWD2.ModelCriterion.BIC];
-% % Display results in a table
-% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
-% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
-% disp(fit_table);
-% 
-% anova(mdlSWD2)
+SW_table.Probe_MW(SW_table.Probe_MW==0 & SW_table.Probe_ON==0)=NaN;
+SW_table.Probe_MB(SW_table.Probe_MB==0 & SW_table.Probe_ON==0)=NaN;
+SW_table.Probe_DR(SW_table.Probe_DR==0 & SW_table.Probe_ON==0)=NaN;
 
 clear topo_*
 clear sub_table
@@ -505,27 +469,46 @@ clear temp_mdl_*
 SW_table.Group=categorical(SW_table.Group);
 SW_table.Group=reordercats(SW_table.Group,["Control" "ADHD"]);
 VOI={'Behav_FA','Behav_Miss','Behav_RT','Probe_Vig','Probe_MW','Probe_MB'};
-figure;
+f1=figure;
+f2=figure;
 for nV=1:length(VOI)
     topo_tV=[];
     topo_pV=[];
+    topo_comp_tV=[];
+    topo_comp_pV=[];
     for nE=1:length(layout.label)-2
         fprintf('... %g/%g\n',nE,length(layout.label)-2)
         sub_table=SW_table(SW_table.Elec==layout.label(nE),:);
-        %temp_mdl_byBehav=fitlme(sub_table,sprintf('SW_density~1+Group+%s+Block+(1|SubID)',VOI{nV}));
-        temp_mdl_byBehav=fitlme(sub_table,sprintf('SW_density~1+%s+Group*Block+(Block|SubID)',VOI{nV}));
+        temp_mdl_byBehav=fitlme(sub_table,sprintf('SW_density~1+Group+%s+Block+(1|SubID)',VOI{nV}));
 
         topo_tV(nE)=temp_mdl_byBehav.Coefficients.tStat(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
         topo_pV(nE)=temp_mdl_byBehav.Coefficients.pValue(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
+
+        temp_mdl_byBehav2=fitlme(sub_table,sprintf('SW_density~1+Group*%s+Block+(1|SubID)',VOI{nV}));
+        mod_comp=compare(temp_mdl_byBehav,temp_mdl_byBehav2);
+        topo_comp_tV(nE)=mod_comp.LRStat(end);
+        topo_comp_pV(nE)=mod_comp.pValue(end);
+
     end
+    figure(f1);
     subplot(2,3,nV)
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
     simpleTopoPlot_ft(topo_tV', layout,'on',[],0,1);
     ft_plot_lay_me(layout, 'chanindx', find(topo_pV<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-    %ft_plot_lay_me(layout, 'chanindx', find(topo_pV<fdr(topo_pV,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     colormap(cmap2);
-    colorbar('Ticks',[-5:5]);
     title(VOI{nV})
     caxis([-1 1]*max(abs(topo_tV)))
+    format_fig;
+
+    figure(f2);
+    subplot(2,3,nV)
+    cmap2=cbrewer('seq','PuBu',64); %cmap2=flipud(cmap2);
+    simpleTopoPlot_ft(topo_comp_tV', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(topo_comp_pV<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    colormap(cmap2);
+    title({VOI{nV},'Mod Comp'})
+    caxis([0 1]*max((topo_comp_tV)))
     format_fig;
 end
