@@ -37,9 +37,7 @@ ft_defaults;
 addpath(genpath(path_ExGauss))
 addpath(genpath(path_FMINSEARCHBND))
 
-addpath(path_fieldtrip);
-ft_defaults;
-addpath(genpath(path_LSCPtools));
+
 
 % NOTE: I'm using trial data 
 files=dir([preproc_path filesep 'fetrial_ft_*.mat']);
@@ -67,9 +65,9 @@ for nF=1:length(files)
     SubID=file_name(12:end-4); 
 
 
-    if ismember(SubID, {'A053', 'C012', 'C024', 'C036', 'C038'}) %% TEMPORARY SKIP CAUSE IT WAS CRASHING; C012 & C024 & C038 maybe just rerun importSART
-        continue;
-    end
+%     if ismember(SubID, {'A053', 'C012', 'C024', 'C036', 'C038'}) %% TEMPORARY SKIP CAUSE IT WAS CRASHING; C012 & C024 & C038 maybe just rerun importSART
+%         continue;
+%     end
 
     %%% Fix the following when removing probes for by probe ERP analysis
     behav_files = dir([behav_path filesep 'wanderIM_behavres_' SubID '_*.mat']);
@@ -109,7 +107,7 @@ for nF=1:length(files)
        
         cfg=[];   %% !! EP - put back in from v1 although should this go after baseline correcting?
         cfg.reref           = 'yes'; 
-        cfg.refchannel      = 'all';
+        cfg.refchannel      = {'TP9', 'TP10'}; %'all';
         cfg.demean          = 'yes';
         cfg.baselinewindow  = [-0.2 0];
         cfg.dftfilter      = 'yes';        % enable notch filtering to eliminate power line noise
@@ -140,8 +138,8 @@ for nF=1:length(files)
         av_data_G = ft_timelockanalysis(cfgerp, data_clean); % av_data_G = ft_timelockanalysis(cfgerp, data);
 
         ERP_NG=av_data_NG.avg-repmat(nanmean(av_data_NG.avg(:,av_data_NG.time>-0.2 & av_data_NG.time<0),2),1,length(av_data_NG.time));
-        ERP_G=av_data_G.avg-repmat(nanmean(av_data_G.avg(:,av_data_NG.time>-0.2 & av_data_NG.time<0),2),1,length(av_data_NG.time)); % This is using av_data_NG for baseline correcting ERP_G
-        %ERP_G=av_data_G.avg-repmat(nanmean(av_data_G.avg(:,av_data_G.time>-0.2 & av_data_G.time<0),2),1,length(av_data_G.time));
+        % ERP_G=av_data_G.avg-repmat(nanmean(av_data_G.avg(:,av_data_NG.time>-0.2 & av_data_NG.time<0),2),1,length(av_data_NG.time)); % This is using av_data_NG for baseline correcting ERP_G
+        ERP_G=av_data_G.avg-repmat(nanmean(av_data_G.avg(:,av_data_G.time>-0.2 & av_data_G.time<0),2),1,length(av_data_G.time)); % TA - This is doing essentially the same as the above 
 
 
         cfgerp2        = [];
@@ -191,21 +189,57 @@ diff_all_ERP_offset=all_ERP_G_offset-all_ERP_NG_offset;
 %% Plots
 %Event-related potentials non-target vs target
 
-thisCh=match_str(chLabels,'Pz');
-
 Colors1=[233,163,201;
     247,247,247;
     161,215,106]/256;
 
 figure;
+thisCh=match_str(chLabels,'Fz');
+subplot(2,2,1);
 hp=[];
 [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(:,thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
 hold on;
 [~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(:,thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
 hold on;
 legend(hp,{'No Go','Go'})
-title('Event-related potentials NoGo vs Go');
-xlim([-0.2 1.8])
+title('ERP NoGo vs Go: Fz');
+xlim([-0.2 1.6])
+format_fig;
+
+thisCh=match_str(chLabels,'Cz');
+subplot(2,2,2);
+hp=[];
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(:,thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(:,thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
+hold on;
+legend(hp,{'No Go','Go'})
+title('ERP NoGo vs Go: Cz');
+xlim([-0.2 1.6])
+format_fig;
+
+thisCh=match_str(chLabels,'Pz');
+subplot(2,2,3);
+hp=[];
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(:,thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(:,thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
+hold on;
+legend(hp,{'No Go','Go'})
+title('ERP NoGo vs Go: Pz');
+xlim([-0.2 1.6])
+format_fig;
+
+thisCh=match_str(chLabels,'Oz');
+subplot(2,2,4);
+hp=[];
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(:,thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(:,thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
+hold on;
+legend(hp,{'No Go','Go'})
+title('ERP NoGo vs Go: Oz');
+xlim([-0.2 1.6])
 format_fig;
 
 % figure;
@@ -260,6 +294,7 @@ format_fig;
 % format_fig;
 
 %% ERP and split by group
+thisCh=match_str(chLabels,'Cz');
 figure;
 hp=[];
 [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
@@ -272,6 +307,7 @@ hold on;
 hold on;
 legend(hp,{'No Go','Go'})
 title('Event-related potentials for NoGo vs Go split by group');
+subtitle('Solid line: Control     Dashed line: ADHD');
 xlim([-0.2 0.8])
 format_fig;
 

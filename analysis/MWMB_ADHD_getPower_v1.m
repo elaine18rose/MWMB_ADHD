@@ -71,7 +71,7 @@ for nF=1:length(eeg_files)
     if exist([preproc_path filesep 'clean_i_probe_' SubID '.mat'])==0
         continue;
     end
-    if redo==1 || exist([preproc_path filesep 'TF_clean_i_probe_' SubID '.mat'])==0 % To skip already preprocessed files
+    if redo==1 || exist([preproc_path filesep 'TF_clean_i_probe_' SubID '.mat'])==0 
         load([preproc_path filesep 'clean_i_probe_' SubID '.mat']);
 
         % take the 20s before a probe
@@ -80,7 +80,7 @@ for nF=1:length(eeg_files)
         data          = ft_redefinetrial(cfg, data);
 
         cfg                             = [];
-        cfg.foilim                      = [1 30];
+        cfg.foilim                      = [1 40]; %[1 30];
         cfg.pad                         = 'nextpow2';
         cfg.tapsmofrq                   = 0.5;
         cfg.method                      = 'mtmfft';
@@ -185,6 +185,7 @@ end
 
 %%
 figure;
+load([preproc_path filesep 'clean_i_probe_' SubID '.mat']); % Uncomment if crashing in 192
 subplot(1,2,1);
 temp_topo=[];
 for nCh=1:length(layout.label)-2
@@ -220,7 +221,7 @@ hp=[];
 hold on;
 [~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Cz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
 hold on;
-xlim([1 30]) %xlim([1 10])
+xlim([1 40]) %xlim([1 10])
 legend(hp,{'Controls','ADHD'})
 title('Power spectrum at electrode Cz');
 xlabel('Frequency (Hz)')
@@ -233,7 +234,7 @@ hp=[];
 hold on;
 [~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Fz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
 hold on;
-xlim([1 30])
+xlim([1 40])
 legend(hp,{'Controls','ADHD'})
 title('Power spectrum at electrode Fz');
 xlabel('Frequency (Hz)')
@@ -246,7 +247,7 @@ hp=[];
 hold on;
 [~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Pz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
 hold on;
-xlim([1 30])
+xlim([1 40])
 legend(hp,{'Controls','ADHD'})
 title('Power spectrum at electrode Pz');
 xlabel('Frequency (Hz)')
@@ -259,7 +260,7 @@ hp=[];
 hold on;
 [~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Oz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
 hold on;
-xlim([1 30])
+xlim([1 40])
 legend(hp,{'Controls','ADHD'})
 title('Power spectrum at electrode Oz');
 xlabel('Frequency (Hz)')

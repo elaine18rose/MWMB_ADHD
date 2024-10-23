@@ -276,17 +276,91 @@ anova(mdlMB2)
 
 
 % Don't Remember
-mdlDK0 = fitlme(all_block_table,'DK~1+BlockN+Group+(1|SubID)');
-mdlDK1 = fitlme(all_block_table,'DK~1+BlockN*Group+(1|SubID)');
-mdlDK2 = fitlme(all_block_table,'DK~1+BlockN*Group+(BlockN|SubID)'); % Winning model; Group: p = 0.83, BlockN: p = .0016
+% mdlDK0 = fitlme(all_block_table,'DK~1+BlockN+Group+(1|SubID)');
+% mdlDK1 = fitlme(all_block_table,'DK~1+BlockN*Group+(1|SubID)');
+mdlDK2 = fitlme(all_block_table,'DK~1+BlockN*Group+(BlockN|SubID)'); % Winning model; Group: p = 0.85, BlockN: p = .0015
+% %%% Extract fit statistics for each model
+% AIC_values = [mdlDK0.ModelCriterion.AIC, mdlDK1.ModelCriterion.AIC, mdlDK2.ModelCriterion.AIC];
+% BIC_values = [mdlDK0.ModelCriterion.BIC, mdlDK1.ModelCriterion.BIC, mdlDK2.ModelCriterion.BIC];
+% % Display results in a table
+% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
+% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
+% disp(fit_table);
+
+anova(mdlDK2)
+
+
+% Intentionality (1 = Entirely intentional to 4 = Entirely unintentional)
+mdlint0 = fitlme(all_block_table,'Intention~1+BlockN+Group+(1|SubID)'); % Winning BIC model 
+% mdlint1 = fitlme(all_block_table,'Intention~1+BlockN*Group+(1|SubID)');
+mdlint2 = fitlme(all_block_table,'Intention~1+BlockN*Group+(BlockN|SubID)'); % Winning AIC model; Group: p <.001, Block: p <.001
+% %%% Extract fit statistics for each model
+% AIC_values = [mdlint0.ModelCriterion.AIC, mdlint1.ModelCriterion.AIC, mdlint2.ModelCriterion.AIC];
+% BIC_values = [mdlint0.ModelCriterion.BIC, mdlint1.ModelCriterion.BIC, mdlint2.ModelCriterion.BIC];
+% % Display results in a table
+% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
+% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
+% disp(fit_table);
+
+anova(mdlint2)
+
+%% probe-level stats
+
+% State (1 = On, 2 = MW, 3 = MB)
+mdlstate0 = fitlme(all_probe_table,'State~1+Block+Group+(1|SubID)'); % Winning BIC model; roup: p <.001, Block: p<.001
+% mdlstate1 = fitlme(all_probe_table,'State~1+Block*Group+(1|SubID)');
+mdlstate2 = fitlme(all_probe_table,'State~1+Block*Group+(Block|SubID)'); % Winning AIC model; Group: p <.001, Block: p =.032
 %%% Extract fit statistics for each model
-AIC_values = [mdlDK0.ModelCriterion.AIC, mdlDK1.ModelCriterion.AIC, mdlDK2.ModelCriterion.AIC];
-BIC_values = [mdlDK0.ModelCriterion.BIC, mdlDK1.ModelCriterion.BIC, mdlDK2.ModelCriterion.BIC];
-% Display results in a table
-ModelNames = {'Model 0', 'Model 1', 'Model 2'};
-fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
-disp(fit_table);
+% AIC_values = [mdlstate0.ModelCriterion.AIC, mdlstate1.ModelCriterion.AIC, mdlstate2.ModelCriterion.AIC];
+% BIC_values = [mdlstate0.ModelCriterion.BIC, mdlstate1.ModelCriterion.BIC, mdlstate2.ModelCriterion.BIC];
+% % Display results in a table
+% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
+% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
+% disp(fit_table);
+
+anova(mdlstate2)
 
 
+% Distraction (1 = in the room; 2 = personal; 3 = about the task)
+% mdldist0 = fitlme(all_probe_table,'Distraction~1+Block+Group+(1|SubID)');
+% mdldist1 = fitlme(all_probe_table,'Distraction~1+Block*Group+(1|SubID)');
+mdldist2 = fitlme(all_probe_table,'Distraction~1+Block*Group+(Block|SubID)'); % Winning AIC & BIC model; Group: p = .94, Block: p = .99
+%%% Extract fit statistics for each model
+% AIC_values = [mdldist0.ModelCriterion.AIC, mdldist1.ModelCriterion.AIC, mdldist2.ModelCriterion.AIC];
+% BIC_values = [mdldist0.ModelCriterion.BIC, mdldist1.ModelCriterion.BIC, mdldist2.ModelCriterion.BIC];
+% % Display results in a table
+% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
+% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
+% disp(fit_table);
+
+anova(mdldist2)
 
 
+% Intentionality (1 = Entirely intentional to 4 = Entirely unintentional)
+% mdlint0 = fitlme(all_probe_table,'Intention~1+Block+Group+(1|SubID)');
+% mdlint1 = fitlme(all_probe_table,'Intention~1+Block*Group+(1|SubID)');
+mdlint2 = fitlme(all_probe_table,'Intention~1+Block*Group+(Block|SubID)'); % Winning AIC & BIC model; Group: p <.001, Block: p <.001
+%%% Extract fit statistics for each model
+% AIC_values = [mdlint0.ModelCriterion.AIC, mdlint1.ModelCriterion.AIC, mdlint2.ModelCriterion.AIC];
+% BIC_values = [mdlint0.ModelCriterion.BIC, mdlint1.ModelCriterion.BIC, mdlint2.ModelCriterion.BIC];
+% % Display results in a table
+% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
+% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
+% disp(fit_table);
+
+anova(mdlint2)
+
+
+% Vigilance (1 = Extremely alert to 4 = Extremely sleepy)
+% mdlvig0 = fitlme(all_probe_table,'Intention~1+Block+Group+(1|SubID)');
+% mdlvig1 = fitlme(all_probe_table,'Intention~1+Block*Group+(1|SubID)');
+mdlvig2 = fitlme(all_probe_table,'Intention~1+Block*Group+(Block|SubID)'); % Winning AIC & BIC model; Group: p <.001, Block: p <.001
+% %%% Extract fit statistics for each model
+% AIC_values = [mdlvig0.ModelCriterion.AIC, mdlvig1.ModelCriterion.AIC, mdlvig2.ModelCriterion.AIC];
+% BIC_values = [mdlvig0.ModelCriterion.BIC, mdlvig1.ModelCriterion.BIC, mdlvig2.ModelCriterion.BIC];
+% % Display results in a table
+% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
+% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
+% disp(fit_table);
+
+anova(mdlvig2)

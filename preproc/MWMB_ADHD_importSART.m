@@ -152,7 +152,10 @@ for nF=1:length(files)
     
     %%%% trial
     if redo_trial==1 || exist([path_data filesep 'Preproc' filesep 'fetrial_ft_' SubID '.mat'])==0
-        
+        if ~strcmp(SubID,{'A053', 'C036'}) %C012 & C024 & C038 re-importing 'cause crashing in ERP script
+            continue;
+        end
+
         hdr=ft_read_header([folder_name filesep file_name]);
         evt=ft_read_event([folder_name filesep file_name]);
 %             trig_start          =1;  %S

@@ -789,7 +789,82 @@ if flag_figures == 1
     end
     format_fig
     xlim([0.5 4.5])
+
+    %% Mind Wandering by Distraction
+    numbers_of_interest = [1, 2, 3];
+    ADHD_mw = [];
+    Control_mw =[];
+    Control_mw = zeros(length(ctrs), length(numbers_of_interest));
+    ADHD_mw = zeros(length(adhds), length(numbers_of_interest));
+
+    clear mw_values
+    index = 1; % Initialize a separate index for Control_vig
+    for nc = 1:length(ctrs)
+        if ctrs(nc) == 'C015'
+            disp('Skipping C015')
+            continue; % Skipping C015 'cause ppt didn't understand instructions
+        end
+        % Extract the State column for the current participant
+        mw_values = all_probe_table.Distraction(all_probe_table.SubID == ctrs(nc));
+        % Count occurrences of each number (1, 2, 3) for the current participant
+        Control_mw(index, :) = histcounts(mw_values, [numbers_of_interest, Inf]);
+        index = index + 1; % Increment the Control_state index only when valid data is added
+    end
+
+    % Calculate the total occurrences of each number across all participants
+    Ctr_mw_total_occurrences = sum(Control_mw);
+    % Calculate the percentage distribution
+    Ctr_mw_percentage_distribution = Ctr_mw_total_occurrences / sum(Ctr_mw_total_occurrences) * 100;
+
+    clear mw_values
+    for nc = 1:length(adhds)
+        % Extract the State column for the current participant
+        mw_values = all_probe_table.Distraction(all_probe_table.SubID == adhds(nc));
+        % Count occurrences of each number (1, 2, 3, 4) for the current participant
+        ADHD_mw(nc, :) = histcounts(mw_values, [numbers_of_interest, Inf]);
+    end
+
+    ADHD_mw_total_occurrences = sum(ADHD_mw);
+    ADHD_mw_percentage_distribution = ADHD_mw_total_occurrences / sum(ADHD_mw_total_occurrences) * 100;
+
+
+
+    % Plot the distribution
+    labels = {'Smth in Room', 'Personal','About task'};
+
+    figure('Position',[1955         361         758         413]);
+    bar((1:numel(labels))-0.2, Ctr_mw_percentage_distribution, 'FaceColor',Colors(1,:),'BarWidth',0.38);
+    ylabel('% of Types of MW');
+    xticks(1:numel(labels));
+    xticklabels(labels);
+    xtickangle(45);
+    % Add percentage values on top of each bar
+    for i = 1:numel(labels)
+        for j = 1:size(Ctr_mw_percentage_distribution, 1)
+            text(i-0.2, Ctr_mw_percentage_distribution(j, i), sprintf('%.1f%%', Ctr_mw_percentage_distribution(j, i)), ...
+                'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom','FontSize', 18,'Color',Colors(1,:),'FontWeight','bold');
+        end
+    end
+    format_fig
+    hold on;
+
+    bar((1:numel(labels))+0.2, ADHD_mw_percentage_distribution, 'FaceColor',Colors(2,:),'BarWidth',0.38);
+    xticks(1:numel(labels));
+    xticklabels(labels);
+    xtickangle(45);
+    % Add percentage values on top of each bar
+    for i = 1:numel(labels)
+        for j = 1:size(ADHD_mw_percentage_distribution, 1)
+            text(i+0.2, ADHD_mw_percentage_distribution(j, i), sprintf('%.1f%%', ADHD_mw_percentage_distribution(j, i)), ...
+                'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 18,'Color',Colors(2,:),'FontWeight','bold');
+        end
+    end
+    format_fig
+    xlim([0.5 3.5])
+    ylim([0 80])
 end
+
+
 
 
 %%
