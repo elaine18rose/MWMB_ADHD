@@ -183,8 +183,53 @@ for nF=1:size(freq_bands,1)
     format_fig;
 end
 
+% By group
+for nF=1:size(freq_bands,1)
+    temp_topo{nF}=[];
+    for nCh=1:length(layout.label)-2
+         temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_pow(match_str(group_PowData,'Control'),match_str(pow.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
+%         temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_pow(:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
+        %         temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_osci(:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
+    end
+end
+cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+cmap(cmap<0)=0;
+figure;
+for nF=1:size(freq_bands,1)
+    subplot(1,size(freq_bands,1),nF);
+
+    simpleTopoPlot_ft(temp_topo{nF}', layout,'on',[],0,1);
+    colormap(cmap); colorbar;
+    title(name_bands{nF});
+    subtitle('Controls')
+    format_fig;
+end
+
+for nF=1:size(freq_bands,1)
+    temp_topo{nF}=[];
+    for nCh=1:length(layout.label)-2
+         temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_pow(match_str(group_PowData,'Control'),match_str(pow.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
+%         temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_pow(:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
+        %         temp_topo{nF}(nCh)=squeeze(nanmean(nanmean(all_osci(:,match_str(data.label,layout.label{nCh}),pow.freq>freq_bands(nF,1) & pow.freq<freq_bands(nF,2)),3),1));
+    end
+end
+
+cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+cmap(cmap<0)=0;
+figure;
+for nF=1:size(freq_bands,1)
+    subplot(1,size(freq_bands,1),nF);
+
+    simpleTopoPlot_ft(temp_topo{nF}', layout,'on',[],0,1);
+    colormap(cmap); colorbar;
+    title(name_bands{nF});
+    subtitle('Controls')
+    format_fig;
+end
+
 %%
 figure;
+load([preproc_path filesep 'clean_i_probe_' SubID '.mat']); % Uncomment if crashing in 192
 subplot(1,2,1);
 temp_topo=[];
 for nCh=1:length(layout.label)-2
@@ -205,6 +250,52 @@ colormap(cmap); colorbar;
 title('slope');
 format_fig;
 
+% offset and slope by group 
+adhd_idx    = find(design_PowData == 1);  
+control_idx = find(design_PowData == 0); 
+
+figure;
+temp_topo_adhd  = [];
+for nCh = 1:length(layout.label)-2
+    temp_topo_adhd(nCh) = squeeze(nanmean(all_aperiodic(adhd_idx, match_str(data.label, layout.label{nCh}), 1), 1));
+end
+subplot(2,2,1)
+simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
+colormap(cmap); colorbar;
+title('Offset - ADHD');
+caxis([-1 -0.2]) 
+format_fig;
+
+temp_topo_control = [];
+for nCh = 1:length(layout.label)-2
+    temp_topo_control(nCh) = squeeze(nanmean(all_aperiodic(control_idx, match_str(data.label, layout.label{nCh}), 1), 1));
+end
+subplot(2,2,2)
+simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
+colormap(cmap); colorbar;
+title('Offset - Control');
+caxis([-1 -0.2]) 
+format_fig;
+
+temp_topo_adhd = [];
+for nCh = 1:length(layout.label)-2
+    temp_topo_adhd(nCh) = squeeze(nanmean(all_aperiodic(adhd_idx, match_str(data.label, layout.label{nCh}), 2), 1));
+end
+subplot(2,2,3)
+simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
+colormap(cmap); colorbar;
+title('Slope - ADHD');
+format_fig;
+
+temp_topo_control = [];
+for nCh = 1:length(layout.label)-2
+    temp_topo_control(nCh) = squeeze(nanmean(all_aperiodic(control_idx, match_str(data.label, layout.label{nCh}), 2), 1));
+end
+subplot(2,2,4)
+simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
+colormap(cmap); colorbar;
+title('Slope - Control');
+format_fig;
 %% PS by group 
 Colors=[253,174,97;
     171,217,233;
@@ -265,4 +356,67 @@ title('Power spectrum at electrode Oz');
 xlabel('Frequency (Hz)')
 ylabel('Log Pow')
 format_fig;
+
+
+%% PS by group - periodic
+Colors=[253,174,97;
+    171,217,233;
+    44,123,182]/256;
+
+faxis = pow.freq;
+chLabels=pow.label;
+
+figure;
+subplot(2,2,1);
+hp=[];
+[~,hp(1)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'Control'),match_str(chLabels,'Cz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'ADHD'),match_str(chLabels,'Cz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+hold on;
+xlim([1 40]) %xlim([1 10])
+legend(hp,{'Controls','ADHD'})
+title('Periodic PS: Cz');
+xlabel('Frequency (Hz)')
+ylabel('Power')
+format_fig;
+
+subplot(2,2,2);
+hp=[];
+[~,hp(1)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'Control'),match_str(chLabels,'Fz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'ADHD'),match_str(chLabels,'Fz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+hold on;
+xlim([1 40])
+legend(hp,{'Controls','ADHD'})
+title('Periodic PS: Fz');
+xlabel('Frequency (Hz)')
+ylabel('Power')
+format_fig;
+
+subplot(2,2,3);
+hp=[];
+[~,hp(1)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'Control'),match_str(chLabels,'Pz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'ADHD'),match_str(chLabels,'Pz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+hold on;
+xlim([1 40])
+legend(hp,{'Controls','ADHD'})
+title('Periodic PS: Pz');
+xlabel('Frequency (Hz)')
+ylabel('Power')
+format_fig;
+
+subplot(2,2,4);
+hp=[];
+[~,hp(1)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'Control'),match_str(chLabels,'Oz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'ADHD'),match_str(chLabels,'Oz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+hold on;
+xlim([1 40])
+legend(hp,{'Controls','ADHD'})
+title('Periodic PS: Oz');
+xlabel('Frequency (Hz)')
+ylabel('Power')
+format_fig;
+
 

@@ -48,7 +48,7 @@ load([pwd filesep '..' filesep 'Preproc' filesep 'all_badChannels_badProbes.mat'
 run ../MWMB_ADHD_elec_layout.m
 
 %% Loop across files
-redo=1;
+redo=0;
 
 nFc=0;
 nFc4=0;
@@ -130,11 +130,11 @@ for nF=1:length(files)
         % COMPUTE BOTH ONSET AND OFFSET ERP
         cfgerp        = [];
         %     cfgerp.latency        = [-0.2 0.8];
-        cfgerp.trials = find_trials({events.value},'S  9'); % EP  - Here looking for NoGos
+        cfgerp.trials = find_trials({events.value},'S 10'); % EP  - Here looking for NoGos
         av_data_NG = ft_timelockanalysis(cfgerp, data_clean); % av_data_NG = ft_timelockanalysis(cfgerp, data);
 
         cfgerp        = [];
-        cfgerp.trials = find_trials({events.value},'S 10'); % EP - Here looking for Gos
+        cfgerp.trials = find_trials({events.value},'S  9'); % EP - Here looking for Gos
         av_data_G = ft_timelockanalysis(cfgerp, data_clean); % av_data_G = ft_timelockanalysis(cfgerp, data);
 
         ERP_NG=av_data_NG.avg-repmat(nanmean(av_data_NG.avg(:,av_data_NG.time>-0.2 & av_data_NG.time<0),2),1,length(av_data_NG.time));
@@ -158,8 +158,7 @@ for nF=1:length(files)
     else
         load([preproc_path filesep 'ERP_' file_name])
           nFc=nFc+1;
-  end
-  
+    end
     
     all_ERP_NG(nFc,:,:)=ERP_NG;
     all_ERP_G(nFc,:,:)=ERP_G;
@@ -168,12 +167,14 @@ for nF=1:length(files)
     all_ERP_G_offset(nFc,:,:)=ERP_G_offset;
     
     
-    
     if SubID(1)=='C'
         group_PowDataEO{nFc}='Control';
     elseif SubID(1)=='A'
         group_PowDataEO{nFc}='ADHD';
     end
+
+    SubIDs{nFc} = SubID;
+
 end
 
 %%
@@ -242,35 +243,17 @@ title('ERP NoGo vs Go: Oz');
 xlim([-0.2 1.6])
 format_fig;
 
+
 % figure;
 % hp=[];
-% [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NT(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
-% [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NT(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+% [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG_offset(:,thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
 % hold on;
-% [~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_TG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
-% [~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_TG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
-% hold off;
-% legend(hp,{'Non Target','Target'})
-% title('Event-related potentials non-target vs target');
-% subtitle('solid line: Controls, dashed line: ADHD');
-% xlim([-0.2 1.8])
+% [~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G_offset(:,thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
+% hold on;
+% legend(hp,{'No Go','Go'})
+% title('Event-related potentials NoGo vs Go - offset-locked');
+% xlim([-0.2 0.8])
 % format_fig;
-
-% figure;
-% hp=[];
-% [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_TG(:,thisCh,:))-squeeze(all_ERP_NT(:,thisCh,:)),0,'r',[2 0.05 0.05 1000],'-',0.5,1,0,1,2);
-
-
-figure;
-hp=[];
-[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG_offset(:,thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
-hold on;
-[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G_offset(:,thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
-hold on;
-legend(hp,{'No Go','Go'})
-title('Event-related potentials NoGo vs Go - offset-locked');
-xlim([-0.2 0.8])
-format_fig;
 
 
 % figure;
@@ -294,8 +277,9 @@ format_fig;
 % format_fig;
 
 %% ERP and split by group
-thisCh=match_str(chLabels,'Cz');
 figure;
+thisCh=match_str(chLabels,'Fz');
+subplot(2,2,1);
 hp=[];
 [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
 hold on;
@@ -306,23 +290,107 @@ hold on;
 [~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
 hold on;
 legend(hp,{'No Go','Go'})
-title('Event-related potentials for NoGo vs Go split by group');
+title('ERP NoGo vs Go: Fz');
 subtitle('Solid line: Control     Dashed line: ADHD');
-xlim([-0.2 0.8])
+xlim([-0.2 1.6])
+format_fig;
+
+thisCh=match_str(chLabels,'Cz');
+subplot(2,2,2);
+hp=[];
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
+hold on;
+legend(hp,{'No Go','Go'})
+title('ERP NoGo vs Go: Cz');
+xlim([-0.2 1.6])
+format_fig;
+
+thisCh=match_str(chLabels,'Pz');
+subplot(2,2,3);
+hp=[];
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
+hold on;
+legend(hp,{'No Go','Go'})
+title('ERP NoGo vs Go: Pz');
+xlim([-0.2 1.6])
+format_fig;
+
+thisCh=match_str(chLabels,'Oz');
+subplot(2,2,4);
+hp=[];
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
+hold on;
+legend(hp,{'No Go','Go'})
+title('ERP NoGo vs Go: Oz');
+xlim([-0.2 1.6])
 format_fig;
 
 
 %% ERP differences
-thisCh=match_str(chLabels,'Pz'); %POz
-
 figure;
+thisCh=match_str(chLabels,'Fz'); 
+subplot(2,2,1); 
 hp=[];
 [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:))-squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
 hold on;
 [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:))-squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
 hold on;
 % legend(hp,{'Non Target','Target'})
-title('Event-related potential differences NoGo vs Go split by group');
+title('ERP differences NoGo vs Go split by group: Fz');
+xlim([-0.2 1.5])
+format_fig;
+
+thisCh=match_str(chLabels,'Cz'); 
+subplot(2,2,2); 
+hp=[];
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:))-squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:))-squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+hold on;
+% legend(hp,{'Non Target','Target'})
+title('ERP differences NoGo vs Go split by group: Cz');
+xlim([-0.2 1.5])
+format_fig;
+
+thisCh=match_str(chLabels,'Pz'); 
+subplot(2,2,3); 
+hp=[];
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:))-squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:))-squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+hold on;
+% legend(hp,{'Non Target','Target'})
+title('ERP differences NoGo vs Go split by group: Pz');
+xlim([-0.2 1.5])
+format_fig;
+
+thisCh=match_str(chLabels,'Oz'); 
+subplot(2,2,4); 
+hp=[];
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:))-squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:))-squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+hold on;
+% legend(hp,{'Non Target','Target'})
+title('ERP differences NoGo vs Go split by group: Oz');
 xlim([-0.2 1.5])
 format_fig;
 
@@ -361,7 +429,7 @@ format_fig; title('Diff Go/NoGos (s)'); legend([h1{1} h2{1}], {'Controls', 'ADHD
 
 [h, pV_diffGroup,~,stat_diffGroup]=ttest2(diffG_NG(match_str(group_PowDataEO,'Control')),diffG_NG(match_str(group_PowDataEO,'ADHD')));
 fprintf('... unpaired t-test between groups on diff ERP between Go and NoGo on POz for 1.1-1.8s: p=%g, t-value=%g, df=%g\n',...
-    pV_diffGroup,stat_diffGroup.tstat,stat_diffGroup.df) % t(18)=0.90, p=0.38
+    pV_diffGroup,stat_diffGroup.tstat,stat_diffGroup.df) 
 
 [h, pV_CTR,~,stat_CTR]=ttest(diffG_NG(match_str(group_PowDataEO,'Control')),0);
 fprintf('... one-sample t-test with 0 for Controls on diff ERP between Go and NoGo on POz for 1.1-1.8s: p=%g, t-value=%g, df=%g\n',...
@@ -418,24 +486,28 @@ end
 %Difference Go/NoGo trials onset-locked
 temp_topo=squeeze(mean(mean(diff_all_ERP(:,matching_elec,xTime>TimeWin(1) & xTime<TimeWin(2)),3),1));
 figure;
+subplot(2,2,1)
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 colorbar;
 title('Topography difference Go/NoGo trials [1.1-1.8]s post-onset')
-%caxis([-1 1]*5.2)
+caxis([-1 1]*2.5)
+format_fig;
 
 temp_topo_CTR=squeeze(mean(mean(diff_all_ERP(match_str(group_PowDataEO,'Control'),matching_elec,xTime>0.15 & xTime<0.25),3),1));
-figure;
+subplot(2,2,2)
 simpleTopoPlot_ft(temp_topo_CTR', layout,'on',[],0,1);
 colorbar;
 title('Topography difference Go/NoGo trials [1.1-1.8]s post-onset for Controls')
-%caxis([-1 1]*.3)
+caxis([-1 1]*2.5)
+format_fig;
 
 temp_topo_ADHD=squeeze(mean(mean(diff_all_ERP(match_str(group_PowDataEO,'ADHD'),matching_elec,xTime>0.15 & xTime<0.25),3),1));
-figure;
+subplot(2,2,3)
 simpleTopoPlot_ft(temp_topo_ADHD', layout,'on',[],0,1);
 colorbar;
 title('Topography difference target/non target trials [1.1-1.8]s post-onset for ADHDs')
-%caxis([-1 1]*.3)
+caxis([-1 1]*2.5)
+format_fig;
 
 %T-values topo
 cmap_ttest=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
@@ -450,40 +522,41 @@ for nE=1:size(diff_all_ERP,2)
     temp_topo_tval(nE)=stat.tstat;
     temp_topo_pval(nE)=pV;
 end
-figure;
+subplot(2,2,4)
 simpleTopoPlot_ft(temp_topo_tval(matching_elec), layout,'on',[],0,1);
 colormap(cmap_ttest);
 colorbar;
 title('Topography difference target/non target trials [1.1-1.8]s post-onset (tvalue)')
-caxis([-1 1]*4)
+caxis([-1 1]*2.5)
 if ~isempty(find(temp_topo_pval(matching_elec)<0.05))
     ft_plot_lay_me(layout, 'chanindx',find(temp_topo_pval(matching_elec)<0.05),'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')
 end
-%%
+format_fig;
+%% below I think we can change it
 %%% Plot topography [0.3-0.8]s post-offset
-%Non-target trials offset-locked
-temp_topo=squeeze(mean(mean(all_ERP_NT_offset(:,matching_elec,xTime>TimeWin(1) & xTime<TimeWin(2)),3),1));
-figure;
-simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-colorbar;
-title('Topography non-target trials [0.3-0.8]s post-offset')
-caxis([-1 1])
-%Target trials offset-locked
-temp_topo=squeeze(mean(mean(all_ERP_TG_offset(:,matching_elec,xTime>TimeWin(1) & xTime<TimeWin(2)),3),1));
-figure;
-simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-colorbar;
-title('Topography target trials [0.3-0.8]s post-offset')
-caxis([-1 1])
-%Difference TG/NT trials offset-locked
-temp_topo=squeeze(mean(mean(diff_all_ERP_offset(:,matching_elec,xTime>TimeWin(1) & xTime<TimeWin(2)),3),1));
-figure;
-simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-colorbar;
-title('Topography difference target/non target trials [0.3-0.8]s post-offset')
-caxis([-1 1])
-%%
-%%Difference TG/NG for all subjects
+% %Non-target trials offset-locked
+% temp_topo=squeeze(mean(mean(all_ERP_NG_offset(:,matching_elec,xTime>TimeWin(1) & xTime<TimeWin(2)),3),1));
+% figure;
+% simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+% colorbar;
+% title('Topography NoGo trials [0.3-0.8]s post-offset')
+% caxis([-1 1])
+% %Target trials offset-locked
+% temp_topo=squeeze(mean(mean(all_ERP_G_offset(:,matching_elec,xTime>TimeWin(1) & xTime<TimeWin(2)),3),1));
+% figure;
+% simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+% colorbar;
+% title('Topography target trials [0.3-0.8]s post-offset')
+% caxis([-1 1])
+% %Difference TG/NT trials offset-locked
+% temp_topo=squeeze(mean(mean(diff_all_ERP_offset(:,matching_elec,xTime>TimeWin(1) & xTime<TimeWin(2)),3),1));
+% figure;
+% simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+% colorbar;
+% title('Topography difference target/non target trials [0.3-0.8]s post-offset')
+% caxis([-1 1])
+
+%% Difference TG/NG for all subjects
 
 thisCh=match_str(chLabels,'Oz');
 figure;
@@ -521,61 +594,183 @@ hold on;
 legend(hp,{'Controls','ADHDs'})
 title('ERP differences between Target and Non-target trials OFFSET');
 
-%%
-%Topography Controls and ADHD
-%%% Plot topography [0.1-0.3]s post-offset
-%Non-target trials offset-locked Controls
-temp_topo=squeeze(mean(mean(all_ERP_NT_offset(match_str(group_PowDataEO,'Control'),matching_elec,xTime>0.1 & xTime<0.3),3),1));
+%% Group topographies [0.2-0.25]s
+% NoGo trials - Controls
+temp_topo=squeeze(mean(mean(all_ERP_NG(match_str(group_PowDataEO,'Control'),matching_elec,xTime>0.2 & xTime<0.25),3),1));
 figure;
+subplot(2,3,1)
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-title('Topography Controls non-target trials [0.1-0.3]s post-offset')
+caxis([-1 5])
+title('Controls NoGo 0.2-0.25s')
+format_fig
+hold on
 
-%Target trials offset-locked Controls
-temp_topo=squeeze(mean(mean(all_ERP_TG_offset(match_str(group_PowDataEO,'Control'),matching_elec,xTime>0.1 & xTime<0.3),3),1));
-figure;
+% Go trials - Controls
+temp_topo=squeeze(mean(mean(all_ERP_G(match_str(group_PowDataEO,'Control'),matching_elec,xTime>0.2 & xTime<0.25),3),1));
+subplot(2,3,2)
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-title('Topography Controls target trials [0.1-0.3]s post-offset')
+caxis([-1 5])
+title('Controls Go 0.2-0.25s')
+format_fig
+hold on
 
-%Difference TG/NT trials offset-locked Controls
-temp_topo=squeeze(mean(mean(diff_all_ERP_offset(match_str(group_PowDataEO,'Control'),matching_elec,xTime>0.1 & xTime<0.3),3),1));
-figure;
+%Difference G/NG trials - Controls
+temp_topo=squeeze(mean(mean(diff_all_ERP(match_str(group_PowDataEO,'Control'),matching_elec,xTime>0.2 & xTime<0.25),3),1));
+subplot(2,3,3);
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-title('Topography difference target/non target trials [0.1-0.3]s post-offset for Controls')
+caxis([-3 3])
+title('Controls - diff Go/NoGo 0.2-0.25s')
+format_fig
+hold on
 
-%Non-target trials offset-locked ADHDs
-temp_topo=squeeze(mean(mean(all_ERP_NT_offset(match_str(group_PowDataEO,'ADHD'),matching_elec,xTime>0.1 & xTime<0.3),3),1));
-figure;
+% NoGo trials - ADHDs
+temp_topo=squeeze(mean(mean(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),matching_elec,xTime>0.2 & xTime<0.25),3),1));
+subplot(2,3,4);
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-title('Topography ADHD non-target trials [0.1-0.3]s post-offset')
+caxis([-1 5])
+title('ADHD NoGo 0.2-0.25s')
+format_fig
+hold on
 
-%Target trials offset-locked ADHDS
-temp_topo=squeeze(mean(mean(all_ERP_TG_offset(match_str(group_PowDataEO,'ADHD'),matching_elec,xTime>0.1 & xTime<0.3),3),1));
-figure;
+% Go trials - ADHDS
+temp_topo=squeeze(mean(mean(all_ERP_G(match_str(group_PowDataEO,'ADHD'),matching_elec,xTime>0.2 & xTime<0.25),3),1));
+subplot(2,3,5);
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-title('Topography ADHD target trials [0.1-0.3]s post-offset')
+caxis([-1 5])
+title('ADHD Go 0.2-0.25s')
+format_fig
+hold on
 
-%Difference TG/NT trials offset-locked ADHDs
-temp_topo=squeeze(mean(mean(diff_all_ERP_offset(match_str(group_PowDataEO,'ADHD'),matching_elec,xTime>0.1 & xTime<0.3),3),1));
-figure;
+% Difference Go/NoGo trials - ADHDs
+temp_topo=squeeze(mean(mean(diff_all_ERP(match_str(group_PowDataEO,'ADHD'),matching_elec,xTime>0.2 & xTime<0.25),3),1));
+subplot(2,3,6);
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-title('Topography difference target/non target trials [0.1-0.3]s post-offset for ADHDs')
-%%
-%%% Cluster difference ADHD and controls separately for onset-locked and offset-locked data
-% Cluster difference for ADHD and controls for offset-locked data
-temp_topoADHD=squeeze(mean(mean(diff_all_ERP_offset(match_str(group_PowDataEO,'ADHD'),matching_elec,xTime>0.1 & xTime<0.3),3),1));
-temp_topoCTRL=squeeze(mean(mean(diff_all_ERP_offset(match_str(group_PowDataEO,'Control'),matching_elec,xTime>0.1 & xTime<0.3),3),1));
+caxis([-3 3])
+title('ADHD - diff Go/NoGo 0.2-0.25s')
+format_fig
+hold off
+
+%% Group topographies [0.4-0.5]s
+% NoGo trials - Controls
+temp_topo=squeeze(mean(mean(all_ERP_NG(match_str(group_PowDataEO,'Control'),matching_elec,xTime>0.4 & xTime<0.5),3),1));
+figure;
+subplot(2,3,1)
+simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
+colorbar;
+caxis([0 15])
+title('Controls NoGo 0.4-0.5s')
+format_fig
+hold on
+
+% Go trials - Controls
+temp_topo=squeeze(mean(mean(all_ERP_G(match_str(group_PowDataEO,'Control'),matching_elec,xTime>0.4 & xTime<0.5),3),1));
+subplot(2,3,2)
+simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
+colorbar;
+caxis([0 40])
+title('Controls Go 0.4-0.5s')
+format_fig
+hold on
+
+%Difference G/NG trials - Controls
+temp_topo=squeeze(mean(mean(diff_all_ERP(match_str(group_PowDataEO,'Control'),matching_elec,xTime>0.4 & xTime<0.5),3),1));
+subplot(2,3,3);
+simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
+colorbar;
+caxis([-5 25])
+title('Controls - diff Go/NoGo 0.4-0.5s')
+format_fig
+hold on
+
+% NoGo trials - ADHDs
+temp_topo=squeeze(mean(mean(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),matching_elec,xTime>0.4 & xTime<0.5),3),1));
+subplot(2,3,4);
+simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
+colorbar;
+caxis([0 15])
+title('ADHD NoGo 0.4-0.5s')
+format_fig
+hold on
+
+% Go trials - ADHDS
+temp_topo=squeeze(mean(mean(all_ERP_G(match_str(group_PowDataEO,'ADHD'),matching_elec,xTime>0.4 & xTime<0.5),3),1));
+subplot(2,3,5);
+simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
+colorbar;
+caxis([0 40])
+title('ADHD Go 0.4-0.5s')
+format_fig
+hold on
+
+%Difference Go/NoGo trials - ADHDs
+temp_topo=squeeze(mean(mean(diff_all_ERP(match_str(group_PowDataEO,'ADHD'),matching_elec,xTime>0.4 & xTime<0.5),3),1));
+subplot(2,3,6);
+simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
+colorbar;
+caxis([-5 25])
+title('ADHD - diff Go/NoGo 0.4-0.5s')
+format_fig
+hold off
+
+%% tvalue calc and plots for 0.2-0.25s and 0.4-0.5s
+temp_topo_tval=[];
+temp_topo_pval=[];
+for nE=1:size(diff_all_ERP,2)
+    A=squeeze(mean(diff_all_ERP(match_str(group_PowDataEO,'Control'),nE,xTime>0.2 & xTime<0.25),3));
+    B=squeeze(mean(diff_all_ERP(match_str(group_PowDataEO,'ADHD'),nE,xTime>0.2 & xTime<0.25),3));
+    [h,pV,~,stat]=ttest2(B,A);
+    temp_topo_tval(nE)=stat.tstat;
+    temp_topo_pval(nE)=pV;
+end
+figure
+subplot(1,2,1)
+simpleTopoPlot_ft(temp_topo_tval(matching_elec), layout,'on',[],0,1);
+colormap(cmap_ttest);
+colorbar;
+title('Difference Go/NoGo 0.2-0.25s (tvalue)')
+caxis([-1 1]*3)
+if ~isempty(find(temp_topo_pval(matching_elec)<0.05))
+    ft_plot_lay_me(layout, 'chanindx',find(temp_topo_pval(matching_elec)<0.05),'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')
+end
+format_fig;
+hold on 
+
+temp_topo_tval=[];
+temp_topo_pval=[];
+for nE=1:size(diff_all_ERP,2)
+    A=squeeze(mean(diff_all_ERP(match_str(group_PowDataEO,'Control'),nE,xTime>0.4 & xTime<0.5),3));
+    B=squeeze(mean(diff_all_ERP(match_str(group_PowDataEO,'ADHD'),nE,xTime>0.4 & xTime<0.5),3));
+    [h,pV,~,stat]=ttest2(B,A);
+    temp_topo_tval(nE)=stat.tstat;
+    temp_topo_pval(nE)=pV;
+end
+subplot(1,2,2)
+simpleTopoPlot_ft(temp_topo_tval(matching_elec), layout,'on',[],0,1);
+colormap(cmap_ttest);
+colorbar;
+title('Difference Go/NoGo 0.4-0.5s (tvalue)')
+caxis([-1 1]*3)
+if ~isempty(find(temp_topo_pval(matching_elec)<0.05))
+    ft_plot_lay_me(layout, 'chanindx',find(temp_topo_pval(matching_elec)<0.05),'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')
+end
+format_fig;
+hold off 
+
+%% Cluster difference for ADHD and controls 
+temp_topoADHD=squeeze(mean(mean(diff_all_ERP(match_str(group_PowDataEO,'ADHD'),matching_elec,xTime>0.1 & xTime<0.3),3),1));
+temp_topoCTRL=squeeze(mean(mean(diff_all_ERP(match_str(group_PowDataEO,'Control'),matching_elec,xTime>0.1 & xTime<0.3),3),1));
 
 temp_topo = temp_topoADHD-temp_topoCTRL; %usually good to do group of interest minus control condition
 figure;
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-title('Cluster difference for ADHD and controls for offset-locked data')
+title('Cluster difference for ADHD and controls [0.1-0.3]s')
 
 
 %%
@@ -588,12 +783,13 @@ All_Conds=double(ismember(group_PowDataEO,'Control'))+1;
 
 
 
-%% Checking if there's a sig difference between P300 for Non-Targets and Targets 
-TG_data = squeeze(all_ERP_TG_offset(:,25,:)); % 25 because it's Pz 
-TG_data_p300= TG_data(:,125); % 125 because it's where P300 occurs; to do this, Mana looked at the sampling frequency and examined the plot I showed her (how it went from -2 to 800 ms) and input it in a script
-NT_data = squeeze(all_ERP_NT_offset(:,25,:));
-NT_data_p300= NT_data(:,125);
-[h p] = ttest(NT_data_p300, TG_data_p300) % T test to see if there's a difference between NT and TG
+%% Checking if there's a sig difference between P300 for NoGo and Go 
+G_data = squeeze(all_ERP_G(:,25,:)); % 25 because it's Pz 
+G_data_p300= G_data(:,125); % 125 because it's where P300 occurs; to do this, Mana looked at the sampling frequency and examined the plot I showed her (how it went from -2 to 800 ms) and input it in a script
+%NOTE: The note in the previous line is for CTET data. May need to modify this for SART data
+NG_data = squeeze(all_ERP_NG(:,25,:));
+NG_data_p300= NG_data(:,125);
+[h p] = ttest(NG_data_p300, G_data_p300) % T test to see if there's a difference between NT and TG
 
 
 
