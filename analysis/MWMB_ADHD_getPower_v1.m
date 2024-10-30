@@ -274,8 +274,10 @@ caxis([-1 -0.2])
 format_fig;
 
 temp_topo_adhd = [];
+topo_adhd = [];
 for nCh = 1:length(layout.label)-2
-    temp_topo_adhd(nCh) = squeeze(nanmean(all_aperiodic(adhd_idx, match_str(data.label, layout.label{nCh}), 2), 1));
+    temp_topo_adhd(nCh) = squeeze(nanmean( all_aperiodic(adhd_idx, match_str(data.label, layout.label{nCh}), 2), 1));
+    topo_adhd(nCh,:) = squeeze(all_aperiodic(adhd_idx, match_str(data.label, layout.label{nCh}), 2));
 end
 subplot(2,2,3)
 simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
@@ -284,14 +286,20 @@ title('Slope - ADHD');
 format_fig;
 
 temp_topo_control = [];
+topo_control = [];
 for nCh = 1:length(layout.label)-2
     temp_topo_control(nCh) = squeeze(nanmean(all_aperiodic(control_idx, match_str(data.label, layout.label{nCh}), 2), 1));
+    topo_control(nCh,:) = squeeze(all_aperiodic(control_idx, match_str(data.label, layout.label{nCh}), 2));
 end
 subplot(2,2,4)
 simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
 colormap(cmap); colorbar;
 title('Slope - Control');
 format_fig;
+
+[H,P,CI,STATS] =ttest2(topo_adhd,topo_control,'dim',2);
+topo_tval=STATS.tstat;
+
 %% PS by group 
 Colors=[253,174,97;
     171,217,233;
