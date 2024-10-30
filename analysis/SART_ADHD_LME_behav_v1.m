@@ -289,11 +289,18 @@ mdlDK2 = fitlme(all_block_table,'DK~1+BlockN*Group+(BlockN|SubID)'); % Winning m
 
 anova(mdlDK2)
 
+%%
+all_probe_table.Group=categorical(all_probe_table.Group);
+all_probe_table.StateC=categorical(nan(size(all_probe_table,1),1));
+all_probe_table.StateC(all_probe_table.State==1)='ON';
+all_probe_table.StateC(all_probe_table.State==2)='MW';
+all_probe_table.StateC(all_probe_table.State==3)='MB';
+all_probe_table.StateC(all_probe_table.State==4)='DR';
 
 % Intentionality (1 = Entirely intentional to 4 = Entirely unintentional)
-mdlint0 = fitlme(all_block_table,'Intention~1+BlockN+Group+(1|SubID)'); % Winning BIC model 
+mdlint0 = fitlme(all_probe_table,'Intention~1+StateC+Group+(1|SubID)'); % Winning BIC model 
 % mdlint1 = fitlme(all_block_table,'Intention~1+BlockN*Group+(1|SubID)');
-mdlint2 = fitlme(all_block_table,'Intention~1+BlockN*Group+(BlockN|SubID)'); % Winning AIC model; Group: p <.001, Block: p <.001
+mdlint2 = fitlme(all_probe_table,'Intention~1+StateC*Group+(1|SubID)'); % Winning AIC model; Group: p <.001, Block: p <.001
 % %%% Extract fit statistics for each model
 % AIC_values = [mdlint0.ModelCriterion.AIC, mdlint1.ModelCriterion.AIC, mdlint2.ModelCriterion.AIC];
 % BIC_values = [mdlint0.ModelCriterion.BIC, mdlint1.ModelCriterion.BIC, mdlint2.ModelCriterion.BIC];
@@ -304,6 +311,31 @@ mdlint2 = fitlme(all_block_table,'Intention~1+BlockN*Group+(BlockN|SubID)'); % W
 
 anova(mdlint2)
 
+figure;
+Colors=[253,174,97;
+    171,217,233;
+    44,123,182]/256;
+myGroups=unique(all_probe_table.Group);
+myStates=unique(all_probe_table.StateC);
+hb=[];
+Int_Paired_test=[];
+for nSta=1:4
+    for_paired_states={};
+    for nG=1:2
+        temp_bar=grpstats(all_probe_table.Intention(all_probe_table.StateC==myStates(nSta) & all_probe_table.Group==myGroups(nG)),...
+            all_probe_table.SubID(all_probe_table.StateC==myStates(nSta) & all_probe_table.Group==myGroups(nG)));
+        hb(nG)=simpleBarPlot(nSta+(2*nG-3)*0.2,temp_bar,Colors(nG,:),0.35,'k',[],2);
+        for_paired_states{nG}=temp_bar;
+    end
+    [h,p,ci,stats] = ttest2(for_paired_states{1},for_paired_states{2});
+    Int_Paired_test(nSta,1)=p;
+    Int_Paired_test(nSta,2)=stats.tstat;
+    Int_Paired_test(nSta,3)=stats.df;
+end
+set(gca,'Xtick',1:4,'XTickLabel',myStates);
+legend(hb,myGroups)
+format_fig;
+ylabel('Unintentional')
 %% probe-level stats
 
 % State (1 = On, 2 = MW, 3 = MB)
