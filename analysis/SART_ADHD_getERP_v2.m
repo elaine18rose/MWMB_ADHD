@@ -142,19 +142,8 @@ for nF=1:length(files)
         ERP_G=av_data_G.avg-repmat(nanmean(av_data_G.avg(:,av_data_G.time>-0.2 & av_data_G.time<0),2),1,length(av_data_G.time)); % TA - This is doing essentially the same as the above 
 
 
-        cfgerp2        = [];
-        cfgerp2.trials = find(table.test_res(:,11)==1)+1; cfgerp2.trials(cfgerp2.trials>length(data_clean.trial))=[];
-        % cfgerp2.trials = find(table.StimType==0)+1; cfgerp2.trials(cfgerp2.trials>length(data_clean.trial))=[];
-        av_data_NG_offset = ft_timelockanalysis(cfgerp2, data_clean); % av_data_NG_offset = ft_timelockanalysis(cfgerp2, data);
-        cfgerp2        = [];
-        cfgerp2.trials = find(table.test_res(:,12)==1)+1; cfgerp2.trials(cfgerp2.trials>length(data_clean.trial))=[];
-        % cfgerp2.trials = find(table.StimType==1)+1; cfgerp2.trials(cfgerp2.trials>length(data_clean.trial))=[];
-        av_data_G_offset = ft_timelockanalysis(cfgerp2, data_clean); % av_data_G_offset = ft_timelockanalysis(cfgerp2, data); 
-
-        ERP_NG_offset=av_data_NG_offset.avg-repmat(nanmean(av_data_NG.avg(:,av_data_NG.time>-0.2 & av_data_NG.time<0),2),1,length(av_data_NG.time));
-        ERP_G_offset=av_data_G_offset.avg-repmat(nanmean(av_data_G.avg(:,av_data_NG.time>-0.2 & av_data_NG.time<0),2),1,length(av_data_NG.time));
-
-        save([preproc_path  filesep 'ERP_' file_name(1:end-4)],'ERP_NG','ERP_G','ERP_NG_offset','ERP_G_offset')
+       
+        save([preproc_path  filesep 'ERP_' file_name(1:end-4)],'ERP_NG','ERP_G')
     else
         load([preproc_path filesep 'ERP_' file_name])
           nFc=nFc+1;
@@ -162,10 +151,7 @@ for nF=1:length(files)
     
     all_ERP_NG(nFc,:,:)=ERP_NG;
     all_ERP_G(nFc,:,:)=ERP_G;
-    
-    all_ERP_NG_offset(nFc,:,:)=ERP_NG_offset;
-    all_ERP_G_offset(nFc,:,:)=ERP_G_offset;
-    
+  
     
     if SubID(1)=='C'
         group_PowDataEO{nFc}='Control';
@@ -184,7 +170,6 @@ chLabels=av_data_NG.label;
 
 %%
 diff_all_ERP=all_ERP_G-all_ERP_NG;
-diff_all_ERP_offset=all_ERP_G_offset-all_ERP_NG_offset;
 
 
 %% Plots
@@ -243,38 +228,6 @@ title('ERP NoGo vs Go: Oz');
 xlim([-0.2 1.6])
 format_fig;
 
-
-% figure;
-% hp=[];
-% [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG_offset(:,thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
-% hold on;
-% [~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G_offset(:,thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
-% hold on;
-% legend(hp,{'No Go','Go'})
-% title('Event-related potentials NoGo vs Go - offset-locked');
-% xlim([-0.2 0.8])
-% format_fig;
-
-
-% figure;
-% hp=[];
-% [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_TG_offset(:,thisCh,:))-squeeze(all_ERP_NT_offset(:,thisCh,:)),0,'r',[2 0.05 0.05 1000],'-',0.5,1,0,1,2);
-
-%% ERP locked on offset and split by group
-% figure;
-% hp=[];
-% [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG_offset(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
-% hold on;
-% [~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G_offset(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
-% hold on;
-% [~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG_offset(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
-% hold on;
-% [~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G_offset(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
-% hold on;
-% legend(hp,{'No Go','Go'})
-% title('Event-related potentials locked on offset for NoGo vs Go split by group');
-% xlim([-0.2 0.8])
-% format_fig;
 
 %% ERP and split by group
 figure;
@@ -394,11 +347,11 @@ title('ERP differences NoGo vs Go split by group: Oz');
 xlim([-0.2 1.5])
 format_fig;
 
-Group_A=squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)); %-squeeze(all_ERP_NT_offset(match_str(group_PowDataEO,'Control'),thisCh,:));
-Group_B=squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)); %-squeeze(all_ERP_NT_offset(match_str(group_PowDataEO,'ADHD'),thisCh,:));
+Group_A=squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:))-squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:));
+Group_B=squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:))-squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:));
 Groups=[ones(size(Group_A,1),1) ; 2*ones(size(Group_B,1),1)];
-totPerm=200;
-%[realpos realneg]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.2,0.1,totPerm,xTime,'full',[]); % Runs an ANOVA - Main effect of group on the diff
+totPerm=500;
+[realpos realneg]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.2,0.1,totPerm,xTime,'full',[]); % Runs an ANOVA - Main effect of group on the diff
 
 
 %%
@@ -593,6 +546,12 @@ hold on;
 hold on;
 legend(hp,{'Controls','ADHDs'})
 title('ERP differences between Target and Non-target trials OFFSET');
+
+Group_A=squeeze(diff_all_ERP_offset(match_str(group_PowDataEO,'Control'),thisCh,:));
+Group_B=squeeze(diff_all_ERP_offset(match_str(group_PowDataEO,'ADHD'),thisCh,:));
+Groups=[ones(size(Group_A,1),1) ; 2*ones(size(Group_B,1),1)];
+%[realpos realneg]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.2,0.1,1000,xTime_offset,'full',[]); % Runs an ANOVA - Main effect of group on the diff
+
 
 %% Group topographies [0.2-0.25]s
 % NoGo trials - Controls
