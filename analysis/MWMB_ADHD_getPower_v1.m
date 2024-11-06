@@ -223,7 +223,7 @@ for nF=1:size(freq_bands,1)
     format_fig;
 end
 
-%%
+%% Offset and Slope 
 figure;
 load([preproc_path filesep 'clean_i_probe_' SubID '.mat']); % Uncomment if crashing in 192
 subplot(1,2,1);
@@ -246,16 +246,21 @@ colormap(cmap); colorbar;
 title('slope');
 format_fig;
 
-% offset and slope by group 
+%% offset and slope by group 
 adhd_idx    = find(design_PowData == 1);  
 control_idx = find(design_PowData == 0); 
 
+cmap_ttest=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
+cmap_ttest=flipud(cmap_ttest);
+
 figure;
 temp_topo_adhd  = [];
+topo_adhd = [];
 for nCh = 1:length(layout.label)-2
     temp_topo_adhd(nCh) = squeeze(nanmean(all_aperiodic(adhd_idx, match_str(data.label, layout.label{nCh}), 1), 1));
+    topo_adhd(nCh,:) = squeeze(all_aperiodic(adhd_idx, match_str(data.label, layout.label{nCh}), 1));
 end
-subplot(2,2,1)
+subplot(2,3,1)
 simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
 colormap(cmap); colorbar;
 title('Offset - ADHD');
@@ -263,15 +268,38 @@ caxis([-1 -0.2])
 format_fig;
 
 temp_topo_control = [];
+topo_control = [];
 for nCh = 1:length(layout.label)-2
     temp_topo_control(nCh) = squeeze(nanmean(all_aperiodic(control_idx, match_str(data.label, layout.label{nCh}), 1), 1));
+    topo_control(nCh,:) = squeeze(all_aperiodic(control_idx, match_str(data.label, layout.label{nCh}), 1));
 end
-subplot(2,2,2)
+subplot(2,3,2)
 simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
 colormap(cmap); colorbar;
 title('Offset - Control');
 caxis([-1 -0.2]) 
 format_fig;
+
+
+[H,P,CI,STATS] =ttest2(topo_adhd,topo_control,'dim',2);
+topo_tval=STATS.tstat;
+topo_pval=P;
+
+matching_elec=[];
+for nE=1:length(layout.label)-2
+    matching_elec(nE)=(match_str(data.label,layout.label(nE)));
+end
+subplot(2,3,3)
+simpleTopoPlot_ft(topo_tval, layout,'on',[],0,1);
+colormap(cmap_ttest);
+colorbar;
+title('Offset Diff btw Groups (tvalue)')
+if ~isempty(find(topo_pval(matching_elec)<0.05))
+    ft_plot_lay_me(layout, 'chanindx',find(topo_pval(matching_elec)<0.05),'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')
+end
+caxis([-1 1]*3)
+format_fig;
+
 
 temp_topo_adhd = [];
 topo_adhd = [];
@@ -279,7 +307,7 @@ for nCh = 1:length(layout.label)-2
     temp_topo_adhd(nCh) = squeeze(nanmean( all_aperiodic(adhd_idx, match_str(data.label, layout.label{nCh}), 2), 1));
     topo_adhd(nCh,:) = squeeze(all_aperiodic(adhd_idx, match_str(data.label, layout.label{nCh}), 2));
 end
-subplot(2,2,3)
+subplot(2,3,4)
 simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
 colormap(cmap); colorbar;
 title('Slope - ADHD');
@@ -291,7 +319,7 @@ for nCh = 1:length(layout.label)-2
     temp_topo_control(nCh) = squeeze(nanmean(all_aperiodic(control_idx, match_str(data.label, layout.label{nCh}), 2), 1));
     topo_control(nCh,:) = squeeze(all_aperiodic(control_idx, match_str(data.label, layout.label{nCh}), 2));
 end
-subplot(2,2,4)
+subplot(2,3,5)
 simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
 colormap(cmap); colorbar;
 title('Slope - Control');
@@ -299,6 +327,23 @@ format_fig;
 
 [H,P,CI,STATS] =ttest2(topo_adhd,topo_control,'dim',2);
 topo_tval=STATS.tstat;
+topo_pval=P;
+
+matching_elec=[];
+for nE=1:length(layout.label)-2
+    matching_elec(nE)=(match_str(data.label,layout.label(nE)));
+end
+subplot(2,3,6)
+simpleTopoPlot_ft(topo_tval, layout,'on',[],0,1);
+colormap(cmap_ttest);
+colorbar;
+title('Slope Diff btw Groups (tvalue)')
+if ~isempty(find(topo_pval(matching_elec)<0.05))
+    ft_plot_lay_me(layout, 'chanindx',find(topo_pval(matching_elec)<0.05),'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')
+end
+caxis([-1 1]*3)
+format_fig;
+
 
 %% PS by group 
 Colors=[253,174,97;
@@ -421,6 +466,100 @@ legend(hp,{'Controls','ADHD'})
 title('Periodic PS: Oz');
 xlabel('Frequency (Hz)')
 ylabel('Power')
+format_fig;
+
+%% Alpha 
+figure;
+temp_topo_adhd  = [];
+topo_adhd = [];
+for nCh = 1:length(layout.label)-2
+    temp_topo_adhd(nCh) = squeeze(nanmean(all_alphapeak(adhd_idx, match_str(data.label, layout.label{nCh}), 1), 1));
+    topo_adhd(nCh,:) = squeeze(all_alphapeak(adhd_idx, match_str(data.label, layout.label{nCh}), 1));
+end
+subplot(2,3,1)
+simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
+colormap(cmap); colorbar;
+title('Alpha Amp - ADHD');
+caxis([10 11]) 
+format_fig;
+
+temp_topo_control = [];
+topo_control = [];
+for nCh = 1:length(layout.label)-2
+    temp_topo_control(nCh) = squeeze(nanmean(all_alphapeak(control_idx, match_str(data.label, layout.label{nCh}), 1), 1));
+    topo_control(nCh,:) = squeeze(all_alphapeak(control_idx, match_str(data.label, layout.label{nCh}), 1));
+end
+subplot(2,3,2)
+simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
+colormap(cmap); colorbar;
+title('Alpha Amp - Control');
+caxis([10 11]) 
+format_fig;
+
+
+[H,P,CI,STATS] =ttest2(topo_adhd,topo_control,'dim',2);
+topo_tval=STATS.tstat;
+topo_pval=P;
+
+matching_elec=[];
+for nE=1:length(layout.label)-2
+    matching_elec(nE)=(match_str(data.label,layout.label(nE)));
+end
+subplot(2,3,3)
+simpleTopoPlot_ft(topo_tval, layout,'on',[],0,1);
+colormap(cmap_ttest);
+colorbar;
+title('Alpha Amp Diff btw Groups (tvalue)')
+if ~isempty(find(topo_pval(matching_elec)<0.05))
+    ft_plot_lay_me(layout, 'chanindx',find(topo_pval(matching_elec)<0.05),'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')
+end
+caxis([-1 1]*2)
+format_fig;
+
+
+temp_topo_adhd = [];
+topo_adhd = [];
+for nCh = 1:length(layout.label)-2
+    temp_topo_adhd(nCh) = squeeze(nanmean(all_alphapeak(adhd_idx, match_str(data.label, layout.label{nCh}), 3), 1));
+    topo_adhd(nCh,:) = squeeze(all_alphapeak(adhd_idx, match_str(data.label, layout.label{nCh}), 2));
+end
+subplot(2,3,4)
+simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
+colormap(cmap); colorbar;
+title('Alpha Freq - ADHD');
+caxis([1 4]) 
+format_fig;
+
+temp_topo_control = [];
+topo_control = [];
+for nCh = 1:length(layout.label)-2
+    temp_topo_control(nCh) = squeeze(nanmean(all_alphapeak(control_idx, match_str(data.label, layout.label{nCh}), 3), 1));
+    topo_control(nCh,:) = squeeze(all_alphapeak(control_idx, match_str(data.label, layout.label{nCh}), 2));
+end
+subplot(2,3,5)
+simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
+colormap(cmap); colorbar;
+title('Alpha Freq - Control');
+caxis([1 4])
+format_fig;
+
+[H,P,CI,STATS] =ttest2(topo_adhd,topo_control,'dim',2);
+topo_tval=STATS.tstat;
+topo_pval=P;
+
+matching_elec=[];
+for nE=1:length(layout.label)-2
+    matching_elec(nE)=(match_str(data.label,layout.label(nE)));
+end
+subplot(2,3,6)
+simpleTopoPlot_ft(topo_tval, layout,'on',[],0,1);
+colormap(cmap_ttest);
+colorbar;
+title('Alpha Freq Diff btw Groups (tvalue)')
+if ~isempty(find(topo_pval(matching_elec)<0.05))
+    ft_plot_lay_me(layout, 'chanindx',find(topo_pval(matching_elec)<0.05),'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')
+end
+caxis([-1 1]*3)
 format_fig;
 
 

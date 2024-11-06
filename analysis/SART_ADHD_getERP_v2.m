@@ -166,11 +166,8 @@ end
 %%
 xTime=av_data_NG.time;
 chLabels=av_data_NG.label;
-% xTime=av_data_G_offset.time(av_data_G_offset.time>-0.2 & av_data_G_offset.time<0.8);
 
-%%
 diff_all_ERP=all_ERP_G-all_ERP_NG;
-
 
 %% Plots
 %Event-related potentials non-target vs target
@@ -422,20 +419,6 @@ for nE=1:length(layout.label)-2
     matching_elec(nE)=(match_str(data.label,layout.label(nE)));
 end
 
-% %Non-target trials offset-locked
-% temp_topo=squeeze(mean(mean(all_ERP_NT_offset(:,:,xTime>0.1 & xTime<0.3),3),1));
-% figure;
-% simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
-% colorbar;
-% title('Topography non-target trials [0.1-0.3]s post-offset')
-%
-% %Target trials offset-locked
-% temp_topo=squeeze(mean(mean(all_ERP_TG_offset(:,:,xTime>0.1 & xTime<0.3),3),1));
-% figure;
-% simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
-% colorbar;
-% title('Topography target trials [0.1-0.3]s post-offset')
-
 %Difference Go/NoGo trials onset-locked
 temp_topo=squeeze(mean(mean(diff_all_ERP(:,matching_elec,xTime>TimeWin(1) & xTime<TimeWin(2)),3),1));
 figure;
@@ -525,7 +508,6 @@ title('ERP differences between Target and Non-target trials for all subjects OFF
 thisCh=match_str(chLabels,'Fz');
 
 figure;
-subplot(1,2,1);
 hp=[];
 % [~,hp(1)]=simpleTplot(xTime,squeeze(diff_all_ERP(:,thisCh,:)),0,'k');
 % hold on;
@@ -536,19 +518,9 @@ hold on;
 legend(hp,{'Controls','ADHDs'})
 title('ERP differences between Target and Non-target trials ONSET');
 
-subplot(1,2,2);
-hp=[];
-% [~,hp(1)]=simpleTplot(xTime,squeeze(diff_all_ERP_offset(:,thisCh,:)),0,'k');
-% hold on;
-[~,hp(1)]=simpleTplot(xTime,squeeze(diff_all_ERP_offset(match_str(group_PowDataEO,'Control'),thisCh,:)),0,'b',[2 0.05 0.05 1000],'-',0.5,1,0,1,2);
-hold on;
-[~,hp(2)]=simpleTplot(xTime,squeeze(diff_all_ERP_offset(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,'r',[2 0.05 0.05 1000],'-',0.5,1,0,1,2);
-hold on;
-legend(hp,{'Controls','ADHDs'})
-title('ERP differences between Target and Non-target trials OFFSET');
 
-Group_A=squeeze(diff_all_ERP_offset(match_str(group_PowDataEO,'Control'),thisCh,:));
-Group_B=squeeze(diff_all_ERP_offset(match_str(group_PowDataEO,'ADHD'),thisCh,:));
+Group_A=squeeze(diff_all_ERP(match_str(group_PowDataEO,'Control'),thisCh,:));
+Group_B=squeeze(diff_all_ERP(match_str(group_PowDataEO,'ADHD'),thisCh,:));
 Groups=[ones(size(Group_A,1),1) ; 2*ones(size(Group_B,1),1)];
 %[realpos realneg]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.2,0.1,1000,xTime_offset,'full',[]); % Runs an ANOVA - Main effect of group on the diff
 
