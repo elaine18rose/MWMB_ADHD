@@ -57,11 +57,18 @@ for nF=1:length(eeg_byProbe_files)
 
         load([preproc_path filesep 'comp_i_probe_' SubID]) % loading ICA components
         load([preproc_path filesep 'feprobe_ft_' SubID '.mat']) %EP - loading by Probe epoched data
+        data.hdr.Fs=data.fsample;
+        data.hdr.nChans=length(data.label);
+        data.hdr.label=data.label;
+        data.hdr.nSamplesPre=data.time{1}(1)*data.fsample;
+        data.hdr.nSamples=length(data.time{1})*length(data.time);
+        data.hdr.nTrials=length(data.time);
         probe_data = fieldtrip2eeglab(data);
 
         rejected_comps = ICA_classification.Comp(ICA_classification.Eye>0.9 | ICA_classification.Heart>0.8); % reject eye component with proba over 0.95 and heart over 0.8
         fprintf('... ... %g bad components rejected\n',length(rejected_comps))
-        EEG_clean = pop_subcomp(probe_data, rejected_comps); % EEG_clean = pop_subcomp(EEG_ica, rejected_comps);
+        EEG_ica.data = probe_data.data;
+        EEG_clean = pop_subcomp(EEG_ica, rejected_comps);
         EEG_clean = eeg_checkset(EEG_clean);
         badCompo=ICA_classification(rejected_comps,:);
 %                     figure;
@@ -77,7 +84,7 @@ for nF=1:length(eeg_byProbe_files)
 %                     plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'O2'),:,1))','b');
 %                     plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'O1'),:,1))','r--');
 %                     plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'O2'),:,1))','b--');
-
+        ori_data=data;
         data = eeglab2fieldtrip(EEG_clean, 'raw');
         %  figure;
         %             plot(squeeze(data.trial{1}(match_str(data.label,'Fz'),:)),'r');
@@ -88,6 +95,32 @@ for nF=1:length(eeg_byProbe_files)
         %
         save([preproc_path filesep 'clean_i_probe_' SubID '.mat'],'data','badCompo');
         all_badCompo=[all_badCompo ; badCompo];
+
+
+        %%%%% for trials
+        load([preproc_path filesep 'fetrial_ft_' SubID '.mat']) %EP - loading by Probe epoched data
+        data.hdr.Fs=data.fsample;
+        data.hdr.nChans=length(data.label);
+        data.hdr.label=data.label;
+        data.hdr.nSamplesPre=data.time{1}(1)*data.fsample;
+        data.hdr.nSamples=length(data.time{1})*length(data.time);
+        data.hdr.nTrials=length(data.time);
+        trial_data = fieldtrip2eeglab(data);
+
+        EEG_ica.data = trial_data.data;
+        EEG_ica.trials=data.hdr.nTrials;
+        EEG_ica.pnts=length(data.time{1});
+        EEG_ica.srate=data.fsample;
+        EEG_ica.xmin=data.time{1}(1);
+        EEG_ica.xmax=data.time{1}(end);
+        EEG_ica.times=data.time{1}*1000;
+
+        EEG_clean = pop_subcomp(EEG_ica, rejected_comps);
+        EEG_clean = eeg_checkset(EEG_clean);
+        ori_data=data;
+        data = eeglab2fieldtrip(EEG_clean, 'raw');
+        save([preproc_path filesep 'clean_i_trial_' SubID '.mat'],'data','badCompo');
+
     else %EP
         load([preproc_path filesep 'clean_i_probe_' SubID '.mat']) %EP
         all_badCompo=[all_badCompo ; badCompo]; %EP

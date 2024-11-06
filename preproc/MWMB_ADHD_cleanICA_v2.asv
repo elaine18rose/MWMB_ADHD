@@ -56,8 +56,14 @@ for nF=1:length(eeg_byProbe_files)
         end
 
         load([preproc_path filesep 'comp_i_probe_' SubID]) % loading ICA components
-        probe_data = load([preproc_path filesep 'feprobe_ft_' SubID '.mat']) %EP - loading by Probe epoched data
-?
+        load([preproc_path filesep 'feprobe_ft_' SubID '.mat']) %EP - loading by Probe epoched data
+        data.hdr.Fs=data.fsample;
+        data.hdr.nChans=length(data.label);
+        data.hdr.label=data.label;
+        data.hdr.nSamplesPre=data.time{1}(1)*data.fsample;
+        data.hdr.nSamples=length(data.time{1})*length(data.time);
+        data.hdr.nTrials=length(data.time);
+        probe_data = fieldtrip2eeglab(data);
 
         rejected_comps = ICA_classification.Comp(ICA_classification.Eye>0.9 | ICA_classification.Heart>0.8); % reject eye component with proba over 0.95 and heart over 0.8
         fprintf('... ... %g bad components rejected\n',length(rejected_comps))

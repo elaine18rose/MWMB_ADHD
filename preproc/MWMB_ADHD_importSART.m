@@ -21,7 +21,7 @@ files=dir([path_data filesep 'EEG' filesep '*.eeg']);
 
 %% loop on subjects
 redo_block=0; % 1 to force re-import, 0 otherwise
-redo_probe=0; % 1 to force re-import, 0 otherwise
+redo_probe=1; % 1 to force re-import, 0 otherwise
 redo_trial=1; % 1 to force re-import, 0 otherwise
 for nF=1:length(files)
     file_name = files(nF).name;
@@ -139,12 +139,11 @@ for nF=1:length(files)
         cfg.reref      = 'yes';
         cfg.refchannel = 'all';
         
-        dat                = ft_preprocessing(cfg); % read raw data
+        data                = ft_preprocessing(cfg); % read raw data
         
-        cfgbs=[];
-        cfgbs.resamplefs      = 250; 
-        cfgbs.detrend         = 'yes';
-        data                  = ft_resampledata(cfgbs,dat); % read raw data
+%         cfgbs=[];
+%         cfgbs.detrend         = 'yes';
+%         data                  = ft_resampledata(cfgbs,dat); % read raw data
         save([path_data filesep 'Preproc' filesep 'feprobe_ft_' SubID],'data');
         
     end
@@ -201,29 +200,28 @@ for nF=1:length(files)
         dat                = ft_preprocessing(cfg); % read raw data
         events=cfg.event;
         cfgbs=[];
-        cfgbs.resamplefs      = 250; 
         cfgbs.demean         = 'yes';
         cfgbs.baseline         = [-0.2 0];
-        data                  = ft_resampledata(cfgbs,dat); % read raw data
+        data                  = ft_preprocessing(cfgbs,dat); % read raw data
         save([path_data filesep 'Preproc' filesep 'fetrial_ft_' SubID],'data','events');
         
-        
-        cfg = [];
-        cfg.trials = find_trials({events.value},'S  9');
-        godata = ft_timelockanalysis(cfg, data);
-        cfg = [];
-        cfg.demean         = 'yes';
-        cfg.baselinewindow         = [-0.2 0];
-        godata                = ft_preprocessing(cfg,godata); % read raw data
-
-                
-        cfg = [];
-        cfg.trials = find_trials({events.value},'S 10');
-        nogodata = ft_timelockanalysis(cfg, data);
-cfg = [];
-        cfg.demean         = 'yes';
-        cfg.baselinewindow         = [-0.2 0];
-        nogodata                = ft_preprocessing(cfg,nogodata); % read raw data
+%         
+%         cfg = [];
+%         cfg.trials = find_trials({events.value},'S  9');
+%         godata = ft_timelockanalysis(cfg, data);
+%         cfg = [];
+%         cfg.demean         = 'yes';
+%         cfg.baselinewindow         = [-0.2 0];
+%         godata                = ft_preprocessing(cfg,godata); % read raw data
+% 
+%                 
+%         cfg = [];
+%         cfg.trials = find_trials({events.value},'S 10');
+%         nogodata = ft_timelockanalysis(cfg, data);
+% cfg = [];
+%         cfg.demean         = 'yes';
+%         cfg.baselinewindow         = [-0.2 0];
+%         nogodata                = ft_preprocessing(cfg,nogodata); % read raw data
 
     end
     
