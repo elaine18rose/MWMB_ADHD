@@ -21,12 +21,12 @@ addpath(genpath(path_LSCPtools))
 
 files=dir([path_data filesep 'EEG' filesep '*.eeg']);
 
-load([preproc_path filesep 'all_badChannels_badProbes.mat']); %file saved from runICA script
+load([preproc_path filesep 'all_badChannels_badProbes.mat']);
 
 %% loop on subjects
 redo_block=0; % 1 to force re-import, 0 otherwise
-redo_probe=0; % 1 to force re-import, 0 otherwise
-redo_trial=1; % 1 to force re-import, 0 otherwise
+redo_probe=1; % 1 to force re-import, 0 otherwise
+redo_trial=0; % 1 to force re-import, 0 otherwise
 for nF=1:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
@@ -100,9 +100,9 @@ for nF=1:length(files)
     
     %%%%% probe
     if redo_probe==1 || exist([path_data filesep 'Preproc' filesep 'feprobe_ft_' SubID '.mat'])==0
-%         if ~strcmp(SubID,{'A031', 'A033'}) 
-%             continue;
-%         end
+        if ~strcmp(SubID,{'A031', 'A033'}) 
+            continue;
+        end
 
         hdr=ft_read_header([folder_name filesep file_name]);
         evt=ft_read_event([folder_name filesep file_name]);
@@ -169,7 +169,7 @@ for nF=1:length(files)
     
     %%%% trial
     if redo_trial==1 || exist([path_data filesep 'Preproc' filesep 'fetrial_ft_' SubID '.mat'])==0
-        if ~strcmp(SubID,{'A048', 'C022'}) %C012 & C024 & C038 re-importing 'cause crashing in ERP script
+        if ~strcmp(SubID,{'A031', 'A033'}) %C012 & C024 & C038 re-importing 'cause crashing in ERP script
             continue;
         end
 

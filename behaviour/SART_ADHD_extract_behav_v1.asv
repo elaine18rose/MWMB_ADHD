@@ -832,9 +832,9 @@ if flag_figures == 1
     % Plot the distribution
     labels = {'Smth in Room', 'Personal','About task'};
 
-    figure('Position',[1955         361         758]);
+    figure('Position',[1955         361         758         413]);
     bar((1:numel(labels))-0.2, Ctr_mw_percentage_distribution, 'FaceColor',Colors(1,:),'BarWidth',0.38);
-    ylabel('Types of MW');
+    ylabel('% of Types of MW');
     xticks(1:numel(labels));
     xticklabels(labels);
     xtickangle(45);
@@ -860,7 +860,8 @@ if flag_figures == 1
         end
     end
     format_fig
-    xlim([0.5 4.5])
+    xlim([0.5 3.5])
+    ylim([0 80])
 end
 
 

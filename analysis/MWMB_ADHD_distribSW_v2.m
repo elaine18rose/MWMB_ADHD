@@ -1,6 +1,6 @@
 %% version 2 - uses version 2 getSW table with NA values
 clear all;
-% close all;
+close all;
 %%
 if isempty(findstr(pwd,'thandrillon'))==0
     path_LSCPtools='/Users/tand0009/WorkGit/LSCPtools/';
@@ -132,35 +132,35 @@ for nF=1:length(SW_files)
     all_Waves(all_onset<-20 | all_onset>0 | all_freq>paramSW.max_Freq | all_Waves(:,paramSW.AmpCriterionIdx)>paramSW.art_ampl | all_Waves(:,11)>paramSW.max_posampl| all_Waves(:,14)>paramSW.art_ampl| abs(all_Waves(:,15))>paramSW.art_ampl,:)=[];
 
 
-%     for nBl=unique(all_Waves(:,2))'
+     for nBl=unique(all_Waves(:,2))' % EP - uncommmented
         duration_of_recording=20/60*length(unique(all_Waves(:,2)));
 
         table_length=size(SW_table,1);
         SW_table.SubID(table_length+1)={SubID};
         SW_table.Group(table_length+1)={GroupID};
-%         SW_table.Block(table_length+1)=nBl;
+        SW_table.Block(table_length+1)=nBl; % EP - uncommmented 141 - 156
 
 
-%         this_MS=MS_labels(probe_res(nBl,19));
-%         SW_table.Probe_MS(table_length+1)=this_MS;
-%         SW_table.Probe_Vig(table_length+1)=probe_res(nBl,22);
+        this_MS=MS_labels(probe_res(nBl,19));
+        SW_table.Probe_MS(table_length+1)=this_MS;
+        SW_table.Probe_Vig(table_length+1)=probe_res(nBl,22);
 
-%         this_block=probe_res(nBl,4);
-%         this_trial=probe_res(nBl,6);
-%         temp_gos=test_res(test_res(:,1)==this_block & test_res(:,4)<this_trial & test_res(:,5)~=3,:);
-%         temp_gos=temp_gos(end-17:end,:);
-%         temp_nogos=test_res(test_res(:,1)==this_block & test_res(:,4)<this_trial & test_res(:,5)==3,:);
-%         temp_nogos=temp_nogos(end-1:end,:);
-%         SW_table.Behav_Miss(table_length+1)=nanmean(temp_gos(:,12)==0);
-%         SW_table.Behav_RT(table_length+1)=nanmean(temp_gos(:,10)-temp_gos(:,8));
-%         SW_table.Behav_FA(table_length+1)=nanmean(temp_nogos(:,11)==0);
+        this_block=probe_res(nBl,4);
+        this_trial=probe_res(nBl,6);
+        temp_gos=test_res(test_res(:,1)==this_block & test_res(:,4)<this_trial & test_res(:,5)~=3,:);
+        temp_gos=temp_gos(end-17:end,:);
+        temp_nogos=test_res(test_res(:,1)==this_block & test_res(:,4)<this_trial & test_res(:,5)==3,:);
+        temp_nogos=temp_nogos(end-1:end,:);
+        SW_table.Behav_Miss(table_length+1)=nanmean(temp_gos(:,12)==0);
+        SW_table.Behav_RT(table_length+1)=nanmean(temp_gos(:,10)-temp_gos(:,8));
+        SW_table.Behav_FA(table_length+1)=nanmean(temp_nogos(:,11)==0);
 
         this_amp=all_Waves(:,4);
         amp_bins=histc(this_amp,bins);
         amp_bins=(amp_bins/duration_of_recording)/length(labels)';
 
         all_distrib_SW=[all_distrib_SW ; amp_bins'];
-%     end
+     end % EP - uncommmented
 
 end
 

@@ -40,7 +40,7 @@ addpath(genpath(path_FMINSEARCHBND))
 
 
 % NOTE: I'm using trial data 
-files=dir([preproc_path filesep 'fetrial_ft_*.mat']);
+files=dir([preproc_path filesep 'clean_i_trial_*.mat']); % EP - changed 14/11/24 files=dir([preproc_path filesep 'fetrial_ft_*.mat']);
 
 load([pwd filesep '..' filesep 'Preproc' filesep 'all_badChannels_badProbes.mat']);
 
@@ -52,18 +52,15 @@ redo=0;
 
 nFc=0;
 nFc4=0;
-all_ERP_NT=[];
-all_ERP_TG=[];
+all_ERP_NG=[];
+all_ERP_G=[];
 
-all_ERP_NT_offset=[];
-all_ERP_TG_offset=[];
 group_PowDataEO=[];
 
 for nF=1:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
-    SubID=file_name(12:end-4); 
-
+    SubID=file_name(15:end-4); 
 
 %     if ismember(SubID, {'A053', 'C012', 'C024', 'C036', 'C038'}) %% TEMPORARY SKIP CAUSE IT WAS CRASHING; C012 & C024 & C038 maybe just rerun importSART
 %         continue;
@@ -84,26 +81,26 @@ for nF=1:length(files)
         fprintf('... processing %s\n',file_name);
         load([preproc_path file_name]);
 
-        %%% rename channels
-        mylabels = data.label;
-        for nCh = 1:length(mylabels)
-            findspace = findstr(mylabels{nCh},' ');
-            if isempty(findspace)
-                newlabels{nCh} = mylabels{nCh};
-            else
-                if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
-                    newlabels{nCh} = mylabels{nCh}(findspace+1:end);
-                else
-                    newlabels{nCh} = mylabels{nCh}(1:findspace-1);
-                end
-            end
-        end
-        cfg=[];
-        cfg.channel          = data.label; %hdr.label(find((cellfun(@isempty,regexp(hdr.label,'EOG'))) & (cellfun(@isempty,regexp(hdr.label,'EMG'))) & (cellfun(@isempty,regexp(hdr.label,'ECG'))) & (cellfun(@isempty,regexp(hdr.label,'Mic')))));
-        cfg.montage.labelold = data.label;
-        cfg.montage.labelnew = newlabels;
-        cfg.montage.tra      = eye(length(data.label));
-        data = ft_preprocessing(cfg, data);
+%         %%% rename channels
+%         mylabels = data.label;
+%         for nCh = 1:length(mylabels)
+%             findspace = findstr(mylabels{nCh},' ');
+%             if isempty(findspace)
+%                 newlabels{nCh} = mylabels{nCh};
+%             else
+%                 if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
+%                     newlabels{nCh} = mylabels{nCh}(findspace+1:end);
+%                 else
+%                     newlabels{nCh} = mylabels{nCh}(1:findspace-1);
+%                 end
+%             end
+%         end
+%         cfg=[];
+%         cfg.channel          = data.label; %hdr.label(find((cellfun(@isempty,regexp(hdr.label,'EOG'))) & (cellfun(@isempty,regexp(hdr.label,'EMG'))) & (cellfun(@isempty,regexp(hdr.label,'ECG'))) & (cellfun(@isempty,regexp(hdr.label,'Mic')))));
+%         cfg.montage.labelold = data.label;
+%         cfg.montage.labelnew = newlabels;
+%         cfg.montage.tra      = eye(length(data.label));
+%         data = ft_preprocessing(cfg, data);
        
         cfg=[];   %% !! EP - put back in from v1 although should this go after baseline correcting?
         cfg.reref           = 'yes'; 
@@ -113,7 +110,6 @@ for nF=1:length(files)
         cfg.dftfilter      = 'yes';        % enable notch filtering to eliminate power line noise
         % cfg.dftfreq        = [25]; % set up the frequencies for notch filtering; EP - left this commented out since there's no flicker
         data_clean = ft_preprocessing(cfg,data);
-
         
         
         %%% take out trial %% !!! EP - I commented this out as we took out probes not trials 
@@ -140,8 +136,6 @@ for nF=1:length(files)
         ERP_NG=av_data_NG.avg-repmat(nanmean(av_data_NG.avg(:,av_data_NG.time>-0.2 & av_data_NG.time<0),2),1,length(av_data_NG.time));
         % ERP_G=av_data_G.avg-repmat(nanmean(av_data_G.avg(:,av_data_NG.time>-0.2 & av_data_NG.time<0),2),1,length(av_data_NG.time)); % This is using av_data_NG for baseline correcting ERP_G
         ERP_G=av_data_G.avg-repmat(nanmean(av_data_G.avg(:,av_data_G.time>-0.2 & av_data_G.time<0),2),1,length(av_data_G.time)); % TA - This is doing essentially the same as the above 
-
-
        
         save([preproc_path  filesep 'ERP_' file_name(1:end-4)],'ERP_NG','ERP_G')
     else
@@ -344,11 +338,15 @@ title('ERP differences NoGo vs Go split by group: Oz');
 xlim([-0.2 1.5])
 format_fig;
 
-Group_A=squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:))-squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:));
-Group_B=squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:))-squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:));
+
+%%
+thisCh=match_str(chLabels,'Pz'); %Pz, Fz
+Group_A=squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:))-squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:));
+Group_B=squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:))-squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:));
 Groups=[ones(size(Group_A,1),1) ; 2*ones(size(Group_B,1),1)];
 totPerm=500;
-[realpos realneg]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.2,0.1,totPerm,xTime,'full',[]); % Runs an ANOVA - Main effect of group on the diff
+[realpos]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.05,0.1,totPerm,xTime,'full',[]); % Runs an ANOVA - Main effect of group on the diff
+
 
 
 %%
@@ -496,12 +494,8 @@ format_fig;
 
 thisCh=match_str(chLabels,'Oz');
 figure;
-subplot(1,2,1);
 [~,~]=simpleTplot(xTime,squeeze(diff_all_ERP(:,thisCh,:)),0,'k',[2 0.05 0.05 1000],'-',0.5,1,0,1,2);
 title('ERP differences between Target and Non-target trials for all subjects ONSET');
-subplot(1,2,2);
-[~,~]=simpleTplot(xTime,squeeze(diff_all_ERP_offset(:,thisCh,:)),0,'k',[2 0.05 0.05 1000],'-',0.5,1,0,1,2);
-title('ERP differences between Target and Non-target trials for all subjects OFFSET');
 
 %%
 %Difference TG/NG for Controls and ADHDs
@@ -594,7 +588,7 @@ figure;
 subplot(2,3,1)
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-caxis([0 15])
+caxis([0 10])
 title('Controls NoGo 0.4-0.5s')
 format_fig
 hold on
@@ -604,7 +598,7 @@ temp_topo=squeeze(mean(mean(all_ERP_G(match_str(group_PowDataEO,'Control'),match
 subplot(2,3,2)
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-caxis([0 40])
+caxis([0 4])
 title('Controls Go 0.4-0.5s')
 format_fig
 hold on
@@ -614,7 +608,7 @@ temp_topo=squeeze(mean(mean(diff_all_ERP(match_str(group_PowDataEO,'Control'),ma
 subplot(2,3,3);
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-caxis([-5 25])
+%caxis([-5 5])
 title('Controls - diff Go/NoGo 0.4-0.5s')
 format_fig
 hold on
@@ -624,7 +618,7 @@ temp_topo=squeeze(mean(mean(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),matchin
 subplot(2,3,4);
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-caxis([0 15])
+caxis([0 10])
 title('ADHD NoGo 0.4-0.5s')
 format_fig
 hold on
@@ -634,7 +628,7 @@ temp_topo=squeeze(mean(mean(all_ERP_G(match_str(group_PowDataEO,'ADHD'),matching
 subplot(2,3,5);
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-caxis([0 40])
+caxis([0 4])
 title('ADHD Go 0.4-0.5s')
 format_fig
 hold on
@@ -644,7 +638,7 @@ temp_topo=squeeze(mean(mean(diff_all_ERP(match_str(group_PowDataEO,'ADHD'),match
 subplot(2,3,6);
 simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 colorbar;
-caxis([-5 25])
+%caxis([-5 5])
 title('ADHD - diff Go/NoGo 0.4-0.5s')
 format_fig
 hold off

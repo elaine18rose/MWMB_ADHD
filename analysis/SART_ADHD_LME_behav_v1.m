@@ -289,27 +289,31 @@ mdlDK2 = fitlme(all_block_table,'DK~1+BlockN*Group+(BlockN|SubID)'); % Winning m
 
 anova(mdlDK2)
 
-%%
+%% probe-level stats
 all_probe_table.Group=categorical(all_probe_table.Group);
 all_probe_table.StateC=categorical(nan(size(all_probe_table,1),1));
 all_probe_table.StateC(all_probe_table.State==1)='ON';
 all_probe_table.StateC(all_probe_table.State==2)='MW';
 all_probe_table.StateC(all_probe_table.State==3)='MB';
-all_probe_table.StateC(all_probe_table.State==4)='DR';
+all_probe_table.StateC(all_probe_table.State==4)='DK';
 
 % Intentionality (1 = Entirely intentional to 4 = Entirely unintentional)
-mdlint0 = fitlme(all_probe_table,'Intention~1+StateC+Group+(1|SubID)'); % Winning BIC model 
+mdlint0 = fitlme(all_probe_table,'Intention~1+StateC+Group+(1|SubID)'); %
 % mdlint1 = fitlme(all_block_table,'Intention~1+BlockN*Group+(1|SubID)');
-mdlint2 = fitlme(all_probe_table,'Intention~1+StateC*Group+(1|SubID)'); % Winning AIC model; Group: p <.001, Block: p <.001
+mdlint2 = fitlme(all_probe_table,'Intention~1+StateC*Group+(1|SubID)'); % Winning AIC & BIC model; Group: p =.075; StateC: p <.001; Group*StateC: p <.001
 % %%% Extract fit statistics for each model
-% AIC_values = [mdlint0.ModelCriterion.AIC, mdlint1.ModelCriterion.AIC, mdlint2.ModelCriterion.AIC];
-% BIC_values = [mdlint0.ModelCriterion.BIC, mdlint1.ModelCriterion.BIC, mdlint2.ModelCriterion.BIC];
+% AIC_values = [mdlint0.ModelCriterion.AIC, mdlint2.ModelCriterion.AIC];
+% %AIC_values = [mdlint0.ModelCriterion.AIC, mdlint1.ModelCriterion.AIC, mdlint2.ModelCriterion.AIC];
+% BIC_values = [mdlint0.ModelCriterion.BIC, mdlint2.ModelCriterion.BIC];
+% % BIC_values = [mdlint0.ModelCriterion.BIC, mdlint1.ModelCriterion.BIC, mdlint2.ModelCriterion.BIC];
 % % Display results in a table
-% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
+% ModelNames = {'Model 0', 'Model 1'};
+% %ModelNames = {'Model 0', 'Model 1', 'Model 2'};
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
 
 anova(mdlint2)
+
 
 figure;
 Colors=[253,174,97;
@@ -322,9 +326,20 @@ Int_Paired_test=[];
 for nSta=1:4
     for_paired_states={};
     for nG=1:2
+        % Extract intention values for the current group and state
+        state_values = all_probe_table.Intention(all_probe_table.StateC == myStates(nSta) & all_probe_table.Group == myGroups(nG));
+        % Calculate percentage for current state and group
+        state_percentages(nG, nSta) = numel(state_values) / numel(all_probe_table.Intention(all_probe_table.Group == myGroups(nG))) * 100;
+        
         temp_bar=grpstats(all_probe_table.Intention(all_probe_table.StateC==myStates(nSta) & all_probe_table.Group==myGroups(nG)),...
             all_probe_table.SubID(all_probe_table.StateC==myStates(nSta) & all_probe_table.Group==myGroups(nG)));
-        hb(nG)=simpleBarPlot(nSta+(2*nG-3)*0.2,temp_bar,Colors(nG,:),0.35,'k',[],2);
+        hb(nG)=simpleBarPlot(nSta+(2*nG-3)*0.2,temp_bar,Colors(nG,:),0.35,'none',[],2); %none was 'k' before to show SE (or was it SD?) bars
+        
+        % Add percentage text on top of each bar
+        text(nSta + (2 * nG - 3) * 0.2, nanmean(temp_bar) + 0.01, sprintf('%.1f%%', state_percentages(nG, nSta)), ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 20, 'FontWeight', 'bold', 'Color', Colors(nG,:));
+        
+
         for_paired_states{nG}=temp_bar;
     end
     [h,p,ci,stats] = ttest2(for_paired_states{1},for_paired_states{2});
@@ -332,16 +347,20 @@ for nSta=1:4
     Int_Paired_test(nSta,2)=stats.tstat;
     Int_Paired_test(nSta,3)=stats.df;
 end
-set(gca,'Xtick',1:4,'XTickLabel',myStates);
+xlabels = {'On Task', 'Mind Wandering','Mind Blanking', 'Dont Remember'};
+ylabels = {'Entirely Int.', 'Somewhat Int.','Somewhat Unint.', 'Entirely Unint.'};
+set(gca,'Xtick',1:4,'XTickLabel',xlabels);
+set(gca,'Ytick',1:4,'YTickLabel',ylabels);
+ytickangle(45);
+xtickangle(45);
 legend(hb,myGroups)
 format_fig;
-ylabel('Unintentional')
-%% probe-level stats
-
+ylabel('Intentionality')
+%% 
 % State (1 = On, 2 = MW, 3 = MB)
-mdlstate0 = fitlme(all_probe_table,'State~1+Block+Group+(1|SubID)'); % Winning BIC model; roup: p <.001, Block: p<.001
-% mdlstate1 = fitlme(all_probe_table,'State~1+Block*Group+(1|SubID)');
-mdlstate2 = fitlme(all_probe_table,'State~1+Block*Group+(Block|SubID)'); % Winning AIC model; Group: p <.001, Block: p =.032
+mdlstate0 = fitlme(all_probe_table,'State~1+Block+Group+(1|SubID)');
+mdlstate1 = fitlme(all_probe_table,'State~1+Block*Group+(1|SubID)');
+mdlstate2 = fitlme(all_probe_table,'State~1+Block*Group+(Block|SubID)'); % Winning AIC & BIC model; Group: p <.001, Block: p =.032
 %%% Extract fit statistics for each model
 % AIC_values = [mdlstate0.ModelCriterion.AIC, mdlstate1.ModelCriterion.AIC, mdlstate2.ModelCriterion.AIC];
 % BIC_values = [mdlstate0.ModelCriterion.BIC, mdlstate1.ModelCriterion.BIC, mdlstate2.ModelCriterion.BIC];
@@ -384,9 +403,9 @@ anova(mdlint2)
 
 
 % Vigilance (1 = Extremely alert to 4 = Extremely sleepy)
-% mdlvig0 = fitlme(all_probe_table,'Intention~1+Block+Group+(1|SubID)');
-% mdlvig1 = fitlme(all_probe_table,'Intention~1+Block*Group+(1|SubID)');
-mdlvig2 = fitlme(all_probe_table,'Intention~1+Block*Group+(Block|SubID)'); % Winning AIC & BIC model; Group: p <.001, Block: p <.001
+mdlvig0 = fitlme(all_probe_table,'Vigilance~1+Block+Group+(1|SubID)');
+mdlvig1 = fitlme(all_probe_table,'Vigilance~1+Block*Group+(1|SubID)');
+mdlvig2 = fitlme(all_probe_table,'Vigilance~1+Block*Group+(Block|SubID)'); % Winning AIC & BIC model; Group: p <.001, Block: p <.001
 % %%% Extract fit statistics for each model
 % AIC_values = [mdlvig0.ModelCriterion.AIC, mdlvig1.ModelCriterion.AIC, mdlvig2.ModelCriterion.AIC];
 % BIC_values = [mdlvig0.ModelCriterion.BIC, mdlvig1.ModelCriterion.BIC, mdlvig2.ModelCriterion.BIC];
@@ -396,3 +415,41 @@ mdlvig2 = fitlme(all_probe_table,'Intention~1+Block*Group+(Block|SubID)'); % Win
 % disp(fit_table);
 
 anova(mdlvig2)
+
+% Define unique levels for Vigilance and Group
+myVigLevels = unique(all_probe_table.Vigilance);
+myGroups = categorical(unique(all_probe_table.Group));
+
+% Initialize matrix to store p-values and test statistics
+Vig_Paired_test = nan(length(myVigLevels), 3); % Rows for each vigilance level, columns for p-value, t-stat, and df
+
+for nVig = 1:length(myVigLevels)
+    for_paired_groups = {}; % Cell array to store data for each group for current vigilance level
+    
+    for nG = 1:2
+        % Extract values of `Vigilance` for the current group and vigilance level
+        vig_values = all_probe_table.Vigilance(all_probe_table.Vigilance == myVigLevels(nVig) & all_probe_table.Group == myGroups(nG));
+        
+        % Store group-specific vigilance data for the t-test
+        for_paired_groups{nG} = vig_values;
+    end
+    
+    % Check that both groups have data for this vigilance level
+    if ~isempty(for_paired_groups{1}) && ~isempty(for_paired_groups{2})
+        % Perform two-sample t-test between groups for the current vigilance level
+        [h, p, ci, stats] = ttest2(for_paired_groups{1}, for_paired_groups{2});
+        
+        % Store results in matrix
+        Vig_Paired_test(nVig, 1) = p;          % p-value
+        Vig_Paired_test(nVig, 2) = stats.tstat; % t-statistic
+        Vig_Paired_test(nVig, 3) = stats.df;    % degrees of freedom
+    else
+        % Display a message if data is missing for this vigilance level/group
+        fprintf('Warning: Missing data for Vigilance level %d\n', myVigLevels(nVig));
+    end
+end
+
+% Display the results
+disp('Paired t-test results for each Vigilance level (p-value, t-stat, df):');
+disp(Vig_Paired_test);
+

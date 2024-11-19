@@ -39,7 +39,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files: by-Probe EEG
 RS = ["R1", "R2"];
 all_badCompo=[];
-redo=1;
+redo=0;
 all_ICA_classification=[];
 for nF=1:length(eeg_byProbe_files)
 
@@ -48,6 +48,9 @@ for nF=1:length(eeg_byProbe_files)
     SubID=SubInfo{3}(1:end-4);
 
     if redo==1 || exist([preproc_path filesep 'clean_i_probe_' SubID '.mat'])==0 % To skip already preprocessed files
+        if ~strcmp(SubID,{'C041'}) % redoing this as there were problems opening the file
+            continue;
+        end
         if exist([preproc_path filesep 'comp_i_probe_' SubID '.mat'])==0
             warning(sprintf('... missing ICA file for %s\n',[eeg_byProbe_files(nF).name]))
             continue;
@@ -98,7 +101,7 @@ for nF=1:length(eeg_byProbe_files)
 
 
         %%%%% for trials
-        load([preproc_path filesep 'fetrial_ft_' SubID '.mat']) %EP - loading by Probe epoched data
+        load([preproc_path filesep 'fetrial_ft_' SubID '.mat']) %EP - loading by trial epoched data
         data.hdr.Fs=data.fsample;
         data.hdr.nChans=length(data.label);
         data.hdr.label=data.label;
@@ -119,10 +122,11 @@ for nF=1:length(eeg_byProbe_files)
         EEG_clean = eeg_checkset(EEG_clean);
         ori_data=data;
         data = eeglab2fieldtrip(EEG_clean, 'raw');
-        save([preproc_path filesep 'clean_i_trial_' SubID '.mat'],'data','badCompo');
+        save([preproc_path filesep 'clean_i_trial_' SubID '.mat'],'data','badCompo','events'); % EP - added events
 
     else %EP
         load([preproc_path filesep 'clean_i_probe_' SubID '.mat']) %EP
+        load([preproc_path filesep 'clean_i_trial_' SubID '.mat']) %EP 
         all_badCompo=[all_badCompo ; badCompo]; %EP
     end
 end
