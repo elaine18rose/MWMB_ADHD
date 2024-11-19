@@ -1,0 +1,511 @@
+%% version 2 - uses version 2 getSW table with NA values 
+clear all;
+close all;
+%%
+if isempty(findstr(pwd,'thandrillon'))==0
+    path_LSCPtools='/Users/tand0009/WorkGit/LSCPtools/';
+    path_fieldtrip='/Users/thandrillon/WorkGit/projects/ext/fieldtrip/';
+    data_path='/Users/thandrillon/Data/ADHD_MW/EEG/';
+    preproc_path='/Users/thandrillon/Data/ADHD_MW/Preproc/';
+    path_eeglab='/Users/thandrillon/WorkGit/projects/ext/eeglab/';
+    path_ICAlabel='/Users/thandrillon/WorkGit/projects/ext/ICLabel/';
+    path_FMINSEARCHBND='/Users/thandrillon/Work/local/FMINSEARCHBND';
+    path_ExGauss='/Users/thandrillon/WorkGit/projects/ext/exgauss/';
+else
+    path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
+    path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
+    data_path = '/Volumes/Seagate/MWMB_ADHD_SART/EEG/';
+    preproc_path='/Volumes/Seagate/MWMB_ADHD_SART/preproc/';
+    path_detectSW = '/Volumes/Seagate/MWMB_ADHD_SART/SW_detection/';
+    path_eeglab='/Users/elaine/desktop/MATLAB_Functions/eeglab/';
+    path_ICAlabel='/Users/elaine/desktop/MATLAB_Functions/ICLabel/';
+    path_ExGauss='/Users/elaine/desktop/MATLAB_Functions/exgauss';
+    path_FMINSEARCHBND='/Users/elaine/desktop/MATLAB_Functions/FMINSEARCHBND';
+
+    %     mkdir(path_detectSW)
+end
+% adding relevant toolboxes to the path
+% spm12 and LSCPtools
+addpath(genpath(path_LSCPtools))
+addpath(path_fieldtrip)
+ft_defaults;
+addpath(genpath(path_ExGauss))
+addpath(genpath(path_FMINSEARCHBND))
+
+% select relevant files, here task
+SW_files=dir([preproc_path filesep 'SW_clean_i_probe_*.mat']);
+
+%EEG Layout info
+run ../MWMB_ADHD_elec_layout.m
+
+
+%% Loop across files
+RS = ["R1", "R2"];
+%redo=0;
+all_threshold_SW=readtable([preproc_path filesep 'all_threshold_SW_v2.csv']); %EP - This is 
+all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
+all_threshold_SW.Group=categorical(all_threshold_SW.Group);
+all_threshold_SW.Elec=categorical(all_threshold_SW.Elec);
+CTR_threshold_SW=all_threshold_SW(all_threshold_SW.Group=='Control' & all_threshold_SW.SubID~='C017',:);
+
+CTR_threshold_SW.Thr_EG(CTR_threshold_SW.Thr_EG>(nanmean(CTR_threshold_SW.Thr_EG)+5*nanstd(CTR_threshold_SW.Thr_EG)))=NaN;
+[Elec_group, ~, idx] = unique(CTR_threshold_SW.Elec);
+mean_Thr = splitapply(@nanmean, CTR_threshold_SW.Thr_EG, idx);
+av_CTR_threshold_SW = table(Elec_group, mean_Thr, 'VariableNames', {'Elec', 'mean_Thr'});
+
+cfg = [];
+cfg.layout = 'EEG1010.lay';
+cfg.channel=cellstr(Elec_group);
+cfg.center      = 'yes';
+layout=ft_prepare_layout(cfg);
+
+figure;
+cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+cmap(cmap<0)=0;
+temp_topo=[];
+for nCh=1:length(layout.label)-2
+    temp_topo(nCh)=squeeze(nanmean(av_CTR_threshold_SW.mean_Thr(av_CTR_threshold_SW.Elec==layout.label{nCh})));
+end
+simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
+colormap(cmap); colorbar;
+
+
+load([pwd filesep '..' filesep 'Preproc' filesep 'all_badChannels_badProbes.mat']);
+
+%%
+ColSW=[];
+for nCh=1:length(layout.label)-2
+ColSW{nCh}=sprintf('SW_%s',layout.label{nCh});
+end
+SW_table_perT=array2table(zeros(0,12+64),'VariableNames',[{'SubID','Group','Probe','MS','ON','MW','MB','DR','Vig','Type','Err','RT'}  ColSW]);
+SW_table_perT.SubID=categorical(SW_table_perT.SubID);
+SW_table_perT.Group=categorical(SW_table_perT.Group);
+SW_table_perT.Type=categorical(SW_table_perT.Type);
+SW_table_perT.MS=categorical(SW_table_perT.MS);
+
+MS_labels={'ON','MW','MB','DK'};
+Group_labels={'ADHD','Control'};
+FilesPbme=[];
+for nF=1:length(SW_files)
+    if startsWith(SW_files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
+        continue; %  EP - Jump to the bottom of the loop.
+    end
+
+
+    %%% load the data
+    SubInfo=split(SW_files(nF).name,'_');
+    SubID=SubInfo{end}(1:end-4);
+    if SubID(1)=='A'
+        GroupID='ADHD';
+    elseif SubID(1)=='C'
+        GroupID='Control';
+    else
+        GroupID='undefined';
+    end
+
+    if strcmp(SubID,'C017') || strcmp(SubID,'C038')
+        FilesPbme=[FilesPbme ; {SubID} , {'Noisy SW detection'}];
+        continue;
+    end
+    if strcmp(SubID,'C015')
+        FilesPbme=[FilesPbme ; {SubID} , {'Weird behaviour'}];
+        continue;
+    end
+
+    behav_file=dir([data_path filesep '..' filesep 'Behaviour' filesep 'wanderIM_behavres_' SubID '*.mat']);
+    if length(behav_file)
+        load([behav_file.folder filesep behav_file.name])
+    else
+        FilesPbme=[FilesPbme ; {SubID} , {'Missing Behaviour'}];
+        continue;
+    end
+
+    fsample=500;
+%     labels={'Fp1'	'Fp2'	'F7'	'F3'	'Fz'	'F4'	'F8'	'FC5'	'FC1'	'FC2'	'FC6'	'T7'	'C3'	'Cz'	'C4'	'T8'	'TP9'	'CP5'	'CP1'	'CP2'	'CP6'	'TP10'	'P7'	'P3'	'Pz'	'P4'	'P8'	'PO9'	'O1'	'Oz'	'O2'	'PO10'	'AF7'	'AF3'	'AF4'	'AF8'	'F5'	'F1'	'F2'	'F6'	'FT9'	'FT7'	'FC3'	'FC4'	'FT8'	'FT10'	'C5'	'C1'	'C2'	'C6'	'TP7'	'CP3'	'CPz'	'CP4'	'TP8'	'P5'	'P1'	'P2'	'P6'	'PO7'	'PO3'	'POz'	'PO4'	'PO8'};
+    load([preproc_path filesep 'SW_clean_i_probe_' SubID]);
+
+    if ~isempty(match_str(badChannels_badTrials_info(:,1),SubID)) && ~isempty(badChannels_badTrials_info{match_str(badChannels_badTrials_info(:,1),SubID),7})
+        probe_res(badChannels_badTrials_info{match_str(badChannels_badTrials_info(:,1),SubID),7},:)=[];
+    elseif strcmp(SubID,'A008')
+        probe_res(25,:)=[];
+    elseif strcmp(SubID,'A053')
+        probe_res([24 25],:)=[]; %removing two probes because we cannot find the triggers
+    elseif strcmp(SubID,'C036')
+        probe_res([6 7],:)=[]; %removing two probes because we cannot find the triggers
+    end
+    if size(probe_res,1)~=length(unique(all_Waves(:,2)))
+        FilesPbme=[FilesPbme ; {SubID} , {'Different Numbers of Probes'}];
+        continue;
+    end
+
+    %%% clean detection
+    paramSW.prticle_Thr=90; % 80 or 90 or 95
+    paramSW.LimFrqW=[1 7]; % [1 4] or [4 10]
+    paramSW.AmpCriterionIdx=4; % 9 (MaxNegpkAmp) or 11 (MaxPosPeakAmp) or 4 (P2P)
+    paramSW.fixThr=[];
+    paramSW.art_ampl=150;
+    paramSW.max_posampl=75;
+    paramSW.max_Freq=7;
+
+    all_Waves=double(all_Waves);
+    all_onset=all_Waves(:,5)/fsample-25;
+    all_freq=1./(abs((all_Waves(:,5)-all_Waves(:,7)))./fsample);
+    fprintf('... ... %g %% waves discarded because of onset\n',mean(all_onset<-20 | all_onset>0)*100)
+    fprintf('... ... %g %% waves discarded because of frequency\n',mean(all_freq>paramSW.max_Freq)*100)
+    fprintf('... ... %g %% waves discarded because of max P2P ampl\n',mean(all_Waves(:,paramSW.AmpCriterionIdx)>paramSW.art_ampl)*100)
+    fprintf('... ... %g %% waves discarded because of max pos ampl\n',mean(all_Waves(:,11)>paramSW.max_posampl | all_Waves(:,14)>paramSW.art_ampl| abs(all_Waves(:,15))>paramSW.art_ampl)*100)
+    all_Waves(all_onset<-20 | all_onset>0 | all_freq>paramSW.max_Freq | all_Waves(:,paramSW.AmpCriterionIdx)>paramSW.art_ampl | all_Waves(:,11)>paramSW.max_posampl| all_Waves(:,14)>paramSW.art_ampl| abs(all_Waves(:,15))>paramSW.art_ampl,:)=[];
+
+    thr_Wave_pc=[];
+    thr_Wave_eg=[];
+    slow_Waves=[];
+    for nE=1:length(labels)
+        thisE_Waves=all_Waves(all_Waves(:,3)==nE,:);
+        temp_p2p=thisE_Waves(:,paramSW.AmpCriterionIdx);
+
+        this_thr=av_CTR_threshold_SW.mean_Thr(av_CTR_threshold_SW.Elec==labels{nE});
+
+        %         [X,fVal,exitFlag,solverOutput] = exgauss_fit(temp_p2p); % Fits an ex-Gauss distribution to data
+        %         bins=0:0.1:paramSW.art_ampl;                            % Creating variable to be used for the function below; from 0 to value set above (paramSW.art_ampl) in increments of 0.1
+        %         eg_pdf=exgauss_pdf(bins,X);                             % Computes the probability density; "X" here gives the values for [Mu, Sigma, Tau]
+        %         end_gaussian=2*bins(find(eg_pdf==max(eg_pdf)));
+        %         this_thr_ind=end_gaussian;
+        %         thr_Wave_eg(nE)=this_thr_ind;
+        slow_Waves=[slow_Waves ; thisE_Waves(thisE_Waves(:,paramSW.AmpCriterionIdx)>this_thr,:)];
+    end
+    %     save([preproc_path filesep 'selectSW_clean_i_probe_' SubID],'slow_Waves')
+
+    for nBl=unique(slow_Waves(:,2))'
+        this_probe_SW=slow_Waves(slow_Waves(:,2)==nBl,:);
+        this_probe_SW(:,5)=this_probe_SW(:,5)/fsample-25;
+        % select trials
+        this_block=probe_res(nBl,4);
+        this_trial=probe_res(nBl,6);
+        temp_trials=test_res(test_res(:,1)==this_block & test_res(:,4)<=this_trial,:);
+
+        time_trials=temp_trials(:,8);
+        time_probe=probe_res(nBl,3);
+        rel_time_trials=time_trials-time_probe;
+        temp_trials(rel_time_trials<-20,:)=[];
+        rel_time_trials(rel_time_trials<-20)=[];
+        temp_SW_perTrial=[];
+        for nTr=1:length(rel_time_trials)-1
+            % get the boundaries of each trial
+            this_onset=rel_time_trials(nTr);
+            this_offset=rel_time_trials(nTr+1);
+            % filter slow waves based on these boundaries
+            temp_slow_Waves=this_probe_SW(this_probe_SW(:,5)>=this_onset & this_probe_SW(:,5)<=this_offset,:);
+            % count slow waves per electrode
+            nout=hist(temp_slow_Waves(:,3),1:length(labels));
+            temp_SW_perTrial=[temp_SW_perTrial ; nout];
+        end
+        temp_trials(end,:)=[];
+        Type_Vec=categorical(size(temp_SW_perTrial,1));
+        Type_Vec(temp_trials(:,5)==3)='NoGo';
+        Type_Vec(temp_trials(:,5)~=3)='Go';
+        Corr_Vec=nan(size(temp_SW_perTrial,1),1);
+        Corr_Vec(Type_Vec=='NoGo')=temp_trials(~isnan(temp_trials(:,11)),11);
+        Corr_Vec(Type_Vec=='Go')=temp_trials(~isnan(temp_trials(:,12)),12);
+
+        % SW_table_perT=array2table(zeros(0,10+64),'VariableNames',[{'SubID','Group','Probe','ON','MW','MB','DR','Vig','Type','Corr','RT'}  ColSW]);
+        table_length=size(SW_table_perT,1);
+        SW_table_perT.SubID(table_length+(1:size(temp_SW_perTrial,1)))=repmat({SubID},size(temp_SW_perTrial,1),1);
+        SW_table_perT.Group(table_length+(1:size(temp_SW_perTrial,1)))=repmat({GroupID},size(temp_SW_perTrial,1),1);
+        SW_table_perT.Probe(table_length+(1:size(temp_SW_perTrial,1)))=repmat(nBl,size(temp_SW_perTrial,1),1);
+        SW_table_perT.MS(table_length+(1:size(temp_SW_perTrial,1)))=repmat(MS_labels(probe_res(nBl,19)),size(temp_SW_perTrial,1),1);
+        SW_table_perT.ON(table_length+(1:size(temp_SW_perTrial,1)))=repmat(probe_res(nBl,19)==1,size(temp_SW_perTrial,1),1);
+        SW_table_perT.MW(table_length+(1:size(temp_SW_perTrial,1)))=repmat(probe_res(nBl,19)==2,size(temp_SW_perTrial,1),1);
+        SW_table_perT.MB(table_length+(1:size(temp_SW_perTrial,1)))=repmat(probe_res(nBl,19)==3,size(temp_SW_perTrial,1),1);
+        SW_table_perT.DR(table_length+(1:size(temp_SW_perTrial,1)))=repmat(probe_res(nBl,19)==4,size(temp_SW_perTrial,1),1);
+        SW_table_perT.Vig(table_length+(1:size(temp_SW_perTrial,1)))=repmat(probe_res(nBl,22),size(temp_SW_perTrial,1),1);
+
+        SW_table_perT.Type(table_length+(1:size(temp_SW_perTrial,1)))=Type_Vec;
+        SW_table_perT.Err(table_length+(1:size(temp_SW_perTrial,1)))=1-Corr_Vec;
+        SW_table_perT.RT(table_length+(1:size(temp_SW_perTrial,1)))=temp_trials(:,10)-temp_trials(:,8);
+        for nCh=1:size(temp_SW_perTrial,2)
+            SW_table_perT.(sprintf('SW_%s',labels{nCh}))(table_length+(1:size(temp_SW_perTrial,1)))=temp_SW_perTrial(:,nCh)==1;
+        end
+    end
+end
+
+%%
+figure;
+subplot(2,1,1)
+temp_topo=[];
+temp_topo2=[];
+for nCh=1:length(layout.label)-2
+    temp_SW=SW_table_perT.(sprintf('SW_%s',layout.label{nCh}))(SW_table_perT.Group=='ADHD');
+    temp_Sub=SW_table_perT.SubID(SW_table_perT.Group=='ADHD');
+    temp_av=grpstats(temp_SW(~isnan(temp_SW)),temp_Sub(~isnan(temp_SW)));
+    temp_topo(nCh)=nanmean(temp_av);
+end
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+colormap(cmap); colorbar;
+    caxis([0.1 0.2])
+title('ADHD')
+
+subplot(2,1,2)
+temp_topo=[];
+temp_topo3=[];
+for nCh=1:length(layout.label)-2
+    temp_SW=SW_table_perT.(sprintf('SW_%s',layout.label{nCh}))(SW_table_perT.Group=='Control');
+    temp_Sub=SW_table_perT.SubID(SW_table_perT.Group=='Control');
+    temp_av=grpstats(temp_SW(~isnan(temp_SW)),temp_Sub(~isnan(temp_SW)));
+    temp_topo(nCh)=nanmean(temp_av);
+end
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+colormap(cmap); colorbar;
+    caxis([0.1 0.2])
+title('Control')
+
+%%
+figure;
+for nState=1:4
+    subplot(2,4,nState)
+    temp_topo=[];
+    for nCh=1:length(layout.label)-2
+        temp_SW=SW_table_perT.(sprintf('SW_%s',layout.label{nCh}))(SW_table_perT.MS==MS_labels{nState});
+        temp_Sub=SW_table_perT.SubID(SW_table_perT.MS==MS_labels{nState});
+        temp_av=grpstats(temp_SW(~isnan(temp_SW)),temp_Sub(~isnan(temp_SW)));
+
+        temp_topo(nCh)=nanmean(temp_av);
+    end
+    simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+    colormap(cmap); colorbar;
+    caxis([0.1 0.2])
+    title(MS_labels{nState})
+end
+
+for nVig=1:4
+    subplot(2,4,4+nVig)
+    temp_topo=[];
+    for nCh=1:length(layout.label)-2
+        temp_SW=SW_table_perT.(sprintf('SW_%s',layout.label{nCh}))(SW_table_perT.Vig==nVig);
+        temp_Sub=SW_table_perT.SubID(SW_table_perT.Vig==nVig);
+        temp_av=grpstats(temp_SW(~isnan(temp_SW)),temp_Sub(~isnan(temp_SW)));
+
+        temp_topo(nCh)=nanmean(temp_av);
+    end
+    simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+    colormap(cmap); colorbar;
+    caxis([0.1 0.2])
+    title(sprintf('Vig%g',nVig))
+end
+
+%% Predicting correct GO RT with Slow Waves
+clear topo_*
+clear sub_table
+clear temp_mdl_*
+for nCh=1:length(layout.label)-2
+    fprintf('... %g/%g\n',nCh,length(layout.label)-2)
+    temp_mdl_RT=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Err==0,:),sprintf('RT~1+%s*Group+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+
+    topo_tV_RT(nCh,1)=temp_mdl_RT.Coefficients.tStat(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+    topo_pV_RT(nCh,1)=temp_mdl_RT.Coefficients.pValue(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+
+    temp_aov_RT=anova(temp_mdl_RT);
+    topo_FV_int_RT(nCh)=temp_aov_RT.FStat(match_str(temp_aov_RT.Term,sprintf('Group:SW_%s',layout.label{nCh})));
+    topo_pV_int_RT(nCh)=temp_aov_RT.pValue(match_str(temp_aov_RT.Term,sprintf('Group:SW_%s',layout.label{nCh})));
+
+    for nG=1:2
+        temp_mdl_RT=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Err==0 & SW_table_perT.Group==Group_labels{nG},:),sprintf('RT~1+%s+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+        topo_tV_RT(nCh,nG+1)=temp_mdl_RT.Coefficients.tStat(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+        topo_pV_RT(nCh,nG+1)=temp_mdl_RT.Coefficients.pValue(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+    end
+end
+
+cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
+figure;
+for nG=1:3
+    subplot(1,3,nG)
+    simpleTopoPlot_ft(topo_tV_RT(:,nG)', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(topo_pV_RT(:,nG)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    colormap(cmap2);
+    colorbar('Ticks',[-5:5]);
+    if nG==1
+    title({'RT','all'})
+    else
+    title({'RT',Group_labels{nG-1}})
+    end
+    caxis([-1 1]*4)
+    format_fig;
+end
+
+figure;
+cmap3=cbrewer('seq','PuBu',64);
+simpleTopoPlot_ft(topo_FV_int_RT', layout,'on',[],0,1);
+ft_plot_lay_me(layout, 'chanindx', find(topo_pV_int_RT<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+%ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+colormap(cmap3);
+colorbar('Ticks',[0:8]);
+title({'RT - Group Int.'})
+% caxis([-1 1]*4)
+format_fig;
+
+% %%
+% SWdens_est=cell(1,2);
+% totperm=500;
+% for nCh=1:length(layout.label)-2
+%     sub_table=SW_table(SW_table.Elec==layout.label(nCh),:);
+%     if nCh==1
+%         out_pred_perm=[];
+%         [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_bygroup(sub_table,'Group','SW_density~1+Block+pred+(1|SubID)',totperm);
+%     else
+%         [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_bygroup(sub_table,'Group','SW_density~1+Block+pred+(1|SubID)',totperm,out_pred_perm);
+%     end
+%     SWdens_est{1}=[SWdens_est{1} ; [nCh real_out]];
+%     SWdens_est{2}=[SWdens_est{2} ; [nCh*ones(totperm,1) perm_out]];
+% end
+% 
+% %%
+% clus_alpha=0.1;
+% montecarlo_alpha=0.05;
+% 
+% cfg_neighb=[];
+% cfg_neighb.method = 'template';
+% cfg_neighb.layout='EEG1010.lay';
+% cfg_neighb.channel=layout.label(1:end-2);
+% neighbours = ft_prepare_neighbours(cfg_neighb);
+% neighbours(~ismember({neighbours.label},unique(SW_table.Elec)))=[];
+% [SWdens_clus]=get_clusterperm_lme_bygroup(SWdens_est,clus_alpha,montecarlo_alpha,totperm,neighbours,1);
+% 
+% 
+% cmap2=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
+% cmap2=flipud(cmap2);
+% limNumClus=1;
+% limMax=5;
+% 
+% temp_topo=SWdens_est{1}(:,3);
+% temp_topo2=zeros(size(temp_topo));
+% temp_topo3=zeros(size(temp_topo));
+% temp_clus=SWdens_clus;
+% 
+% figure;
+% if ~isempty(temp_clus)
+%     for nclus=1:length(temp_clus)
+%         if length(match_str(layout.label,temp_clus{nclus}{2}))<limNumClus
+%             continue;
+%         end
+%         %             ft_plot_lay_me(layout, 'chanindx',match_str(layout.label,temp_clus{nclus}{2}),'pointsymbol','o','pointcolor','r','pointsize',64,'box','no','label','yes')
+%         temp_topo2(match_str(layout.label,temp_clus{nclus}{2}))=temp_topo(match_str(layout.label,temp_clus{nclus}{2}));
+%         temp_topo3(match_str(layout.label,temp_clus{nclus}{2}))=1;
+%         fprintf('... ... found %s cluster (%g) of %g electrodes (tval cluster=%g, Pmc=%g)\n',temp_clus{nclus}{1},nclus,length(temp_clus{nclus}{2}),temp_clus{nclus}{3},temp_clus{nclus}{4})
+%     end
+% end
+% simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
+% %     ft_plot_lay_me(layout, 'chanindx',1:length(layout.label)-2,'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',6,'box','no','label','no')
+% format_fig;
+% caxis([-1 1]*limMax)
+% if ~isempty(temp_clus)
+%     for nclus=1:length(temp_clus)
+%         if length(match_str(layout.label,temp_clus{nclus}{2}))<limNumClus
+%             continue;
+%         end
+%         ft_plot_lay_me(layout, 'chanindx',match_str(layout.label,temp_clus{nclus}{2}),'pointsymbol','o','pointcolor','k','pointsize',96,'box','no','label','no')
+%     end
+% end
+% hb=colorbar('Position',[0.94    0.6    0.05    0.33]);
+% colormap(cmap2);
+
+%% Predicting Go Corr with Slow Waves
+clear topo_*
+clear sub_table
+clear temp_mdl_*
+for nCh=1:length(layout.label)-2
+    fprintf('... %g/%g\n',nCh,length(layout.label)-2)
+    temp_mdl_Err=fitlme(SW_table_perT(SW_table_perT.Type=='Go',:),sprintf('Err~1+%s*Group+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+
+    topo_tV_Err(nCh,1)=temp_mdl_Err.Coefficients.tStat(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+    topo_pV_Err(nCh,1)=temp_mdl_Err.Coefficients.pValue(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+
+    temp_aov_Err=anova(temp_mdl_Err);
+    topo_FV_int_Err(nCh)=temp_aov_Err.FStat(match_str(temp_aov_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
+    topo_pV_int_Err(nCh)=temp_aov_Err.pValue(match_str(temp_aov_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
+
+    for nG=1:2
+        temp_mdl_Err=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Group==Group_labels{nG},:),sprintf('Err~1+%s+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+        topo_tV_Err(nCh,nG+1)=temp_mdl_Err.Coefficients.tStat(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+        topo_pV_Err(nCh,nG+1)=temp_mdl_Err.Coefficients.pValue(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+    end
+end
+
+cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
+figure;
+for nG=1:3
+    subplot(1,3,nG)
+    simpleTopoPlot_ft(topo_tV_Err(:,nG)', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(topo_pV_Err(:,nG)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    colormap(cmap2);
+    colorbar('Ticks',[-5:5]);
+    if nG==1
+    title({'Err','all'})
+    else
+    title({'Err',Group_labels{nG-1}})
+    end
+    caxis([-1 1]*4)
+    format_fig;
+end
+
+figure;
+cmap3=cbrewer('seq','PuBu',64);
+simpleTopoPlot_ft(topo_FV_int_Err', layout,'on',[],0,1);
+ft_plot_lay_me(layout, 'chanindx', find(topo_pV_int_Err<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+%ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+colormap(cmap3);
+colorbar('Ticks',[0:8]);
+title({'Err - Group Int.'})
+% caxis([-1 1]*4)
+format_fig;
+
+%% Predicting NoGo Err with Slow Waves
+clear topo_*
+clear sub_table
+clear temp_mdl_*
+for nCh=1:length(layout.label)-2
+    fprintf('... %g/%g\n',nCh,length(layout.label)-2)
+    temp_mdl_NoGo_Err=fitlme(SW_table_perT(SW_table_perT.Type=='NoGo',:),sprintf('Err~1+%s+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+
+    topo_tV_NoGo_Err(nCh,1)=temp_mdl_NoGo_Err.Coefficients.tStat(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+    topo_pV_NoGo_Err(nCh,1)=temp_mdl_NoGo_Err.Coefficients.pValue(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+
+%     temp_aov_NoGo_Err=anova(temp_mdl_NoGo_Err);
+%     topo_FV_int_NoGo_Err(nCh)=temp_aov_NoGo_Err.FStat(match_str(temp_aov_NoGo_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
+%     topo_pV_int_NoGo_Err(nCh)=temp_aov_NoGo_Err.pValue(match_str(temp_aov_NoGo_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
+
+    for nG=1:2
+        temp_mdl_NoGo_Err=fitlme(SW_table_perT(SW_table_perT.Type=='NoGo' & SW_table_perT.Group==Group_labels{nG},:),sprintf('Err~1+%s+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+        topo_tV_NoGo_Err(nCh,nG+1)=temp_mdl_NoGo_Err.Coefficients.tStat(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+        topo_pV_NoGo_Err(nCh,nG+1)=temp_mdl_NoGo_Err.Coefficients.pValue(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+    end
+end
+
+cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
+figure;
+for nG=1:3
+    subplot(1,3,nG)
+    simpleTopoPlot_ft(topo_tV_NoGo_Err(:,nG)', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(topo_pV_NoGo_Err(:,nG)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    ft_plot_lay_me(layout, 'chanindx', find(topo_pV_NoGo_Err(:,nG)<fdr(topo_pV_NoGo_Err(:,nG),0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
+    colormap(cmap2);
+    colorbar('Ticks',[-5:5]);
+    if nG==1
+    title({'NoGo_Err','all'})
+    else
+    title({'NoGo_Err',Group_labels{nG-1}})
+    end
+    caxis([-1 1]*4)
+    format_fig;
+end
+
+% figure;
+% cmap3=cbrewer('seq','PuBu',64);
+% simpleTopoPlot_ft(topo_FV_int_NoGo_Err', layout,'on',[],0,1);
+% ft_plot_lay_me(layout, 'chanindx', find(topo_pV_int_NoGo_Err<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+% ft_plot_lay_me(layout, 'chanindx', find(topo_pV_int_NoGo_Err<fdr(topo_pV_int_NoGo_Err,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
+% colormap(cmap3);
+% colorbar('Ticks',[0:8]);
+% title({'NoGo_Err - Group Int.'})
+% % caxis([-1 1]*4)
+% format_fig;
