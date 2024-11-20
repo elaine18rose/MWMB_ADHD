@@ -79,10 +79,10 @@ SW_table.Group=categorical(SW_table.Group);
 SW_table.Elec=categorical(SW_table.Elec);
 SW_table.Probe_MS=categorical(SW_table.Probe_MS);
 
-SW_table=array2table(zeros(0,19),'VariableNames',{'SubID','Group','Elec','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope','SW_threshold','SW_peakneg','SW_peakpos','Rate_ON','Rate_MW','Rate_MB','Rate_DR','Av_Vig','Behav_Miss','Behav_FA','Behav_RT'});
-SW_table.SubID=categorical(SW_table.SubID);
-SW_table.Group=categorical(SW_table.Group);
-SW_table.Elec=categorical(SW_table.Elec);
+SW_table_perS=array2table(zeros(0,19),'VariableNames',{'SubID','Group','Elec','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope','SW_threshold','SW_peakneg','SW_peakpos','Rate_ON','Rate_MW','Rate_MB','Rate_DR','Av_Vig','Behav_Miss','Behav_FA','Behav_RT'});
+SW_table_perS.SubID=categorical(SW_table_perS.SubID);
+SW_table_perS.Group=categorical(SW_table_perS.Group);
+SW_table_perS.Elec=categorical(SW_table_perS.Elec);
 
 MS_labels={'ON','MW','MB','DK'};
 FilesPbme=[];
@@ -416,7 +416,7 @@ neighbours(~ismember({neighbours.label},unique(SW_table.Elec)))=[];
 [SWdens_clus]=get_clusterperm_lme_bygroup(SWdens_est,clus_alpha,montecarlo_alpha,totperm,neighbours,1);
 
 
-cmap2=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
+cmap2=cbrewer('div','RdBu',64); % selectg a sequential colorscale from yellow to red (64)
 cmap2=flipud(cmap2);
 limNumClus=1;
 limMax=5;
@@ -468,9 +468,12 @@ clear sub_table
 clear temp_mdl_*
 SW_table.Group=categorical(SW_table.Group);
 SW_table.Group=reordercats(SW_table.Group,["Control" "ADHD"]);
+
 VOI={'Behav_FA','Behav_Miss','Behav_RT','Probe_Vig','Probe_MW','Probe_MB'};
 f1=figure;
 f2=figure;
+f3=figure;
+f4=figure;
 for nV=1:length(VOI)
     topo_tV=[];
     topo_pV=[];
@@ -479,26 +482,32 @@ for nV=1:length(VOI)
     for nE=1:length(layout.label)-2
         fprintf('... %g/%g\n',nE,length(layout.label)-2)
         sub_table=SW_table(SW_table.Elec==layout.label(nE),:);
-        temp_mdl_byBehav=fitlme(sub_table,sprintf('SW_density~1+Group+%s+Block+(1|SubID)',VOI{nV}));
+        temp_mdl_byBehav=fitlme(sub_table,sprintf('SW_density~1+%s+Block+(1|SubID)',VOI{nV}));
 
-        topo_tV(nE)=temp_mdl_byBehav.Coefficients.tStat(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
-        topo_pV(nE)=temp_mdl_byBehav.Coefficients.pValue(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
+        topo_tV(nE,1)=temp_mdl_byBehav.Coefficients.tStat(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
+        topo_pV(nE,1)=temp_mdl_byBehav.Coefficients.pValue(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
 
         temp_mdl_byBehav2=fitlme(sub_table,sprintf('SW_density~1+Group*%s+Block+(1|SubID)',VOI{nV}));
         mod_comp=compare(temp_mdl_byBehav,temp_mdl_byBehav2);
         topo_comp_tV(nE)=mod_comp.LRStat(end);
         topo_comp_pV(nE)=mod_comp.pValue(end);
 
+        for nG=1:2
+            temp_mdl_byBehav=fitlme(sub_table(sub_table.Group==Groups{nG},:),sprintf('SW_density~1+%s+Block+(1|SubID)',VOI{nV}));
+            topo_tV(nE,nG+1)=temp_mdl_byBehav.Coefficients.tStat(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
+            topo_pV(nE,nG+1)=temp_mdl_byBehav.Coefficients.pValue(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
+        end
+
     end
     figure(f1);
     subplot(2,3,nV)
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
-    simpleTopoPlot_ft(topo_tV', layout,'on',[],0,1);
-    ft_plot_lay_me(layout, 'chanindx', find(topo_pV<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    simpleTopoPlot_ft(topo_tV(:,1)', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(topo_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     colormap(cmap2);
-    title(VOI{nV})
-    caxis([-1 1]*max(abs(topo_tV)))
+    title({'All',VOI{nV}})
+    caxis([-1 1]*max(max(abs(topo_tV))))
     format_fig;
 
     figure(f2);
@@ -511,4 +520,27 @@ for nV=1:length(VOI)
     title({VOI{nV},'Mod Comp'})
     caxis([0 1]*max((topo_comp_tV)))
     format_fig;
+
+    figure(f3);
+    subplot(2,3,nV)
+    cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
+    simpleTopoPlot_ft(topo_tV(:,2)', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(topo_pV(:,2)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    colormap(cmap2);
+    title({'ADHD',VOI{nV}})
+    caxis([-1 1]*max(max(abs(topo_tV))))
+    format_fig;
+
+    figure(f4);
+    subplot(2,3,nV)
+    cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
+    simpleTopoPlot_ft(topo_tV(:,3)', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(topo_pV(:,3)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    colormap(cmap2);
+    title({'Controls',VOI{nV}})
+    caxis([-1 1]*max(max(abs(topo_tV))))
+    format_fig;
+
 end
