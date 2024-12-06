@@ -62,7 +62,9 @@ for nF=1:length(eeg_files)
     %%% load the data
     SubInfo=split(eeg_files(nF).name,'-');
     SubID=SubInfo{2}(1:end-4);
-
+%         if ~strcmp(SubID,{'A007'})
+%             continue;
+%         end
     if redo==1 || exist([preproc_path filesep 'comp_i_probe_' SubID '.mat'])==0 || ~any(strcmp(badChannels_badTrials_info(:,1), SubID)) % To skip already preprocessed files
         fprintf('... working on %s\n',[eeg_files(nF).name])
 

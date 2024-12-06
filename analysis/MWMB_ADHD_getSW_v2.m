@@ -33,7 +33,7 @@ addpath(genpath(path_ExGauss))
 addpath(genpath(path_FMINSEARCHBND))
 
 % select relevant files
-SW_files=dir([preproc_path filesep 'SW_clean_i_probe_*.mat']);
+files=dir([preproc_path filesep 'clean_i_probe_*.mat']);
 eeg_files=dir([data_path filesep '*.eeg']);
 
 %EEG Layout info
@@ -48,13 +48,10 @@ all_threshold_SW=array2table(zeros(0,5),'VariableNames',{'SubID','Group','Elec',
 all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
 all_threshold_SW.Group=categorical(all_threshold_SW.Group);
 all_threshold_SW.Elec=categorical(all_threshold_SW.Elec);
-for nF=1:length(SW_files)
-%     if contains(eeg_files(nF).name,RS) %To skip resting state files
-%         continue
-%     end
+for nF=1:length(files)
 
     %%% load the data
-    SubInfo=split(SW_files(nF).name,'_');
+    SubInfo=split(files(nF).name,'_');
     SubID=SubInfo{end}(1:end-4);
     if SubID(1)=='A'
         GroupID='ADHD';

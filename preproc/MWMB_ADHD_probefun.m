@@ -41,10 +41,11 @@ elseif strcmp(cfg.SubID,'A039')
         1301 1366 1411 1478 1534 1585 1641 1689 1794 1860 ...
         1921 1975 2036 2099 2167 2235 2343 2391 2436 2490];
     startProbeIdx=sort(startProbeIdx); % EP - wrong triggers; start triggers became S 8s
+    %%%Code below is to help with troubelshooting ppts with diff number of probes and triggers in EEG and behav file
     % load('/Users/thandrillon/Data/ADHD_MW/Behaviour/wanderIM_behavres_A039_29May2024-1210.mat')
-    % diff_probeend=diff(probe_res(:,3));
-    % evt_samples=[evt.sample];
-    % [diff(evt_samples(startProbeIdx))/hdr.Fs ; diff_probeend']
+%     diff_probeend=diff(probe_res(:,3));
+%     evt_samples=[evt.sample];
+%     [diff(evt_samples(startProbeIdx))/hdr.Fs ; diff_probeend']
 end
 evt_samples=[evt.sample];
 for i=1:length(startProbeIdx)

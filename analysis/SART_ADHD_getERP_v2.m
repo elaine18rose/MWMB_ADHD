@@ -345,7 +345,7 @@ Group_A=squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:))-squee
 Group_B=squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:))-squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:));
 Groups=[ones(size(Group_A,1),1) ; 2*ones(size(Group_B,1),1)];
 totPerm=500;
-[realpos]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.05,0.1,totPerm,xTime,'full',[]); % Runs an ANOVA - Main effect of group on the diff
+[realpos]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.05,0.05,totPerm,xTime,[],[]); % Runs an ANOVA - Main effect of group on the diff
 
 
 

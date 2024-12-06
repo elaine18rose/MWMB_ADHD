@@ -1,0 +1,332 @@
+---
+title: "SART-demographics-v1"
+author: "Elaine P."
+date: "2024-11-29"
+output: html_document
+---
+
+```{r} 
+rm(list=ls())
+#---- Packages ----
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(reshape2)
+library(stringr)
+library(ggplot2)
+library(gridExtra)
+library(RColorBrewer)
+library(lme4)
+library(ggpubr)
+library(stats)
+library(rstatix)
+library(ppcor)
+library(lme4)
+library(lmerTest)
+library(tidyverse)
+library(data.table)
+
+# ---- Import files -----
+#full dataset:
+dataset <- read.table('/Users/elaine/Desktop/Git_Studies/MWMB_ADHD/tables/SART_ADHD_behav_demo_v1.txt', header = TRUE, sep = ",", dec = ".")
+
+# # Here we're excluding control participants who score above 60 as well as those flagged with havig inconsistent CAARS scores
+# dataset2 <- dataset[is.na(dataset$CAARS_ADHDIndex)==FALSE,]
+# #Putting a threshold on CAARS_ADHDIndex using all dataset:
+# #CAARSADHDIndexTH <- dataset2 %>% filter((Group == "Control" & CAARS_ADHDIndex <61) | (Group == "ADHD" & CAARS_ADHDIndex > 65))
+# dataset <- dataset2 %>% 
+#   filter((Group == "CTR" & CAARS_ADHDIndex <61 & CAARS_InconsistencyIndex==0 | (Group == "ADHD" & CAARS_InconsistencyIndex==0)))
+
+# To Check how many participants in each group 
+num_participants_adhd <- dataset %>%
+  filter(Group == "A") %>%
+  summarize(num_participants = n_distinct(SubID))
+
+num_participants_control <- dataset %>%
+  filter(Group == "C") %>%
+  summarize(num_participants = n_distinct(SubID))
+
+
+#Changing the name for groups
+dataset$Group <- as.character(dataset$Group)
+dataset$Group[dataset$Group == 'A'] <-'ADHD'
+dataset$Group[dataset$Group == 'C'] <-'Control'
+dataset$Group<-as.factor(dataset$Group)
+dataset$SubID <- factor(dataset$SubID)
+```
+
+```{r}
+# ---- Correlation between CAARS (unfiltered) & Group ----
+# Preparing data ----
+CAARSTotalADHDSymptoms <- dataset 
+CAARSTotalADHDSymptoms$Group<-c(ADHD=1,CTR=2)[CAARSTotalADHDSymptoms$Group]
+CAARSTotalADHDSymptoms <- CAARSTotalADHDSymptoms %>%
+  group_by(SubID) %>%
+  summarise(CAARS_TotalADHDSymptoms = mean(CAARS_TotalADHDSymptoms),
+            Group = mean(Group))
+
+CAARSADHDIndex <- dataset
+CAARSADHDIndex$Group<-c(ADHD=1,CTR=2)[CAARSADHDIndex$Group]
+CAARSADHDIndex <- CAARSADHDIndex %>%
+  group_by(SubID) %>%
+  summarise(CAARSADHDIndex = mean(CAARS_ADHDIndex),
+            Group = mean(Group))
+
+CAARSInattentiveness <-dataset
+CAARSInattentiveness$Group<-c(ADHD=1,CTR=2)[CAARSInattentiveness$Group]
+CAARSInattentiveness <- CAARSInattentiveness %>%
+  group_by(SubID) %>%
+  summarise(CAARSInattentiveness = mean(CAARS_Inattentiveness),
+            Group = mean(Group))
+
+CAARSHyperactivity <-dataset
+CAARSHyperactivity$Group<-c(ADHD=1,CTR=2)[CAARSHyperactivity$Group]
+CAARSHyperactivity <- CAARSHyperactivity %>%
+  group_by(SubID) %>%
+  summarise(CAARSHyperactivity = mean(CAARS_Hyperactivity),
+            Group = mean(Group))
+
+
+# Spearmans correlation ----
+cor.test(x=CAARSTotalADHDSymptoms$Group, y=CAARSTotalADHDSymptoms$CAARS_TotalADHDSymptoms, method = 'spearman',use =  "na.or.complete")
+
+cor.test(x=CAARSADHDIndex$Group, y=CAARSADHDIndex$CAARSADHDIndex, method = 'spearman',use =  "na.or.complete")
+
+cor.test(x=CAARSHyperactivity$Group, y=CAARSHyperactivity$CAARSHyperactivity, method = 'spearman',use =  "na.or.complete")
+
+cor.test(x=CAARSInattentiveness$Group, y=CAARSInattentiveness$CAARSInattentiveness, method = 'spearman',use =  "na.or.complete")
+
+# Significant (p<.001) correlation found for group and total ADHD symptoms with a rho of -.856
+# Significant (p<.001) correlation found for group and ADHD index with a rho of -.829
+```
+
+```{r}
+# ---- Making a CAARS Dataset with Threshold Using Average Dataset ---- 
+# Here we're excluding control participants who score above 60 as well as those flagged with havig inconsistent CAARS scores
+# dataset2 <- dataset[is.na(dataset$CAARS_ADHDIndex)==FALSE,]
+CAARSInattentivenessTH <- dataset2 %>% 
+  filter((Group == "Control" & CAARS_Inattentiveness <61 & CAARS_InconsistencyIndex==0 | (Group == "ADHD" & CAARS_InconsistencyIndex==0)))
+CAARSHyperactivityTH <-  dataset2 %>% filter((Group == "CTR" & CAARS_Hyperactivity <61) & CAARS_InconsistencyIndex==0 | (Group == "ADHD" & CAARS_InconsistencyIndex==0))
+CAARSTotalADHDSymptomsTH <- dataset2 %>% filter((Group == "CTR" & CAARS_TotalADHDSymptoms <61) & CAARS_InconsistencyIndex==0 | (Group == "ADHD" & CAARS_InconsistencyIndex==0))
+CAARSADHDIndexTH <- dataset2 %>% filter((Group == "CTR" & CAARS_ADHDIndex <61) & CAARS_InconsistencyIndex==0 | (Group == "ADHD" & CAARS_InconsistencyIndex==0))
+
+# #65 was the threshold chosen so that ADHD is 'much above average' and 61 for controls so they're, at most,'slightly above average'
+# 
+# CAARSInattentivenessTH <- dataset2 %>% filter((Group == "CTR" & CAARS_Inattentiveness <61) | (Group == "ADHD" & CAARS_Inattentiveness > 65))
+# CAARSHyperactivityTH <-  dataset2 %>% filter((Group == "CTR" & CAARS_Hyperactivity <61) | (Group == "ADHD" & CAARS_Hyperactivity > 65))
+# CAARSTotalADHDSymptomsTH <- dataset2 %>% filter((Group == "CTR" & CAARS_TotalADHDSymptoms <61) | (Group == "ADHD" & CAARS_TotalADHDSymptoms > 65))
+# CAARSADHDIndexTH <- dataset2 %>% filter((Group == "CTR" & CAARS_ADHDIndex <61) | (Group == "ADHD" & CAARS_ADHDIndex > 65))
+
+```
+
+```{r}
+#Boxplot for CAARS ADHD Index and Group ----
+Colors = c( "#56B4E9", "#E69F00")
+
+CAARSADHDIndexTH2 <- CAARSADHDIndexTH %>%
+  group_by(SubID) %>%
+  summarise(CAARS_ADHDIndex = mean(CAARS_ADHDIndex))
+CAARSADHDIndexTH2 <- CAARSADHDIndexTH2 %>%
+  mutate(Group = case_when(
+    startsWith(SubID, "A") ~ "ADHD", 
+    startsWith(SubID, "C") ~ "CONTROL"
+  ))
+
+ggplot(CAARSADHDIndexTH2, aes(x = Group, y = CAARS_ADHDIndex)) + 
+  geom_boxplot(aes(fill = Group), fill= Colors) +
+    geom_jitter(shape = 20, position = position_jitter(width = 0.21), size = 5) +
+  xlab("Group") + ylab("CAARS ADHD Index") +
+    theme_classic()+ theme(text=element_text(size = 35), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"))
+
+
+```
+
+```{r}
+#Boxplot for Group and CAARS scores no thresholds
+Colors = c( "#56B4E9", "#E69F00")
+
+#ADHD Index ----
+CAARSADHDIndex <- dataset %>% 
+  group_by(SubID) %>%
+  summarise(CAARSADHDIndex = mean(CAARS_ADHDIndex))
+CAARSADHDIndex <- CAARSADHDIndex %>%
+  mutate(Group = case_when(
+    startsWith(SubID, "A") ~ "ADHD", 
+    startsWith(SubID, "C") ~ "Control"
+  ))
+
+# CAARSInconsistencyIndex <- dataset %>%
+#   group_by(SubID) %>%
+#   summarise(CAARSInconsistencyIndex = mean(CAARS_InconsistencyIndex))
+# CAARSInconsistencyIndex <- CAARSInconsistencyIndex %>%
+#   mutate(Group = case_when(
+#     startsWith(SubID, "A") ~ "ADHD", 
+#     startsWith(SubID, "C") ~ "CONTROL"
+#   ))
+
+ggplot(data = CAARSADHDIndex, aes(x = Group, y = CAARSADHDIndex)) + 
+  geom_boxplot(aes(fill = Group), fill= Colors) +
+    geom_jitter(shape = 20, position = position_jitter(width = 0.21), size = 5) +
+  xlab("Group") + ylab("CAARS ADHD Index") +
+    theme_classic()+ theme(text=element_text(size = 35), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold")) + geom_hline(yintercept = 61, linetype = 2, color = "#E69F00", size = 1) 
+
+#CAARS Inattentive Symptoms  ----
+CAARSInattentiveness <- CAARSInattentiveness %>%
+  mutate(Group = case_when(
+    startsWith(SubID, "A") ~ "ADHD", 
+    startsWith(SubID, "C") ~ "CONTROL"
+  ))
+
+ggplot(CAARSInattentiveness, aes(x = Group, y = CAARSInattentiveness)) + 
+  geom_boxplot(aes(fill = Group), fill= Colors, outlier.shape=NA) +
+    geom_jitter(shape = 20, position = position_jitter(width = 0.21), size = 5) +
+  xlab("Group") + ylab("CAARS Inattentiveness Symptoms") +
+    theme_classic()+ theme(text=element_text(size = 35), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"))
+
+#CAARS Hyperactive Symptoms  ----
+CAARSHyperactivity <- CAARSHyperactivity %>%
+  mutate(Group = case_when(
+    startsWith(SubID, "A") ~ "ADHD", 
+    startsWith(SubID, "C") ~ "CONTROL"
+  ))
+
+ggplot(CAARSHyperactivity, aes(x = Group, y = CAARSHyperactivity)) + 
+  geom_boxplot(aes(fill = Group), fill= Colors) +
+    geom_jitter(shape = 20, position = position_jitter(width = 0.21), size = 5) +
+  xlab("Group") + ylab("CAARS Hyperactivity Symptoms") +
+    theme_classic()+ theme(text=element_text(size = 35), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"))
+
+
+#Total Symptoms
+CAARSTotalADHDSymptoms <- CAARSTotalADHDSymptoms %>%
+  mutate(Group = case_when(
+    startsWith(SubID, "A") ~ "ADHD", 
+    startsWith(SubID, "C") ~ "CONTROL"
+  ))
+
+ggplot(CAARSTotalADHDSymptoms, aes(x = Group, y = CAARS_TotalADHDSymptoms)) + 
+  geom_boxplot(aes(fill = Group), fill= Colors) +
+    geom_jitter(shape = 20, position = position_jitter(width = 0.21), size = 5) +
+  xlab("Group") + ylab("CAARS Total ADHD Symptoms") +
+    theme_classic()+ theme(text=element_text(size = 35), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"))
+
+
+```
+```{r}
+# ---- t-test CAARS scores and group ----
+t.test(CAARSADHDIndex ~ Group, data = CAARSADHDIndex)
+t.test(CAARSInattentiveness ~ Group, data = CAARSInattentiveness)
+t.test(CAARSHyperactivity ~ Group, data = CAARSHyperactivity)
+t.test(CAARS_TotalADHDSymptoms ~ Group, data = CAARSTotalADHDSymptoms)
+
+# partial correlation for SWD and ADHD Index ----
+CAARSADHDIndex$Group<-c(ADHD=1,CONTROL=2)[CAARSADHDIndex$Group]
+ppcor::pcor.test(CAARSADHDIndex$CAARS_ADHDIndex, CAARSADHDIndex$SW_density, CAARSADHDIndex[, "Group"], method = "spearman")
+
+```
+
+
+```{r}
+#Correlation between Age and Group 
+# Preparing data ----
+AgeData <- dataset
+AgeData$Group<-c(ADHD=1,CTR=2)[AgeData$Group]
+AgeData <- AgeData %>%
+  group_by(SubID) %>%
+  summarise(Age = mean(Age),
+            Group = mean(Group))
+
+# Spearmans correlation ----
+cor.test(x=AgeData$Group, y=AgeData$Age, method = 'spearman',use =  "na.or.complete")
+
+# Non-Significant (p=.636) correlation found for age and group with a rho of -.0606
+
+```
+
+```{r}
+# Correlation between CAARS, Group & Age
+# Preparing dataset ----
+# Turning group to numerical 
+CAARSADHDIndexTH2 <- CAARSADHDIndexTH
+CAARSADHDIndexTH2$Group<-c(ADHD=1,CTR=2)[CAARSADHDIndexTH2$Group]
+
+CAARSTotalADHDSymptomsTH2 <- CAARSTotalADHDSymptomsTH
+CAARSTotalADHDSymptomsTH2$Group<-c(ADHD=1,CTR=2)[CAARSTotalADHDSymptomsTH$Group]
+  
+#Spearmans correlation ----
+cor.test(x=CAARSADHDIndexTH2$CAARS_ADHDIndex, y=CAARSADHDIndexTH2$Group, method = 'spearman', use =  "na.or.complete")
+cor.test(x=CAARSTotalADHDSymptomsTH2$CAARS_TotalADHDSymptoms, y=CAARSTotalADHDSymptomsTH2$Group, method = 'spearman')
+# ADHD Index & group have a high neg correlation - rho -0.86 (p<.001)
+# Total Symptoms & group have a high neg correlation - rho -0.87 (p<.001)
+
+cor.test(x=CAARSADHDIndexTH2$CAARS_ADHDIndex, y=CAARSADHDIndexTH2$Age, method = 'spearman', use =  "na.or.complete")
+cor.test(x=CAARSTotalADHDSymptomsTH2$CAARS_TotalADHDSymptoms, y=CAARSTotalADHDSymptomsTH2$Age, method = 'spearman')
+# ADHD Index & age have a very weak correlation - rho 0.11 (p=.004)
+# Total Symptoms & age have a ver weak correlation - rho -0.11 (p=.003)
+
+#Between groups ----
+CAARSADHDIndexTH2=as.data.table(CAARSADHDIndexTH2)
+setkey(CAARSADHDIndexTH2, Group)
+
+CAARSADHDIndexTH2[,list(corr = cor(CAARS_ADHDIndex,Age,method = 'spearman')), by = Group]
+#CAARS and Age: ADHD - r = .16
+#CAARS and Age:  CTR - r = -.35
+
+```
+
+
+```{r}
+# Correlation between Years of Edu, Group and Age
+# Preparing data ----
+EdData <- dataset
+EdData$Group<-c(ADHD=1,CTR=2)[EdData$Group]
+EdData <- EdData %>% 
+  group_by(SubID) %>%
+  summarise(Age = mean(Age),
+            Edu = mean(Education_Years),
+            Group = mean(Group))
+
+#Spearmans correlation ----
+cor.test(x=EdData$Edu, y=EdData$Group, method = 'spearman',use =  "na.or.complete")
+# Correlation between Years of Education & group are non-sig
+
+cor.test(x=EdData$Edu, y=EdData$Age, method = 'spearman',use =  "na.or.complete")
+# Years of education & group have a moderate correlation (higher YOE for older) - rho 0.715 (p<.001)
+
+#Between groups ----
+EdData=as.data.table(EdData)
+setkey(EdData, Group)
+
+EdData[,list(corr = cor(Edu,Age,method = 'spearman', use =  "na.or.complete")), by = Group]
+#Years of Education and Age: ADHD - r = .59
+#Years of Education and Age: CTR - r = .81
+
+```
+
+```{r}
+# Correlation between Sex, Group and Age
+# Preparing data ----
+SexData <- dataset
+SexData$Group<-c(ADHD=1,CTR=2)[SexData$Group]
+SexData$Sex<-c(Female=1,Male=2, Other=3)[SexData$Sex]
+SexData <- SexData %>% 
+  group_by(SubID) %>%
+  summarise(Age = mean(Age),
+            Sex = mean(Sex),
+            Group = mean(Group))
+
+#Spearmans correlation ----
+cor.test(x=SexData$Sex, y=SexData$Group, method = 'spearman',use =  "na.or.complete")
+# Correlation between sex & group are non-sig
+
+cor.test(x=SexData$Sex, y=SexData$Age, method = 'spearman',use =  "na.or.complete")
+# Correlation between sex & age are non-sig
+
+#Between groups ----
+SexData=as.data.table(SexData)
+setkey(SexData, Group)
+
+SexData[,list(corr = cor(Sex,Age,method = 'spearman', use =  "na.or.complete")), by = Group]
+#Years of Education and Sex: ADHD - r = .028
+#Years of Education and Sex: CTR - r = .152
+```

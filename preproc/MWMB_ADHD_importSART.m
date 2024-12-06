@@ -24,8 +24,8 @@ files=dir([path_data filesep 'EEG' filesep '*.eeg']);
 load([preproc_path filesep 'all_badChannels_badProbes.mat']); %file saved from runICA script
 
 %% loop on subjects
-redo_block=0; % 1 to force re-import, 0 otherwise
-redo_probe=0; % 1 to force re-import, 0 otherwise
+redo_block=1; % 1 to force re-import, 0 otherwise
+redo_probe=1; % 1 to force re-import, 0 otherwise
 redo_trial=1; % 1 to force re-import, 0 otherwise
 for nF=1:length(files)
     file_name = files(nF).name;
@@ -37,7 +37,8 @@ for nF=1:length(files)
     if isempty(findstr(SubID,'ID-'))==0
         SubID(1:findstr(SubID,'ID-')+2)=[];
     end
-    
+          if ~strcmp(SubID,{'A007'}) % Seeing if A007 will run
+        end  
     tic;
 %         if ~strcmp(SubID,'A039') %%re-add this if you need to clip the data
 %             continue;
@@ -100,9 +101,9 @@ for nF=1:length(files)
     
     %%%%% probe
     if redo_probe==1 || exist([path_data filesep 'Preproc' filesep 'feprobe_ft_' SubID '.mat'])==0
-%         if ~strcmp(SubID,{'A031', 'A033'}) 
-%             continue;
-%         end
+        if ~strcmp(SubID,{'A007'}) 
+            continue;
+        end
 
         hdr=ft_read_header([folder_name filesep file_name]);
         evt=ft_read_event([folder_name filesep file_name]);
@@ -169,7 +170,7 @@ for nF=1:length(files)
     
     %%%% trial
     if redo_trial==1 || exist([path_data filesep 'Preproc' filesep 'fetrial_ft_' SubID '.mat'])==0
-        if ~strcmp(SubID,{'A048', 'C022'}) %C012 & C024 & C038 re-importing 'cause crashing in ERP script
+        if ~strcmp(SubID,{'A007'}) %C012 & C024 & C038 re-importing 'cause crashing in ERP script
             continue;
         end
 

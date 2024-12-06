@@ -1,0 +1,1193 @@
+---
+title: "Correlational and LMEs Analyses - Behaviour and CAARS, ASRS - Scores"
+author: "Elaine P."
+made: "2024-11-29"
+updated: "2024-06-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r} 
+rm(list=ls())
+#---- Packages ----
+library(plyr)
+library(dplyr)
+#library(tidyr)
+library(reshape2)
+library(stringr)
+library(ggplot2)
+library(gridExtra)
+library(RColorBrewer)
+library(lme4)
+#library(ggpubr)
+library(stats)
+#library(rstatix)
+library(ppcor)
+library(lme4)
+library(lmerTest)
+library(tidyverse)
+#library(BayesFactor)
+library(brms)
+library(vioplot)
+
+# ---- Import files -----
+#full dataset:
+dataset <- read.table('/Users/elaine/Desktop/Git_Studies/MWMB_ADHD/tables/SART_ADHD_behav_demo_v1.txt', header = TRUE, sep = ",", dec = ".")
+
+exclude_ids <- c("A021", "C015")
+dataset <- dataset[!(dataset$SubID %in% exclude_ids), ]
+
+# Here we're excluding control participants who were flagged with having inconsistent CAARS scores
+dataset2 <- dataset[is.na(dataset$CAARS_ADHDIndex)==FALSE,]
+dataset2 <- dataset2 %>%
+  filter((Group == "C" & CAARS_InconsistencyIndex=="no" | (Group == "A" & CAARS_InconsistencyIndex=="no")))
+#Putting a threshold on CAARS_ADHDIndex using all dataset:
+#CAARSADHDIndexTH <- dataset2 %>% filter((Group == "Control" & CAARS_ADHDIndex <61) | (Group == "ADHD" & CAARS_ADHDIndex > 65))
+
+
+# To Check how many participants in each group 
+num_participants_adhd <- dataset %>%
+  filter(Group == "A") %>%
+  summarize(num_participants = n_distinct(SubID))
+
+num_participants_control <- dataset %>%
+  filter(Group == "C") %>%
+  summarize(num_participants = n_distinct(SubID))
+
+#Changing the name for groups
+dataset$Group <- as.character(dataset$Group)
+dataset$Group[dataset$Group == 'A'] <-'ADHD'
+dataset$Group[dataset$Group == 'C'] <-'Control'
+dataset$Group<-as.factor(dataset$Group)
+dataset$SubID <- factor(dataset$SubID)
+dataset$Subtype <- factor(dataset$Subtype)
+
+dataset2$Group <- as.character(dataset2$Group)
+dataset2$Group[dataset2$Group == 'A'] <-'ADHD'
+dataset2$Group[dataset2$Group == 'C'] <-'Control'
+dataset2$Group<-as.factor(dataset2$Group)
+dataset2$Subtype <- factor(dataset2$Subtype)
+```
+
+```{r}
+# ---- Averaging Behaviour (all data)---- 
+AvrData <- dataset %>%
+  group_by(SubID) %>%
+  summarise(ASRSInattentiveness = mean(ASRS_Inattentiveness),
+            ASRSHyperactivity = mean(ASRS_Hyperactivity),
+            ASRS5 = mean(ASRS_5),
+            CAARSInattentiveness = mean(CAARS_Inattentiveness),
+            CAARSHyperactivity = mean(CAARS_Hyperactivity),
+            CAARSTotalADHDSymptoms = mean(CAARS_TotalADHDSymptoms),
+            CAARSADHDIndex = mean(CAARS_ADHDIndex),
+            Epworth= mean(Epworth),
+            MeanFA = mean(FA, na.rm=TRUE),
+            MeanMiss = mean(Misses, na.rm=TRUE),
+            MeanRT = mean(RT, na.rm=TRUE),
+            stdRT=mean(stdRT),
+            dprime=mean(dprime))
+
+
+#Labelling data as ADHD and Control
+AvrData <- AvrData %>%
+  mutate(Group = case_when(
+    startsWith(as.character(SubID), "A") ~ "ADHD",
+    startsWith(as.character(SubID), "C") ~ "Control",
+    TRUE ~ "Unknown"
+  ))
+
+# ---- Averaging Behaviour (with only participants not flagged for inconsistent CAARS scores) ---- 
+AvrData1 <- dataset2 %>%
+  group_by(SubID) %>%
+  summarise(ASRSInattentiveness = mean(ASRS_Inattentiveness),
+            ASRSHyperactivity = mean(ASRS_Hyperactivity),
+            ASRS5 = mean(ASRS_5),
+            CAARSInattentiveness = mean(CAARS_Inattentiveness),
+            CAARSHyperactivity = mean(CAARS_Hyperactivity),
+            CAARSTotalADHDSymptoms = mean(CAARS_TotalADHDSymptoms),
+            CAARSADHDIndex = mean(CAARS_ADHDIndex),
+            Epworth= mean(Epworth),
+            MeanFA = mean(FA,na.rm=TRUE),
+            MeanMiss = mean(Misses, na.rm=TRUE),
+            MeanRT = mean(RT, na.rm=TRUE),
+            stdRT=mean(stdRT),
+            dprime=mean(dprime))
+
+
+#Labelling data as ADHD and Control
+AvrData1 <- AvrData1 %>%
+  mutate(Group = case_when(
+    startsWith(as.character(SubID), "A") ~ "ADHD",
+    startsWith(as.character(SubID), "C") ~ "Control",
+    TRUE ~ "Unknown"
+  ))
+
+```
+
+```{r}
+## Behaviour x ASRS/CAARS Spearman's Correlation Plots (all participants)
+Colors = c( "#56B4E9", "#E69F00")
+# ---- Plots for Misses ---- 
+ggplot(data = AvrData, aes(x = ASRSHyperactivity, y = MeanMiss, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Misses') +
+  xlab('ASRS - Impulsivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)+
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = ASRSInattentiveness, y = MeanMiss, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Misses') +
+  xlab('ASRS - Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)+
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = ASRS5, y = MeanMiss, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Misses') +
+  xlab('ASRS-5 Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)+
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = CAARSInattentiveness, y = MeanMiss, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Misses') +
+  xlab('CAARS Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)+
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = CAARSHyperactivity, y = MeanMiss, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Misses') +
+  xlab('CAARS Hyperactivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = CAARSTotalADHDSymptoms, y = MeanMiss, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Misses') +
+  xlab('CAARS Total ADHD Symptoms Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = CAARSADHDIndex, y = MeanMiss, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Misses') +
+  xlab('CAARS ADHD Index') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = Epworth, y = MeanMiss, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab(' Mean Misses') +
+  xlab('Epworth') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors)   
+
+# ---- Plots for FAs ---- 
+ggplot(data = AvrData, aes(x = ASRSHyperactivity, y = MeanFA, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean False Alarms') +
+  xlab('ASRS - Impulsivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = ASRSInattentiveness, y = MeanFA, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean False Alarms') +
+  xlab('ASRS - Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = ASRS5, y = MeanFA, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean False Alarms') +
+  xlab('ASRS-5 Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = CAARSInattentiveness, y = MeanFA, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean False Alarms') +
+  xlab('CAARS Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = CAARSHyperactivity, y = MeanFA, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean False Alarms') +
+  xlab('CAARS Hyperactivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = CAARSTotalADHDSymptoms, y = MeanFA, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab(' Mean False Alarms') +
+  xlab('CAARS Total ADHD Symptoms Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors)  
+
+ggplot(data = AvrData, aes(x = CAARSADHDIndex, y = MeanFA, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab(' Mean False Alarms') +
+  xlab('CAARS ADHD Index') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = Epworth, y = MeanFA, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab(' Mean False Alarms') +
+  xlab('Epworth') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors)   
+
+# ---- Plots for RTs ---- 
+ggplot(data = AvrData, aes(x = ASRSHyperactivity, y = MeanRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Hit Reaction Time') +
+  xlab('ASRS - Impulsivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)+
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = ASRSInattentiveness, y = MeanRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Hit Reaction Time') +
+  xlab('ASRS - Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)+
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = ASRS5, y = MeanRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Hit Reaction Time') +
+  xlab('ASRS-5 Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)+
+  scale_colour_manual(values=Colors)   
+
+
+ggplot(data = AvrData, aes(x = CAARSInattentiveness, y = MeanRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Hit Reaction Time') +
+  xlab('CAARS Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = CAARSHyperactivity, y = MeanRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Hit Reaction Time') +
+  xlab('CAARS Hyperactivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = CAARSTotalADHDSymptoms, y = MeanRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Hit Reaction Time') +
+  xlab('CAARS Total ADHD Symptoms Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = CAARSADHDIndex, y = MeanRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Hit Reaction Time') +
+  xlab('CAARS ADHD Index') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = Epworth, y = MeanRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Hit Reaction Time') +
+  xlab('Epworth') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors)   
+
+
+
+# ---- Plots for Std RTs ---- 
+ggplot(data = AvrData, aes(x = ASRSHyperactivity, y = stdRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('stdRT') +
+  xlab('ASRS - Impulsivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)+
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = ASRSInattentiveness, y = stdRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('stdRT') +
+  xlab('ASRS - Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)+
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = ASRS5, y = stdRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('stdRT') +
+  xlab('ASRS-5 Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)+
+  scale_colour_manual(values=Colors)   
+
+
+ggplot(data = AvrData, aes(x = CAARSInattentiveness, y = stdRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('stdRT') +
+  xlab('CAARS Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = CAARSHyperactivity, y = stdRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('stdRT') +
+  xlab('CAARS Hyperactivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = CAARSTotalADHDSymptoms, y = stdRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('stdRT') +
+  xlab('CAARS Total ADHD Symptoms Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = CAARSADHDIndex, y = stdRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('stdRT') +
+  xlab('CAARS ADHD Index') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData, aes(x = Epworth, y = stdRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('stdRT') +
+  xlab('Epworth') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors)   
+
+
+
+# ---- Plots for dPrime ---- 
+ggplot(data = AvrData, aes(x = ASRSHyperactivity, y = dprime, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean d prime') +
+  xlab('ASRS - Impulsivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = ASRSInattentiveness, y = dprime, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean d prime') +
+  xlab('ASRS - Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = ASRS5, y = dprime, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean d prime') +
+  xlab('ASRS-5 Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+
+ggplot(data = AvrData, aes(x = CAARSInattentiveness, y = dprime, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean d prime') +
+  xlab('CAARS Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = CAARSHyperactivity, y = dprime, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean d prime') +
+  xlab('CAARS Hyperactivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = CAARSTotalADHDSymptoms, y = dprime, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean d prime') +
+  xlab('CAARS Total ADHD Symptoms Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = CAARSADHDIndex, y = dprime, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean d prime') +
+  xlab('CAARS ADHD Index') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData, aes(x = CAARSADHDIndex, y = Epworth, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean d prime') +
+  xlab('Epworth') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors) 
+
+```
+
+```{r}
+## Behaviour x CAARS Spearman's Correlation Plots (w/ only ppts not flagged for inconsistent answers; ADHD: 16, CTR: 30)
+# ---- Plots for Misses ----
+ggplot(data = AvrData1, aes(x = CAARSInattentiveness, y = MeanMiss, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Misses') +
+  xlab('CAARS Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)+
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData1, aes(x = CAARSHyperactivity, y = MeanMiss, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Misses') +
+  xlab('CAARS Hyperactivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData1, aes(x = CAARSTotalADHDSymptoms, y = MeanMiss, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Misses') +
+  xlab('CAARS Total ADHD Symptoms Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData1, aes(x = CAARSADHDIndex, y = MeanMiss, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Misses') +
+  xlab('CAARS ADHD Index') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+# ---- Plots for FAs ----
+ggplot(data = AvrData1, aes(x = CAARSInattentiveness, y = MeanFA, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean False Alarms') +
+  xlab('CAARS Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData1, aes(x = CAARSHyperactivity, y = MeanFA, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean False Alarms') +
+  xlab('CAARS Hyperactivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData1, aes(x = CAARSTotalADHDSymptoms, y = MeanFA, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab(' Mean False Alarms') +
+  xlab('CAARS Total ADHD Symptoms Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors)  
+
+ggplot(data = AvrData1, aes(x = CAARSADHDIndex, y = MeanFA, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab(' Mean False Alarms') +
+  xlab('CAARS ADHD Index') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18) +
+  scale_colour_manual(values=Colors)   
+
+
+
+
+# ---- Plots for  RTs ---- 
+ggplot(data = AvrData1, aes(x = CAARSInattentiveness, y = MeanRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Hit Reaction Time') +
+  xlab('CAARS Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData1, aes(x = CAARSHyperactivity, y = MeanRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Hit Reaction Time') +
+  xlab('CAARS Hyperactivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData1, aes(x = CAARSTotalADHDSymptoms, y = MeanRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Hit Reaction Time') +
+  xlab('CAARS Total ADHD Symptoms Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData1, aes(x = CAARSADHDIndex, y = MeanRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean Hit Reaction Time') +
+  xlab('CAARS ADHD Index') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)  
+
+
+# ---- Plots for stdRTs----
+ggplot(data = AvrData1, aes(x = CAARSInattentiveness, y = stdRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('stdRT') +
+  xlab('CAARS Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData1, aes(x = CAARSHyperactivity, y = stdRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('stdRT') +
+  xlab('CAARS Hyperactivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData1, aes(x = CAARSTotalADHDSymptoms, y = stdRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('stdRT') +
+  xlab('CAARS Total ADHD Symptoms Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)   
+
+ggplot(data = AvrData1, aes(x = CAARSADHDIndex, y = stdRT, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('stdRT') +
+  xlab('CAARS ADHD Index') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors)
+# ---- Plots for dprime ----
+ggplot(data = AvrData1, aes(x = CAARSInattentiveness, y = dprime, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean d prime') +
+  xlab('CAARS Inattentiveness Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData1, aes(x = CAARSHyperactivity, y = dprime, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean d prime') +
+  xlab('CAARS Hyperactivity Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData1, aes(x = CAARSTotalADHDSymptoms, y = dprime, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean d prime') +
+  xlab('CAARS Total ADHD Symptoms Scores') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors) 
+
+ggplot(data = AvrData1, aes(x = CAARSADHDIndex, y = dprime, color = Group)) + 
+  geom_point(position = position_jitter(width = .015), size = 1, alpha = 0.5)+
+  ylab('Mean d prime') +
+  xlab('CAARS ADHD Index') +
+  geom_smooth(method=lm) +
+  stat_cor(method = "spearman") +
+  theme_bw(base_size = 18)  +
+  scale_colour_manual(values=Colors) 
+
+```
+
+
+```{r}
+# Correlation with CAARS and FAs
+# Preparing data ----
+FAData <- dataset
+FAData$Group<-c(ADHD=1,Control=2)[FAData$Group]
+FAData <- FAData %>% 
+  group_by(SubID) %>%
+  summarise(FA = mean(FA, na.rm=TRUE),
+            subtype = Subtype,
+            CAARS_Inattentiveness = mean(CAARS_Inattentiveness),
+            CAARS_Hyperactivity = mean(CAARS_Hyperactivity),
+            CAARS_TotalADHDSymptoms = mean(CAARS_TotalADHDSymptoms),
+            CAARS_ADHDIndex=mean(CAARS_ADHDIndex),
+            Group = mean(Group))
+FAData$subtytpe_numeric <-as.numeric(factor(FAData$subtype, levels = c("Combined", "Inattention")))
+
+#Spearmans correlation ----
+cor.test(x=FAData$FA, y=FAData$CAARS_Inattentiveness, method = 'spearman',use =  "na.or.complete")
+# Correlation between FA & CAARS-Inn are sig (p = .02), r = .285
+
+cor.test(x=FAData$FA, y=FAData$subtytpe_numeric, method = 'spearman',use =  "na.or.complete")
+
+
+#Between groups ----
+FAData=as.data.table(FAData)
+setkey(FAData, Group)
+
+FAData[,list(corr = cor(FA,CAARS_Inattentiveness,method = 'spearman', use =  "na.or.complete")), by = Group]
+#FA and CAARS Inn: ADHD - r = .06, Control = .33
+```
+
+```{r}
+# Correlation with behaviour and diagnosis
+# Preparing data ----
+dataset$subtype_numeric <-as.numeric(factor(dataset$Subtype, levels = c("Combined", "Inattention")))
+
+#Spearmans correlation ----
+cor.test(x=dataset$FA, y=dataset$subtype_numeric, method = 'spearman',use =  "na.or.complete") # r = -.051, p = .001
+cor.test(x=dataset$Misses, y=dataset$subtype_numeric, method = 'spearman',use =  "na.or.complete") # r = -.053, p <.001
+cor.test(x=dataset$RT, y=dataset$subtype_numeric, method = 'spearman',use =  "na.or.complete") # r = -.0033, p = .43
+cor.test(x=dataset$stdRT, y=dataset$subtype_numeric, method = 'spearman',use =  "na.or.complete") #-0.30, p <.001
+cor.test(x=dataset$dprime, y=dataset$subtype_numeric, method = 'spearman',use =  "na.or.complete") #r = .10, p <.001
+
+```
+
+```{r} 
+# Bayesian LMs (UNEDITED)----
+# Misses ----
+lmBF.Miss0 <- lmBF(Miss ~ 1 + Age + BlockN + SubID, data =  dataset, whichRandom = 'SubID') #NOTE: The only diff between this and the below model is GROUP (the variable we're interested in)
+lmBF.Miss1 <- lmBF(Miss ~ 1 + Group + Age + BlockN + SubID, data =  dataset, whichRandom = 'SubID')
+
+lmBF.Miss1/lmBF.Miss0 #BF10: >3 means H1 is validated <1/3 means H0 is validated in-between no conclusion
+lmBF.Miss0/lmBF.Miss1 #BF01: >3 means H0 is validated <1/3 means H1 is validated in-between no conclusion
+
+# FAs ----
+lmBF.FA0 <- lmBF(FA ~ 1 + Age + BlockN + SubID, data =  dataset, whichRandom = 'SubID')
+lmBF.FA1 <- lmBF(FA ~ 1 + Group + Age + BlockN + SubID, data =  dataset, whichRandom = 'SubID')
+
+lmBF.FA1/lmBF.FA0 #BF10: >3 means H1 is validated <1/3 means H0 is validated in-between no conclusion
+lmBF.FA0/lmBF.FA1 #BF01: >3 means H0 is validated <1/3 means H1 is validated in-between no conclusion
+
+#RT ----
+lmBF.HRT0 <- lmBF(Hit_RT ~ 1 + Age + BlockN + SubID, data =  dataset[is.na(dataset$Hit_RT)==FALSE,], whichRandom = 'SubID')
+lmBF.HRT1 <- lmBF(Hit_RT ~ 1 + Group + Age + BlockN + SubID, data =  dataset[is.na(dataset$Hit_RT)==FALSE,], whichRandom = 'SubID')
+
+lmBF.HRT1/lmBF.HRT0 #BF10: >3 means H1 is validated <1/3 means H0 is validated in-between no conclusion
+lmBF.HRT0/lmBF.HRT1 #BF01: >3 means H0 is validated <1/3 means H1 is validated in-between no conclusion
+```
+
+```{r} 
+# Bayesian LMEs (UNEDITED)----
+# Misses ----
+get_prior(Miss ~ 1 + Group + Age + BlockN + (1+BlockN|SubID), data =  dataset)
+
+
+
+
+
+lmBF.Miss0 <- lmBF(Miss ~ 1 + Age + BlockN + SubID, data =  dataset, whichRandom = 'SubID') #NOTE: The only diff between this and the below model is GROUP (the variable we're interested in)
+lmBF.Miss1 <- lmBF(Miss ~ 1 + Group + Age + BlockN + SubID, data =  dataset, whichRandom = 'SubID')
+
+lmBF.Miss1/lmBF.Miss0 #BF10: >3 means H1 is validated <1/3 means H0 is validated in-between no conclusion
+lmBF.Miss0/lmBF.Miss1 #BF01: >3 means H0 is validated <1/3 means H1 is validated in-between no conclusion
+
+# FAs ----
+lmBF.FA0 <- lmBF(FA ~ 1 + Age + BlockN + SubID, data =  dataset, whichRandom = 'SubID')
+lmBF.FA1 <- lmBF(FA ~ 1 + Group + Age + BlockN + SubID, data =  dataset, whichRandom = 'SubID')
+
+lmBF.FA1/lmBF.FA0 #BF10: >3 means H1 is validated <1/3 means H0 is validated in-between no conclusion
+lmBF.FA0/lmBF.FA1 #BF01: >3 means H0 is validated <1/3 means H1 is validated in-between no conclusion
+
+#RT ----
+lmBF.HRT0 <- lmBF(Hit_RT ~ 1 + Age + BlockN + SubID, data =  dataset[is.na(dataset$Hit_RT)==FALSE,], whichRandom = 'SubID')
+lmBF.HRT1 <- lmBF(Hit_RT ~ 1 + Group + Age + BlockN + SubID, data =  dataset[is.na(dataset$Hit_RT)==FALSE,], whichRandom = 'SubID')
+
+lmBF.HRT1/lmBF.HRT0 #BF10: >3 means H1 is validated <1/3 means H0 is validated in-between no conclusion
+lmBF.HRT0/lmBF.HRT1 #BF01: >3 means H0 is validated <1/3 means H1 is validated in-between no conclusion
+```
+
+```{r}
+#LMEs for group & block effects on performance (UNEDITED)
+# ---- LMEs Misses ----
+lm.Miss0 <- lmer(Miss ~ 1 + (1|SubID), data = dataset, REML = FALSE)
+
+##Effects of group on misses
+lm.Miss1 <- lmer(Miss ~ 1 + Group + (1|SubID), data =  dataset, REML = FALSE)
+
+##Added effects of age on misses 
+lm.Miss2 <- lmer(Miss ~ 1 + Group + Age + (1|SubID), data =  dataset, REML = FALSE) 
+
+##Added effects of block number on misses 
+lm.Miss3 <- lmer(Miss ~ 1 + Group + Age + BlockN + (1+BlockN|SubID), data =  dataset, REML = FALSE) 
+# Note: we added block as a random slope i.e., the model now takes into account differing baselines for block
+
+##Effect of age as an interaction with group
+lm.Miss4 <- lmer(Miss ~ 1 + Group*Age + BlockN + (1+BlockN|SubID), data =  dataset, REML = FALSE) 
+
+##Added effects of block number as an interaction on misses 
+lm.Miss5 <- lmer(Miss ~ 1 + Group*BlockN+Age + (1+BlockN|SubID), data =  dataset, REML = FALSE)
+
+##Anova to see which one has the most interaction
+anova(lm.Miss0,lm.Miss1,lm.Miss2,lm.Miss3, lm.Miss4, lm.Miss5)
+
+summary(lm.Miss3)
+confint(lm.Miss3, method = "Wald", oldNames = FALSE)
+#----Summary of results ----
+# Misses:
+#     Winning model: Miss ~ 1 + Group + Age + BlockN + (1 + BlockN | SubID)
+#     Only BlockN had a sig effect (p < .001)
+# Group (all data) on behaviour (FILTERED data with threshold on performance across ALL BLOCKS):
+#      Same result as above; only BlockN was sig
+
+```
+
+
+```{r}
+# ---- LMEs FAs (UNEDITED) ----
+lm.FA0 <- lmer(FA ~ 1 + (1|SubID), data = dataset, REML = FALSE)
+
+##Effects of group on FAs
+lm.FA1 <- lmer(FA ~ 1 + Group + (1|SubID), data = dataset, REML = FALSE)
+
+##Added effects of age on FA 
+lm.FA2 <- lmer(FA ~ 1 + Group + Age + (1|SubID), data =  dataset, REML = FALSE) 
+
+##Added effects of block number on FA 
+lm.FA3 <- lmer(FA ~ 1 + Group + Age + BlockN + (1+BlockN|SubID), data =  dataset, REML = FALSE) 
+# Note: we added block as a random slope i.e., the model now takes into account differing baselines for block
+
+##Effect of age as an interaction with group
+lm.FA4 <- lmer(FA ~ 1 + Group*Age + BlockN + (1+BlockN|SubID), data =  dataset, REML = FALSE) 
+
+##Added effects of block number as an interaction on misses 
+lm.FA5 <- lmer(FA ~ 1 + Group*BlockN+Age + (1+BlockN|SubID), data =  dataset, REML = FALSE)
+
+##Anova to see which one has the most interaction
+anova(lm.FA0,lm.FA1,lm.FA2,lm.FA3, lm.FA4,lm.FA5)
+
+summary(lm.FA3)
+confint(lm.FA3, method = "Wald", oldNames = FALSE)
+#----Summary of results ----
+# False Alarms:
+#      Winning model: FA ~ 1 + Group + Age + BlockN + (1 + BlockN | SubID)
+#      Only Block N had a sig. effect (p < .001)
+# Group (all data) on behaviour (FILTERED data with threshold on performance across ALL BLOCKS):
+#      Same result as above; only BlockN was sig although less sig. (p = .0107)
+
+```
+
+
+```{r}
+# ---- LMEs Hits (UNEDITED) -----
+lm.Hit0 <- lmer(Hit ~ 1 + (1|SubID), data = dataset, REML = FALSE)
+
+##Effects of treatment on hit  
+lm.Hit1 <- lmer(Hit ~ 1 + Group + (1|SubID), data = dataset, REML = FALSE)
+
+##Added effects of age on hit 
+lm.Hit2 <- lmer(Hit ~ 1 + Group*Age + (1|SubID), data =  dataset, REML = FALSE) 
+
+##Added effects of block number on hit   
+lm.Hit3 <- lmer(Hit ~ 1 + Group*Age + BlockN + (1+BlockN|SubID), data = dataset, REML = FALSE)
+
+##Added effects of block number as an interaction on hit   
+lm.Hit4 <- lmer(Hit ~ 1 + Group*Age*BlockN + (1+BlockN|SubID), data = dataset, REML = FALSE)
+
+##Anova to see which one has the most interaction
+anova(lm.Hit0,lm.Hit1,lm.Hit2,lm.Hit3, lm.Hit4)
+
+summary(lm.Hit3)
+confint(lm.Hit3, method = "Wald", oldNames = FALSE)
+```
+
+```{r}
+# ---- LMEs Hit RTs (UNEDITED) ----
+##Hit RT  
+lm.HR0 <- lmer(Hit_RT ~ 1 + (1|SubID), data = dataset, REML = FALSE)
+
+##Effects of group on hit RT 
+lm.HR1 <- lmer(Hit_RT ~ 1 + Group + (1|SubID), data = dataset, REML = FALSE)
+
+##Added effects of age on hit RT
+lm.HR2 <- lmer(Hit_RT ~ 1 + Group + Age + (1|SubID), data =  dataset, REML = FALSE) 
+
+##Added effects of block number on hit RT 
+lm.HR3 <- lmer(Hit_RT ~ 1 + Group + Age + BlockN + (1+BlockN|SubID), data =  dataset, REML = FALSE) 
+# Note: we added block as a random slope i.e., the model now takes into account differing baselines for block
+
+##Effect of age as an interaction with group
+lm.HR4 <- lmer(Hit_RT ~ 1 + Group*Age + BlockN + (1+BlockN|SubID), data =  dataset, REML = FALSE) 
+
+##Added effects of block number as an interaction on misses 
+lm.HR5 <- lmer(Hit_RT ~ 1 + Group*BlockN+Age + (1+BlockN|SubID), data =  dataset, REML = FALSE)
+
+##Anova to see which one has the most interaction
+anova(lm.HR0,lm.HR1,lm.HR2,lm.HR3, lm.HR4, lm.HR5)
+
+summary(lm.HR3)
+confint(lm.HR3, method = "Wald", oldNames = FALSE)
+
+#----Summary of results ----
+#    Reaction Time:
+#      Winning model: Hit_RT ~ 1 + Group + Age + BlockN + (1+BlockN|SubID)
+#      Only Block N had a sig. effect (p = .00125)
+# Group (all data) on behaviour (FILTERED data with threshold on performance across ALL BLOCKS):
+#      Same result as above; only BlockN was sig although less sig. (p = .00368)
+
+
+```
+
+```{r}
+# ---- LMEs d prime (UNEDITED) ----
+##dprime 
+lm.dprime0<- lmer(dprime ~ 1 + (1|SubID), data = fullthreshdataset, REML = FALSE)
+
+##Effects of treatment on dprime 
+lm.dprime1 <- lmer(dprime ~ 1 + Group + (1|SubID), data = fullthreshdataset, REML = FALSE)
+
+##Added effects of age on dprime
+lm.dprime2 <- lmer(dprime ~ 1 + Group*Age + (1|SubID), data =  fullthreshdataset, REML = FALSE) 
+
+##Added effects of block number on dprime 
+lm.dprime3 <- lmer(dprime ~ 1 + Group*Age + BlockN + (1+BlockN|SubID), data = fullthreshdataset, REML = FALSE)
+
+##Added effects of block number as an interaction on dprime 
+lm.dprime4 <- lmer(dprime ~ 1 + Group*Age*BlockN + (1+BlockN|SubID), data = fullthreshdataset, REML = FALSE)
+
+##Anova to see which one has the most interaction
+anova(lm.dprime0,lm.dprime1,lm.dprime2,lm.dprime3,lm.dprime4)
+
+summary(lm.dprime3)
+confint(lm.dprime3, method = "Wald", oldNames = FALSE)
+
+#----Summary of results ----
+#    Reaction Time:
+#    d Prime:
+#      Winning model: dprime ~ 1 + Group*Age + BlockN + (1 + BlockN | SubID)
+#      Only BlockN had a sig. effect (p = .022)
+# Group (all data) on behaviour (FILTERED data with threshold on performance across ALL BLOCKS):
+#      Same result as above; only BlockN was sig 
+```
+     
+     
+```{r}
+#LMEs for performance (without Age) (UNEDITED)
+# ---- LMEs Misses ----
+lm.Miss0 <- lmer(Miss ~ 1 + (1|SubID), data = dataset, REML = FALSE)
+
+##Effects of group on misses
+lm.Miss1 <- lmer(Miss ~ 1 + Group + (1|SubID), data =  dataset, REML = FALSE)
+
+##Added effects of block number on misses 
+lm.Miss2 <- lmer(Miss ~ 1 + Group + BlockN + (1+BlockN|SubID), data =  dataset, REML = FALSE) 
+# Note: we added block as a random slope i.e., the model now takes into account differing baselines for block
+
+##Added effects of block number as an interaction on misses 
+lm.Miss3 <- lmer(Miss ~ 1 + Group*BlockN + (1+BlockN|SubID), data =  dataset, REML = FALSE)
+
+##Anova to see which one has the most interaction
+anova(lm.Miss0,lm.Miss1,lm.Miss2,lm.Miss3)
+
+summary(lm.Miss2)
+confint(lm.Miss2, method = "Wald", oldNames = FALSE)
+# ---- LMEs FAs ----
+lm.FA0 <- lmer(FA ~ 1 + (1|SubID), data = dataset, REML = FALSE)
+
+##Effects of group on FAs
+lm.FA1 <- lmer(FA ~ 1 + Group + (1|SubID), data = dataset, REML = FALSE)
+
+##Added effects of block number on FAs 
+lm.FA2 <- lmer(FA ~ 1 + Group + BlockN + (1+BlockN|SubID), data = dataset, REML = FALSE)
+
+##Added effects of block number as an interaction on FAs 
+lm.FA3 <- lmer(FA ~ 1 + Group*BlockN + (1+BlockN|SubID), data = dataset, REML = FALSE)
+
+##Anova to see which one has the most interaction
+anova(lm.FA0,lm.FA1,lm.FA2,lm.FA3)
+
+summary(lm.FA2)
+confint(lm.FA2, method = "Wald", oldNames = FALSE)
+
+
+# ---- LMEs Hit RTs ----
+##Hit RT  
+lm.HR0 <- lmer(Hit_RT ~ 1 + (1|SubID), data = dataset, REML = FALSE)
+
+##Effects of group on hit RT 
+lm.HR1 <- lmer(Hit_RT ~ 1 + Group + (1|SubID), data = dataset, REML = FALSE)
+
+##Added effects of block number on hit RT  
+lm.HR2 <- lmer(Hit_RT ~ 1 + Group + BlockN + (1+BlockN|SubID), data = dataset, REML = FALSE)
+
+##Added effects of block number as an interaction on hit RT  
+lm.HR3 <- lmer(Hit_RT ~ 1 + Group*BlockN + (1+BlockN|SubID), data = dataset, REML = FALSE)
+
+##Anova to see which one has the most interaction
+anova(lm.HR0,lm.HR1,lm.HR2,lm.HR3)
+
+summary(lm.HR2)
+confint(lm.HR2, method = "Wald", oldNames = FALSE)
+
+```
+
+```{r}
+#Mean performance scores by group and Split VIOLIN PLOTS (UNEDITED) ----
+Colors = c( "#56B4E9", "#E69F00")
+Avr_ADHD <- AvrData[AvrData$Group =="ADHD", ]
+Avr_CTR <- AvrData[AvrData$Group == "CONTROL", ]
+
+#Misses- (UNEDITED) ---
+vioplot(MeanMiss*100~Group, data=Avr_ADHD, col = "#56B4E9", plotCentre = "line", side = "left", xlab = "", ylab = substitute(paste(bold("% of Misses"))), ylim = c(0,  100), xaxt = 'n', lty="blank",
+        cex.lab=2, cex.axis=2, cex.main=2, cex.sub=2) 
+vioplot(MeanMiss*100~Group, data=Avr_CTR, col = "#E69F00", plotCentre = "line", side = "right", add = T, lty="blank") 
+
+
+#FA (UNEDITED) ----
+vioplot(MeanFA*100~Group, data=Avr_ADHD, col = "#56B4E9", plotCentre = "line", side = "left", xlab = "", ylab = substitute(paste(bold("% of False Alarms"))), ylim = c(0,  7), xaxt = 'n', lty="blank",
+        cex.lab=2, cex.axis=2, cex.main=2, cex.sub=2)
+vioplot(MeanFA*100~Group, data=Avr_CTR, col = "#E69F00", plotCentre = "line", side = "right", add = T, lty="blank") 
+
+```
+
+
+```{r}
+#Mean performance scores by group and barplots (UNEDITED) ----
+Colors = c( "#56B4E9", "#E69F00")
+#AvrData$Group = with(AvrData, reorder(CONTROL, ADHD))
+
+#Bar graphs by behaviour and group
+AvrData %>%
+     group_by(Group) %>%
+     summarize( m= mean(MeanMiss))%>%
+    ggplot(aes(x=Group, y=m*100, fill = Group)) + geom_bar(stat="identity", fill = Colors) + ylim(0, 60) +
+    xlab("Group") + ylab("Mean Misses (%)") + 
+    theme_classic()+ theme(text=element_text(size = 35), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"))
+
+
+AvrData %>%
+     group_by(Group) %>%
+     summarize( m= mean(MeanHitRT))%>%
+    ggplot(aes(x=Group, y=m, fill = Group)) + geom_bar(stat="identity", fill = Colors) + ylim(0, 2) +
+  xlab("Group") + ylab("Mean Reaction Time (s)") + 
+    theme_classic()+ theme(text=element_text(size = 35), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"))
+
+
+AvrData %>%
+     group_by(Group) %>%
+     summarize( m= mean(MeanFA))%>%
+    ggplot(aes(x=Group, y=m*100, fill = Group)) + geom_bar(stat="identity", fill = Colors) + ylim(0, 2) +
+  xlab("Group") + ylab("Mean False Alarms (%)") + 
+    theme_classic()+ theme(text=element_text(size = 35), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"))
+
+
+# Collated bar graphs of behaviour and group
+behavmeans <- AvrData %>%
+  group_by(Group) %>%
+  summarise(#MeanHitRT=mean(MeanHitRT, na.rm=TRUE),
+            MeanMiss=mean(MeanMiss),
+            MeanFA=mean(MeanFA))
+
+behavmeans.long<-melt(behavmeans,id.vars="Group")
+
+ggplot(behavmeans.long,aes(x=variable,y=value*100,fill=factor(Group)))+
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_discrete(name="Group",
+                      breaks=c(1, 2),
+                      labels=c("ADHD", "Control"))+
+  xlab("Task Performance")+ylab("Mean Performance")
+
+```
+
+```{r}
+#Mean performance scores by group and BARPLOTS with error bars and individual datapoints (UNEDITED)----
+Colors = c( "#56B4E9", "#E69F00")
+
+#Bar graphs by behaviour and group
+#Misses ----
+  ggplot(AvrData, aes(fill = Group, y = MeanMiss*100, x = Group)) +
+  geom_bar(position = "dodge", width = 0.8, stat = "summary", fun = "mean", linewidth = .8, fill = Colors) +
+  xlab("") + ylab("Misses (%)") + 
+  stat_summary(fun.data = mean_sdl, geom = "errorbar", color ="darkgrey", position = position_dodge(0.8), width = 0.2, linewidth = 4) +
+  geom_point(position = position_jitterdodge(0.3, dodge.width = .8), alpha = 0.8, size = 8) +
+  theme_classic() + coord_cartesian(ylim = c(5,100)) +
+  theme(text=element_text(size = 85), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"), 
+  legend.position = "none")
+  
+  ggsave(file="../Figures/CTET_BarPlot_Miss_2023.png", 
+      width = 60,
+      height = 35,
+      units = c("cm"))
+ 
+  boxplot(MeanMiss ~ Group, data = AvrData) 
+
+#RT ----  
+  ggplot(AvrData, aes(fill = Group, y = MeanHitRT, x = Group)) +
+  geom_bar(position = "dodge", width = 0.8, stat = "summary", fun = "mean", linewidth = .8, fill = Colors) +
+  xlab("") + ylab("Reaction Time (s)") + 
+  stat_summary(fun.data = mean_sdl, geom = "errorbar", color = "darkgrey", position = position_dodge(0.8), width = 0.2, linewidth = 4) +
+  geom_point(position = position_jitterdodge(0.3, dodge.width = .8), alpha = 0.8, size = 8) +
+  theme_classic() + coord_cartesian(ylim = c(1,1.8)) +
+  theme(text=element_text(size = 85), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"),
+  legend.position = "none")
+
+    ggsave(file="../Figures/CTET_BarPlot_RT_2023.png", 
+      width = 60,
+      height = 35,
+      units = c("cm"))
+  
+ #FA ---- 
+  ggplot(AvrData, aes(fill = Group, y = MeanFA*100, x = Group)) +
+  geom_bar(position = "dodge", width = 0.8, stat = "summary", fun = "mean",  linewidth = .8, fill = Colors) +
+  xlab("") + ylab("False Alarms (%)") + 
+  stat_summary(fun.data = mean_sdl, geom = "errorbar", color = "darkgrey", position = position_dodge(0.8), width = 0.2, linewidth = 4) +
+  geom_point(position = position_jitterdodge(0.3, dodge.width = .8), alpha = 0.8, size = 8) +
+  theme_classic() +  coord_cartesian(ylim = c(0.2,6)) +
+  theme(text=element_text(size = 85), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"), 
+  legend.position = "none")  
+    
+    ggsave(file="../Figures/CTET_BarPlot_FA_2023.png", 
+      width = 60,
+      height = 35,
+      units = c("cm"))    
+```
+
+```{r}
+#Mean performance scores by group and BOXPLOTS with error bars and individual datapoints (UNEDITED)----
+Colors = c( "#56B4E9", "#E69F00")
+
+#Boxplots graphs by behaviour and group
+#Misses ----
+  ggplot(AvrData, aes(fill = Group, y = MeanMiss*100, x = Group)) +
+  geom_boxplot(fill = Colors, fatten=4) +
+  xlab("") + ylab("Misses (%)") + 
+  stat_summary(fun.data = mean_sdl, geom = "errorbar", color ="darkgrey", position = position_dodge(0.8), width = 0.2, linewidth = 2) +
+  geom_point(position = position_jitterdodge(0.3, dodge.width = .8), alpha = 0.8, size = 4) +
+  theme_classic() + coord_cartesian(ylim = c(5,100)) +
+  theme(text=element_text(size = 40), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"), 
+  legend.position = "none")
+  
+  # ggsave(file="../Figures/CTET_BoxPlot_Miss_2023.png", 
+  #     width = 60,
+  #     height = 35,
+  #     units = c("cm"))
+ 
+
+#RT ----  
+  ggplot(AvrData, aes(fill = Group, y = MeanHitRT, x = Group)) +
+  geom_boxplot(fill = Colors, fatten=4) +
+  xlab("") + ylab("Reaction Time (s)") + 
+  stat_summary(fun.data = mean_sdl, geom = "errorbar", color = "darkgrey", position = position_dodge(0.8), width = 0.2, linewidth = 2) +
+  geom_point(position = position_jitterdodge(0.3, dodge.width = .8), alpha = 0.8, size = 4) +
+  theme_classic() + coord_cartesian(ylim = c(1.1,1.8)) +
+  theme(text=element_text(size = 40), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"),
+  legend.position = "none")
+
+    # ggsave(file="../Figures/CTET_BoxPlot_RT_2023.png", 
+    #   width = 60,
+    #   height = 35,
+    #   units = c("cm"))
+  
+ #FA ---- 
+  ggplot(AvrData, aes(fill = Group, y = MeanFA*100, x = Group)) +
+  geom_boxplot(fill = Colors, outlier.shape = NA, fatten=4) +
+  xlab("") + ylab("False Alarms (%)") + 
+  stat_summary(fun.data = mean_sdl, geom = "errorbar", color = "darkgrey", position = position_dodge(0.8), width = 0.2, linewidth = 4) +
+  geom_point(position = position_jitterdodge(0.3, dodge.width = .8), alpha = 0.8, size = 4) +
+  theme_classic() +  coord_cartesian(ylim = c(0.2,6)) +
+  theme(text=element_text(size = 40), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"), 
+  legend.position = "none")  
+    
+    # ggsave(file="../Figures/CTET_BoxPlot_FA_2023.png", 
+    #   width = 60,
+    #   height = 35,
+    #   units = c("cm"))    
+```

@@ -43,7 +43,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 all_badCompo=[];
-redo=0;
+redo=1;
 all_pow=[];
 all_frac=[];
 all_osci=[];
@@ -114,7 +114,7 @@ for nF=1:length(files)
     peaks_params=[];
     for nE=1:length(fractal.label)
         temp_peaks=fractal.fooofparams(nE).peak_params;
-        temp_peaks=temp_peaks(temp_peaks(:,1)>9 & temp_peaks(:,1)<13,:);
+        temp_peaks=temp_peaks(temp_peaks(:,1)>5 & temp_peaks(:,1)<15,:);
         if size(temp_peaks,1)==1
             peaks_params(nE,:)=temp_peaks(temp_peaks(:,2)==max(temp_peaks(:,2)),:);
         else
@@ -354,9 +354,9 @@ chLabels=pow.label;
 figure;
 subplot(2,2,1);
 hp=[];
-[~,hp(1)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'Control'),match_str(chLabels,'Cz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+[~,hp(1)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'Control'),match_str(chLabels,'Cz'),:))),0,Colors(1,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Cz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+[~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Cz'),:))),0,Colors(2,:),0,'-',0.5,1,0,1,2);
 hold on;
 xlim([1 40]) %xlim([1 10])
 legend(hp,{'Controls','ADHD'})
@@ -367,9 +367,9 @@ format_fig;
 
 subplot(2,2,2);
 hp=[];
-[~,hp(1)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'Control'),match_str(chLabels,'Fz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+[~,hp(1)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'Control'),match_str(chLabels,'Fz'),:))),0,Colors(1,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Fz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+[~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Fz'),:))),0,Colors(2,:),0,'-',0.5,1,0,1,2);
 hold on;
 xlim([1 40])
 legend(hp,{'Controls','ADHD'})
@@ -380,9 +380,9 @@ format_fig;
 
 subplot(2,2,3);
 hp=[];
-[~,hp(1)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'Control'),match_str(chLabels,'Pz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+[~,hp(1)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'Control'),match_str(chLabels,'Pz'),:))),0,Colors(1,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Pz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+[~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Pz'),:))),0,Colors(2,:),0,'-',0.5,1,0,1,2);
 hold on;
 xlim([1 40])
 legend(hp,{'Controls','ADHD'})
@@ -393,9 +393,9 @@ format_fig;
 
 subplot(2,2,4);
 hp=[];
-[~,hp(1)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'Control'),match_str(chLabels,'Oz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+[~,hp(1)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'Control'),match_str(chLabels,'Oz'),:))),0,Colors(1,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Oz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+[~,hp(2)]=simpleTplot(faxis,squeeze((all_pow(match_str(group_PowData,'ADHD'),match_str(chLabels,'Oz'),:))),0,Colors(2,:),0,'-',0.5,1,0,1,2);
 hold on;
 xlim([1 40])
 legend(hp,{'Controls','ADHD'})
@@ -416,9 +416,9 @@ chLabels=pow.label;
 figure;
 subplot(2,2,1);
 hp=[];
-[~,hp(1)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'Control'),match_str(chLabels,'Cz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+[~,hp(1)]=simpleTplot(faxis(3:end),squeeze((all_osci(match_str(group_PowData,'Control'),match_str(chLabels,'Cz'),3:end))),0,Colors(1,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'ADHD'),match_str(chLabels,'Cz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+[~,hp(2)]=simpleTplot(faxis(3:end),squeeze((all_osci(match_str(group_PowData,'ADHD'),match_str(chLabels,'Cz'),3:end))),0,Colors(2,:),0,'-',0.5,1,0,1,2);
 hold on;
 xlim([1 40]) %xlim([1 10])
 legend(hp,{'Controls','ADHD'})
@@ -429,9 +429,9 @@ format_fig;
 
 subplot(2,2,2);
 hp=[];
-[~,hp(1)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'Control'),match_str(chLabels,'Fz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+[~,hp(1)]=simpleTplot(faxis(3:end),squeeze((all_osci(match_str(group_PowData,'Control'),match_str(chLabels,'Fz'),3:end))),0,Colors(1,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'ADHD'),match_str(chLabels,'Fz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+[~,hp(2)]=simpleTplot(faxis(3:end),squeeze((all_osci(match_str(group_PowData,'ADHD'),match_str(chLabels,'Fz'),3:end))),0,Colors(2,:),0,'-',0.5,1,0,1,2);
 hold on;
 xlim([1 40])
 legend(hp,{'Controls','ADHD'})
@@ -442,9 +442,9 @@ format_fig;
 
 subplot(2,2,3);
 hp=[];
-[~,hp(1)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'Control'),match_str(chLabels,'Pz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+[~,hp(1)]=simpleTplot(faxis(3:end),squeeze((all_osci(match_str(group_PowData,'Control'),match_str(chLabels,'Pz'),3:end))),0,Colors(1,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'ADHD'),match_str(chLabels,'Pz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+[~,hp(2)]=simpleTplot(faxis(3:end),squeeze((all_osci(match_str(group_PowData,'ADHD'),match_str(chLabels,'Pz'),3:end))),0,Colors(2,:),0,'-',0.5,1,0,1,2);
 hold on;
 xlim([1 40])
 legend(hp,{'Controls','ADHD'})
@@ -455,9 +455,9 @@ format_fig;
 
 subplot(2,2,4);
 hp=[];
-[~,hp(1)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'Control'),match_str(chLabels,'Oz'),:))),0,Colors(1,:),0,'-',0.2,1,0,1,2);
+[~,hp(1)]=simpleTplot(faxis(3:end),squeeze((all_osci(match_str(group_PowData,'Control'),match_str(chLabels,'Oz'),3:end))),0,Colors(1,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(faxis,squeeze((all_osci(match_str(group_PowData,'ADHD'),match_str(chLabels,'Oz'),:))),0,Colors(2,:),0,'-',0.2,1,0,1,2);
+[~,hp(2)]=simpleTplot(faxis(3:end),squeeze((all_osci(match_str(group_PowData,'ADHD'),match_str(chLabels,'Oz'),3:end))),0,Colors(2,:),0,'-',0.5,1,0,1,2);
 hold on;
 xlim([1 40])
 legend(hp,{'Controls','ADHD'})
@@ -465,6 +465,43 @@ title('Periodic PS: Oz');
 xlabel('Frequency (Hz)')
 ylabel('Power')
 format_fig;
+
+%% Cluster perm to see if there are sig group diff between pow and freq 
+thisCh=match_str(chLabels,'Pz'); %Pz, Fz, Cz, Oz
+Group_A=squeeze(all_osci(match_str(group_PowData,'Control'),thisCh,faxis>1 & faxis<15)); % 3:end removes NA columns
+Group_B=squeeze(all_osci(match_str(group_PowData,'ADHD'),thisCh,faxis>1 & faxis<15));
+
+newfaxis=faxis(faxis>1 & faxis<15); 
+
+Groups=[ones(size(Group_A,1),1) ; 2*ones(size(Group_B,1),1)];
+totPerm=500;
+[realpos]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.05,0.05,totPerm,faxis,[],[]); % Runs an ANOVA - Main effect of group on the diff
+% Change 2nd val after Groups to 0.1 
+
+%significant_freqs = faxis(realpos.clusters == 1);
+% disp(['Significant frequencies: ', num2str(significant_freqs)]);
+for nF=1:length(newfaxis)
+[p,anovatab,stats] =anova1([Group_A(:,nF) ; Group_B(:,nF)],Groups,'off');
+allFvalues(nF)=anovatab{2,5};
+allPvalues(nF)=p;
+end
+
+figure;
+hold on;
+plot(newfaxis, mean(Group_A, 1), 'b', 'DisplayName', 'Control');
+plot(newfaxis, mean(Group_B, 1), 'r', 'DisplayName', 'ADHD');
+
+sig_freqs = find(realpos.clusters);
+ylimits = ylim;
+fill([newfaxis(sig_freqs), fliplr(newfaxis(sig_freqs))], ...
+     [ylimits(1)*ones(1, length(sig_freqs)), ylimits(2)*ones(1, length(sig_freqs))], ...
+     'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', 'Significant');
+legend;
+xlabel('Frequency (Hz)');
+ylabel('Power');
+title('Group Differences in Power');
+hold off;
+
 
 %% Alpha 
 % fractal.foofparams: 1: Centre frequency, 2: power and 3: width
@@ -499,20 +536,20 @@ format_fig;
 [H,P,CI,STATS] =ttest2(topo_adhd,topo_control,'dim',2);
 topo_tval=STATS.tstat;
 topo_pval=P;
-
-temp_topo_tval=[];
-for nE=1:length(layout.label)-2
-    ch_idx = match_str(data.label,layout.label(nE));
-    temp_topo_tval(nE) = topo_tval(ch_idx);
-end
+% 
+% temp_topo_tval=[];
+% for nE=1:length(layout.label)-2
+%     ch_idx = match_str(data.label,layout.label(nE));
+%     temp_topo_tval(nE) = topo_tval(ch_idx);
+% end
 subplot(2,3,3)
-simpleTopoPlot_ft(temp_topo_tval, layout,'on',[],0,1);
+simpleTopoPlot_ft(topo_tval, layout,'on',[],0,1);
 colormap(cmap_ttest);
 colorbar;
 title('Alpha Power Diff btw Groups (tvalue)')
 
 sig_elec =[];
-sig_elec = find(P < 0.05);
+sig_elec = find(topo_pval < 0.05);
 
 if ~isempty(sig_elec)
     ft_plot_lay_me(layout, 'chanindx',sig_elec,'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')
@@ -531,7 +568,7 @@ subplot(2,3,4)
 simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
 colormap(cmap); colorbar;
 title('Alpha Freq - ADHD');
-caxis([10 11]) 
+caxis([9.5 12]) 
 format_fig;
 
 temp_topo_control = [];
@@ -544,27 +581,28 @@ subplot(2,3,5)
 simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
 colormap(cmap); colorbar;
 title('Alpha Freq - Control');
-caxis([10 11])
+caxis([9.5 12])
 format_fig;
 
 [H,P,CI,STATS] =ttest2(topo_adhd,topo_control,'dim',2);
 topo_tval=STATS.tstat;
 topo_pval=P;
-
-temp_topo_tval=[];
-for nE=1:length(layout.label)-2
-    ch_idx = match_str(data.label,layout.label(nE));
-    temp_topo_tval(nE) = topo_tval(ch_idx);
-end
+% 
+% temp_topo_tval=[];
+% for nE=1:length(layout.label)-2
+%     ch_idx = match_str(data.label,layout.label(nE));
+%     temp_topo_tval(nE) = topo_tval(ch_idx);
+%     temp_topo_pval(nE) = P(ch_idx);
+% end
 
 subplot(2,3,6)
-simpleTopoPlot_ft(temp_topo_tval, layout,'on',[],0,1);
+simpleTopoPlot_ft(topo_tval, layout,'on',[],0,1);
 colormap(cmap_ttest);
 colorbar;
 title('Alpha Freq Diff btw Groups (tvalue)')
 
 sig_elec =[];
-sig_elec = find(P < 0.05);
+sig_elec = find(topo_pval < 0.05);
 
 if ~isempty(sig_elec)
     ft_plot_lay_me(layout, 'chanindx',sig_elec,'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')

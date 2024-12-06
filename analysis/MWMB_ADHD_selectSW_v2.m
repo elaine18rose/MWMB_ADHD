@@ -42,7 +42,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 %redo=0;
-all_threshold_SW=readtable([preproc_path filesep 'all_threshold_SW_v2.csv']); %EP - This is 
+all_threshold_SW=readtable([preproc_path filesep 'all_threshold_SW_v2.csv']); 
 all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
 all_threshold_SW.Group=categorical(all_threshold_SW.Group);
 all_threshold_SW.Elec=categorical(all_threshold_SW.Elec);
@@ -132,7 +132,10 @@ for nF=1:length(SW_files)
         probe_res([24 25],:)=[]; %removing two probes because we cannot find the triggers
     elseif strcmp(SubID,'C036')
         probe_res([6 7],:)=[]; %removing two probes because we cannot find the triggers
+    elseif strcmp(SubID,'A007')
+        probe_res(40,:)=[]; %removing one probe because the EEG recording was cut-off
     end
+
     if size(probe_res,1)~=length(unique(all_Waves(:,2)))
         FilesPbme=[FilesPbme ; {SubID} , {'Different Numbers of Probes'}];
         continue;
@@ -373,9 +376,9 @@ cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
 figure;
 simpleTopoPlot_ft(topo_tV_byGroup', layout,'on',[],0,1);
 ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-%ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[0 0 0]*0.7,'pointsize',72,'box','no','label','no');
 colormap(cmap2);
 colorbar('Ticks',[-5:5]);
-title({'SW density','A vs C'})
+title({'SW density','A vs C w/o C017 and C038'})
 caxis([-1 1]*4)
 format_fig;

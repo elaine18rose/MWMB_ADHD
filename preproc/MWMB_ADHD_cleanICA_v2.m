@@ -48,9 +48,9 @@ for nF=1:length(eeg_byProbe_files)
     SubID=SubInfo{3}(1:end-4);
 
     if redo==1 || exist([preproc_path filesep 'clean_i_probe_' SubID '.mat'])==0 % To skip already preprocessed files
-        if ~strcmp(SubID,{'C041'}) % redoing this as there were problems opening the file
-            continue;
-        end
+%         if ~strcmp(SubID,{'A007'}) % redoing this ppt who had incomplete EEG recording
+%             continue;
+%         end
         if exist([preproc_path filesep 'comp_i_probe_' SubID '.mat'])==0
             warning(sprintf('... missing ICA file for %s\n',[eeg_byProbe_files(nF).name]))
             continue;
