@@ -114,7 +114,7 @@ for nF=1:length(files)
     peaks_params=[];
     for nE=1:length(fractal.label)
         temp_peaks=fractal.fooofparams(nE).peak_params;
-        temp_peaks=temp_peaks(temp_peaks(:,1)>9 & temp_peaks(:,1)<13,:);
+        temp_peaks=temp_peaks(temp_peaks(:,1)>5 & temp_peaks(:,1)<15,:);
         if size(temp_peaks,1)==1
             peaks_params(nE,:)=temp_peaks(temp_peaks(:,2)==max(temp_peaks(:,2)),:);
         else
@@ -467,15 +467,19 @@ ylabel('Power')
 format_fig;
 
 %% Cluster perm to see if there are sig group diff between pow and freq 
-thisCh=match_str(chLabels,'Pz'); %Pz, Fz, Cz, Oz
-Group_A=squeeze(all_osci(match_str(group_PowData,'Control'),thisCh,faxis>1 & faxis<15)); % 3:end removes NA columns
-Group_B=squeeze(all_osci(match_str(group_PowData,'ADHD'),thisCh,faxis>1 & faxis<15));
+thisCh=match_str(chLabels,'Fz'); %Pz, Fz, Cz, Oz
+% Group_A=squeeze(all_osci(match_str(group_PowData,'Control'),thisCh,faxis>1 & faxis<15)); % 3:end removes NA columns
+% Group_B=squeeze(all_osci(match_str(group_PowData,'ADHD'),thisCh,faxis>1 & faxis<15));
+
+Group_A=squeeze(all_pow(match_str(group_PowData,'Control'),thisCh,faxis>1 & faxis<15)); % 3:end removes NA columns
+Group_B=squeeze(all_pow(match_str(group_PowData,'ADHD'),thisCh,faxis>1 & faxis<15));
 
 newfaxis=faxis(faxis>1 & faxis<15); 
 
 Groups=[ones(size(Group_A,1),1) ; 2*ones(size(Group_B,1),1)];
-totPerm=500;
+totPerm=1000;
 [realpos]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.05,0.05,totPerm,faxis,[],[]); % Runs an ANOVA - Main effect of group on the diff
+% Change 2nd val after Groups to 0.1 
 
 %significant_freqs = faxis(realpos.clusters == 1);
 % disp(['Significant frequencies: ', num2str(significant_freqs)]);
@@ -485,27 +489,96 @@ allFvalues(nF)=anovatab{2,5};
 allPvalues(nF)=p;
 end
 
+
+if realpos.pmonte < 0.05 % Check if the cluster is significant
+    sig_freqs = find(realpos.clusters); % Extract significant frequency indices
+else
+    sig_freqs = [];
+end
+
 figure;
 hold on;
 plot(newfaxis, mean(Group_A, 1), 'b', 'DisplayName', 'Control');
 plot(newfaxis, mean(Group_B, 1), 'r', 'DisplayName', 'ADHD');
 
-sig_freqs = find(realpos.clusters);
+% Highlight significant regions
 ylimits = ylim;
-fill([newfaxis(sig_freqs), fliplr(newfaxis(sig_freqs))], ...
-     [ylimits(1)*ones(1, length(sig_freqs)), ylimits(2)*ones(1, length(sig_freqs))], ...
-     'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', 'Significant');
+if ~isempty(sig_freqs)
+    sig_freq_values = newfaxis(sig_freqs); % Map indices to frequency values
+    fill([sig_freq_values, fliplr(sig_freq_values)], ...
+         [ylimits(1)*ones(1, length(sig_freq_values)), ylimits(2)*ones(1, length(sig_freq_values))], ...
+         'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', 'Significant');
+end
+
 legend;
 xlabel('Frequency (Hz)');
 ylabel('Power');
-title('Group Differences in Power');
+title('Group Differences in Power - Pz');
 hold off;
 
+%% Topo of Sig PS cluster found for Fz
+freq_band = [3 8.7];
+freq_idx = pow.freq >= freq_band(1) & pow.freq <= freq_band(2);
+avg_power = mean(all_pow(:, :, freq_idx), 3); % Participants x Channels
+
+% adhd_idx    = find(design_PowData == 1);  
+% control_idx = find(design_PowData == 0); 
+
+temp_topo_adhd = [];
+topo_adhd = [];
+for nCh = 1:length(layout.label)-2
+    ch_idx = match_str(data.label, layout.label{nCh});
+    temp_topo_adhd(nCh) = squeeze(nanmean(mean(all_pow(adhd_idx, ch_idx, freq_idx),3), 1));
+    topo_adhd(nCh,:) = squeeze(mean(all_pow(adhd_idx, ch_idx,freq_idx), 3));
+end
+figure;
+subplot(1,3,1)
+simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
+colormap(cmap); colorbar;
+title('Sig Cluster found for Fz - ADHD');
+caxis([-1.8 -1]) 
+format_fig;
+
+
+temp_topo_control = [];
+topo_control = [];
+for nCh = 1:length(layout.label)-2
+    ch_idx = match_str(data.label, layout.label{nCh});
+    temp_topo_control(nCh) = squeeze(nanmean(mean(all_pow(control_idx, ch_idx, freq_idx),3), 1));
+    topo_control(nCh,:) = squeeze(mean(all_pow(control_idx, ch_idx,freq_idx), 3));
+end
+subplot(1,3,2)
+simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
+colormap(cmap); colorbar;
+title('Sig Cluster found for Fz - Control');
+caxis([-1.8 -1]) 
+format_fig;
+
+
+[H, P, CI, STATS] = ttest2(topo_adhd, topo_control, 'dim', 2); % Perform unpaired t-tests across ppts (dim 2) at each channel
+topo_tval = STATS.tstat; % T-values for each channel
+topo_pval = P;           % P-values for each channel
+
+
+subplot(1,3,3)
+simpleTopoPlot_ft(topo_tval, layout,'on',[],0,1);
+colormap(cmap_ttest);
+colorbar;
+title('Diff btw Group (ADHD-CTR)(tvalue)')
+
+sig_elec =[];
+sig_elec = find(topo_pval < 0.05);
+
+if ~isempty(sig_elec)
+    ft_plot_lay_me(layout, 'chanindx',sig_elec,'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')
+end
+caxis([-1 1]*2.5)
+format_fig;
 
 %% Alpha 
 % fractal.foofparams: 1: Centre frequency, 2: power and 3: width
 figure;
-temp_topo_adhd  = [];
+temp_topo_adhd = [];
 topo_adhd = [];
 for nCh = 1:length(layout.label)-2
     temp_topo_adhd(nCh) = squeeze(nanmean(all_alphapeak(adhd_idx, match_str(data.label, layout.label{nCh}), 2), 1));
@@ -535,20 +608,20 @@ format_fig;
 [H,P,CI,STATS] =ttest2(topo_adhd,topo_control,'dim',2);
 topo_tval=STATS.tstat;
 topo_pval=P;
-
-temp_topo_tval=[];
-for nE=1:length(layout.label)-2
-    ch_idx = match_str(data.label,layout.label(nE));
-    temp_topo_tval(nE) = topo_tval(ch_idx);
-end
+% 
+% temp_topo_tval=[];
+% for nE=1:length(layout.label)-2
+%     ch_idx = match_str(data.label,layout.label(nE));
+%     temp_topo_tval(nE) = topo_tval(ch_idx);
+% end
 subplot(2,3,3)
-simpleTopoPlot_ft(temp_topo_tval, layout,'on',[],0,1);
+simpleTopoPlot_ft(topo_tval, layout,'on',[],0,1);
 colormap(cmap_ttest);
 colorbar;
-title('Alpha Power Diff btw Groups (tvalue)')
+title('Alpha Power Diff btw Groups (ADHD-CTR(tvalue))')
 
 sig_elec =[];
-sig_elec = find(P < 0.05);
+sig_elec = find(topo_pval < 0.05);
 
 if ~isempty(sig_elec)
     ft_plot_lay_me(layout, 'chanindx',sig_elec,'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')
@@ -567,7 +640,7 @@ subplot(2,3,4)
 simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
 colormap(cmap); colorbar;
 title('Alpha Freq - ADHD');
-caxis([10 11]) 
+caxis([9.5 12]) 
 format_fig;
 
 temp_topo_control = [];
@@ -580,27 +653,28 @@ subplot(2,3,5)
 simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
 colormap(cmap); colorbar;
 title('Alpha Freq - Control');
-caxis([10 11])
+caxis([9.5 12])
 format_fig;
 
 [H,P,CI,STATS] =ttest2(topo_adhd,topo_control,'dim',2);
 topo_tval=STATS.tstat;
 topo_pval=P;
-
-temp_topo_tval=[];
-for nE=1:length(layout.label)-2
-    ch_idx = match_str(data.label,layout.label(nE));
-    temp_topo_tval(nE) = topo_tval(ch_idx);
-end
+% 
+% temp_topo_tval=[];
+% for nE=1:length(layout.label)-2
+%     ch_idx = match_str(data.label,layout.label(nE));
+%     temp_topo_tval(nE) = topo_tval(ch_idx);
+%     temp_topo_pval(nE) = P(ch_idx);
+% end
 
 subplot(2,3,6)
-simpleTopoPlot_ft(temp_topo_tval, layout,'on',[],0,1);
+simpleTopoPlot_ft(topo_tval, layout,'on',[],0,1);
 colormap(cmap_ttest);
 colorbar;
-title('Alpha Freq Diff btw Groups (tvalue)')
+title('Alpha Freq Diff btw Groups (tvalue)') %Update title to reflect if its ADHD vs Control 
 
 sig_elec =[];
-sig_elec = find(P < 0.05);
+sig_elec = find(topo_pval < 0.05);
 
 if ~isempty(sig_elec)
     ft_plot_lay_me(layout, 'chanindx',sig_elec,'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')
