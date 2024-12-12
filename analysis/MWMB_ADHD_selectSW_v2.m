@@ -135,6 +135,8 @@ for nF=1:length(SW_files)
     elseif strcmp(SubID,'A007')
         probe_res(40,:)=[]; %removing one probe because the EEG recording was cut-off
     end
+% C017 C038: check SW detection (big difference between percentile and
+% exGauss thresholds)
 
     if size(probe_res,1)~=length(unique(all_Waves(:,2)))
         FilesPbme=[FilesPbme ; {SubID} , {'Different Numbers of Probes'}];
