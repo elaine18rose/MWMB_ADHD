@@ -236,13 +236,17 @@ hplot=[];
 for nE=1:length(labels)
     temp_plotA=squeeze(all_distrib_SW_per(nE,:,all_GroupID==uniqueGroupIDs(2)));
      temp_plotB=squeeze(all_distrib_SW_per(nE,:,all_GroupID==uniqueGroupIDs(1)));
+     temp_plotC=squeeze(all_distrib_SW_per(nE,:,:));
      temp_plotdiff=temp_plotA-repmat(nanmean(temp_plotB,2),1,size(temp_plotA,2));
+
+     distributionAll=cumsum(mean(temp_plotC,1))./max(cumsum(mean(temp_plotC,1)));
 
      bins_over=bins(find(mean(temp_plotA')>mean(temp_plotB')));
      bins_over(bins_over==0)=[];
      first_bin_over=bins_over(1);
      all_first_bin_over(nE)=first_bin_over;
-     all_first_pctile_over(nE)=find(first_bin_over==bins)/length(bins);
+%      all_first_bin_over(nE)=find(first_bin_over==bins)/length(bins);
+     all_first_pctile_over(nE)=distributionAll(first_bin_over);
 %    simpleTplot(bins,temp_plotA',0,Colors(2,:),[0 0.05 0.05 1000],'-',0.5,1,0,1,4);
 hold on;
 plot(bins,mean(temp_plotdiff'))

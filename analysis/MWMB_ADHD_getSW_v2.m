@@ -102,7 +102,7 @@ for nF=1:length(files)
     end
 
         %%% clean detection
-        paramSW.prticle_Thr=80; % 80 or 90 or 95
+        paramSW.prticle_Thr=50; % 80 or 90 or 95
         paramSW.LimFrqW=[1 7]; % [1 4] or [4 10]
         paramSW.AmpCriterionIdx=4; % 9 (MaxNegpkAmp) or 11 (MaxPosPeakAmp) or 4 (P2P)
         paramSW.fixThr=[];
@@ -164,7 +164,7 @@ for nF=1:length(files)
         all_threshold_SW=[all_threshold_SW ; this_thr];
 end
 
-writetable(all_threshold_SW,[preproc_path filesep 'all_threshold_SW_v2.csv'])
+writetable(all_threshold_SW,[preproc_path filesep 'all_threshold_SW_50pc.csv'])
 
 
 %%
