@@ -554,17 +554,17 @@ mdlsubtypedprime0 = fitglme(behav_demo_table1, 'dprime ~ Subtype + BlockN + (1|S
 %                  'Distribution', 'Normal', 'Link', 'Identity');
 % mdlsubtypedprime2 = fitglme(behav_demo_table1, 'Misses ~ Subtype + BlockN + (1 + BlockN + Subtype|SubID)', ...
 %                 'Distribution', 'Normal', 'Link', 'Identity');
-% 
+
 % %% Extract fit statistics for each model
-% AIC_values = [mdlsubtypedprime0.ModelCriterion.AIC, mdlsubtypedprime1.ModelCriterion.AIC, mdlsubtypedprime2.ModelCriterion.AIC];
-% BIC_values = [mdlsubtypedprime0.ModelCriterion.BIC, mdlsubtypedprime1.ModelCriterion.BIC, mdlsubtypedprime2.ModelCriterion.BIC];
+% AIC_values = [mdlsubtypeStdRT0.ModelCriterion.AIC, mdlsubtypeStdRT1.ModelCriterion.AIC, mdlsubtypeStdRT2.ModelCriterion.AIC];
+% BIC_values = [mdlsubtypeStdRT0.ModelCriterion.BIC, mdlsubtypeStdRT1.ModelCriterion.BIC, mdlsubtypeStdRT2.ModelCriterion.BIC];
 % % Display results in a table
 % ModelNames = {'Model 0', 'Model 1', 'Model 2'};
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
 
-disp(mdlsubtypedprime0);
-anova(mdlsubtypedprime0)
+disp(mdlsubtypeStdRT0);
+anova(mdlsubtypeStdRT0)
 
 %% GLMEs just with ADHD
 data_ADHD = behav_demo_table(~(behav_demo_table.Group == 'C'),:); 
@@ -653,23 +653,3 @@ mdlsubtypeStdRT0 = fitglme(data_ADHD, 'stdRT ~ Subtype + BlockN + (1|SubID)', ..
 
 disp(mdlsubtypeStdRT0);
 anova(mdlsubtypeStdRT0)
-
-
-% d Prime
-mdlsubtypedprime0 = fitglme(data_ADHD, 'dprime ~ Subtype + BlockN + (1|SubID)', ...
-                'Distribution', 'Normal', 'Link', 'Identity'); % Winning model
-% mdlsubtypedprime1 = fitglme(data_ADHD, 'Misses ~ Subtype + BlockN + (1 + BlockN|SubID)', ...
-%                  'Distribution', 'Normal', 'Link', 'Identity');
-% mdlsubtypedprime2 = fitglme(data_ADHD, 'Misses ~ Subtype + BlockN + (1 + BlockN + Subtype|SubID)', ...
-%                 'Distribution', 'Normal', 'Link', 'Identity');
-% 
-% %% Extract fit statistics for each model
-% AIC_values = [mdlsubtypedprime0.ModelCriterion.AIC, mdlsubtypedprime1.ModelCriterion.AIC, mdlsubtypedprime2.ModelCriterion.AIC];
-% BIC_values = [mdlsubtypedprime0.ModelCriterion.BIC, mdlsubtypedprime1.ModelCriterion.BIC, mdlsubtypedprime2.ModelCriterion.BIC];
-% % Display results in a table
-% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
-% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
-% disp(fit_table);
-
-disp(mdlsubtypedprime0);
-anova(mdlsubtypedprime0)
