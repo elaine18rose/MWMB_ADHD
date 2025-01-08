@@ -45,7 +45,8 @@ behav_demo_table = readtable([save_path filesep 'SART_ADHD_behav_demo_v1.txt']);
 behav_demo_table.Group=categorical(behav_demo_table.Group);
 behav_demo_table.SubID=categorical(behav_demo_table.SubID);
 behav_demo_table.Sex=categorical(behav_demo_table.Sex);
-behav_demo_table.Subtype=categorical(behav_demo_table.Subtype);
+behav_demo_table.ReportedSubtype=categorical(behav_demo_table.ReportedSubtype);
+behav_demo_table.DIVASubtype=categorical(behav_demo_table.DIVASubtype);
 %% trial-level performance
 
 % FAs/Commission Errors
@@ -133,14 +134,14 @@ mdlcrit2 = fitlme(all_behav_table,'crit~1+BlockN*Group+(BlockN|SubID)');
 
 anova(mdlcrit1)
 
-CV_CTR=[];
-for nc=1:length(ctrs)
-    CV_CTR(nc)=nanmean(all_behav_table.stdRT(all_behav_table.SubID==ctrs(nc)))./nanmean(all_behav_table.RT(all_behav_table.SubID==ctrs(nc)));
-end
-CV_ADHD=[];
-for nc=1:length(adhds)
-    CV_ADHD(nc)=nanmean(all_behav_table.stdRT(all_behav_table.SubID==adhds(nc)))./nanmean(all_behav_table.RT(all_behav_table.SubID==adhds(nc)));
-end
+% CV_CTR=[];
+% for nc=1:length(ctrs)
+%     CV_CTR(nc)=nanmean(all_behav_table.stdRT(all_behav_table.SubID==ctrs(nc)))./nanmean(all_behav_table.RT(all_behav_table.SubID==ctrs(nc)));
+% end
+% CV_ADHD=[];
+% for nc=1:length(adhds)
+%     CV_ADHD(nc)=nanmean(all_behav_table.stdRT(all_behav_table.SubID==adhds(nc)))./nanmean(all_behav_table.RT(all_behav_table.SubID==adhds(nc)));
+% end
 
 %% block-level stats
 
@@ -301,6 +302,11 @@ all_probe_table.StateC(all_probe_table.State==1)='ON';
 all_probe_table.StateC(all_probe_table.State==2)='MW';
 all_probe_table.StateC(all_probe_table.State==3)='MB';
 all_probe_table.StateC(all_probe_table.State==4)='DK';
+all_probe_table.VigC=categorical(nan(size(all_probe_table,1),1));
+all_probe_table.VigC(all_probe_table.Vigilance==1)='Ex. Alert';
+all_probe_table.VigC(all_probe_table.Vigilance==2)='Alert';
+all_probe_table.VigC(all_probe_table.Vigilance==3)='Sleepy';
+all_probe_table.VigC(all_probe_table.Vigilance==4)='Ex. Sleepy';
 
 % Intentionality (1 = Entirely intentional to 4 = Entirely unintentional)
 mdlint0 = fitlme(all_probe_table,'Intention~1+StateC+Group+(1|SubID)'); %
@@ -440,7 +446,7 @@ for nVig = 1:length(myVigLevels)
     end
     
     % Check that both groups have data for this vigilance level
-    if ~isempty(for_paired_groups{1}) && ~isempty(for_paired_groups{2})
+    if numel(for_paired_groups{1}) > 1 && numel(for_paired_groups{2}) > 1%~isempty(for_paired_groups{1}) && ~isempty(for_paired_groups{2})
         % Perform two-sample t-test between groups for the current vigilance level
         [h, p, ci, stats] = ttest2(for_paired_groups{1}, for_paired_groups{2});
         
@@ -508,11 +514,11 @@ anova(mdlsubtypeMiss0)
 
 % RT
 behav_demo_table2 = rmmissing(behav_demo_table1, 'DataVariables', {'RT'}); % Removing data with NAs for RT
-% mdlsubtypeRT0 = fitglme(behav_demo_table2, 'RT ~ Subtype + BlockN + (1|SubID)', ...
+% mdlsubtypeRT0 = fitlme(behav_demo_table2, 'RT ~ Subtype + BlockN + (1|SubID)', ...
 %                 'Distribution', 'Normal', 'Link', 'Identity'); 
-mdlsubtypeRT1 = fitglme(behav_demo_table2, 'RT ~ Subtype + BlockN + (1 + BlockN|SubID)', ...
+mdlsubtypeRT1 = fitlme(behav_demo_table2, 'RT ~ Subtype + BlockN + (1 + BlockN|SubID)', ...
                 'Distribution', 'Normal', 'Link', 'Identity');% Winning model
-% mdlsubtypeRT2 = fitglme(behav_demo_table2, 'RT ~ Subtype + BlockN + (1 + BlockN + Subtype|SubID)', ...
+% mdlsubtypeRT2 = fitlme(behav_demo_table2, 'RT ~ Subtype + BlockN + (1 + BlockN + Subtype|SubID)', ...
 %                 'Distribution', 'Normal', 'Link', 'Identity');
 % 
 % %% Extract fit statistics for each model
@@ -673,3 +679,51 @@ mdlsubtypedprime0 = fitglme(data_ADHD, 'dprime ~ Subtype + BlockN + (1|SubID)', 
 
 disp(mdlsubtypedprime0);
 anova(mdlsubtypedprime0)
+
+
+%% analysis for ADHD subtype and anxiety and depression 
+data_ADHD = behav_demo_table(~(behav_demo_table.Group == 'C'),:); 
+
+agg_data_ADHD = groupsummary(data_ADHD, 'SubID', {'max'}, {'Depression', 'Anxiety'}); % Aggregate data because right now we have inflated datapoints for each ppt
+[uniqueSubIDs, idx] = unique(data_ADHD.SubID); % Get the first occurrence of each SubID
+agg_data_ADHD.ReportedSubtype = data_ADHD.ReportedSubtype(idx);
+agg_data_ADHD.DIVASubtype=data_ADHD.DIVASubtype(idx);
+
+agg_data_ADHD.SubID=categorical(agg_data_ADHD.SubID);
+agg_data_ADHD.ReportedSubtype=categorical(agg_data_ADHD.ReportedSubtype);
+agg_data_ADHD.DIVASubtype=categorical(agg_data_ADHD.DIVASubtype);
+
+subtypes = unique(agg_data_ADHD.ReportedSubtype); % Change to DIVA subtypes once we have everyone's data
+comorbidity_stats = zeros(numel(subtypes), 2); % Initialize a matrix for stats
+
+for i = 1:numel(subtypes)
+    idx = agg_data_ADHD.ReportedSubtype == subtypes(i); % Logical index for each subtype
+    
+    % Calculate proportions for depression and anxiety
+    comorbidity_stats(i, 1) = mean(agg_data_ADHD.max_Depression(idx)); % Proportion of depression
+    comorbidity_stats(i, 2) = mean(agg_data_ADHD.max_Anxiety(idx));    % Proportion of anxiety
+end
+
+bar(comorbidity_stats, 'grouped');
+xticks(1:numel(subtypes));
+xticklabels(subtypes);
+ylabel('Proportion');
+legend({'Depression', 'Anxiety'});
+title('Proportion of Comorbidities by ADHD Subtype');
+format_fig
+
+% Depression
+[depression_table, subtypeLabels, varLabels] = crosstab(agg_data_ADHD.ReportedSubtype, agg_data_ADHD.max_Depression);
+
+% Perform Fisher's exact test on the contingency table; I have too few observations for Chi test and was getting NaN values
+%[p, chi2stat, df] = chi2gof(depression_table(:));  
+[p, h] = fishertest(depression_table);
+disp(['Fisher''s exact test p-value: ', num2str(p)]); % No sig difference between depression and subtype (might just also be underpowered)
+
+% Anxiety
+[anxiety_table, subtypeLabels, varLabels] = crosstab(agg_data_ADHD.ReportedSubtype, agg_data_ADHD.max_Anxiety);
+
+% Perform Fisher's exact test on the contingency table; I have too few observations for Chi test and was getting NaN values
+%[p, chi2stat, df] = chi2gof(anxiety_table(:));  
+[p, h] = fishertest(anxiety_table);
+disp(['Fisher''s exact test p-value: ', num2str(p)]); % Small sig difference between anxiety and subtype 
