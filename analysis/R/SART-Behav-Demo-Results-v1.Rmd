@@ -731,6 +731,8 @@ FAData[,list(corr = cor(FA,CAARS_Inattentiveness,method = 'spearman', use =  "na
 # Correlation with behaviour and diagnosis
 # Preparing data ----
 dataset$subtype_numeric <-as.numeric(factor(dataset$Subtype, levels = c("Combined", "Inattention")))
+##TA - One approach is to do an ANOVA and see if there's a main effect of group and then do a post-hoc 
+## For those combined it would be a 1 for Combined and 1 for inattentive
 
 #Spearmans correlation ----
 cor.test(x=dataset$FA, y=dataset$subtype_numeric, method = 'spearman',use =  "na.or.complete") # r = -.051, p = .001

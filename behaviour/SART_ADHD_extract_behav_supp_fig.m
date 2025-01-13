@@ -13,6 +13,7 @@ else
     path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
     path_RainCloudPlot = '/Users/elaine/desktop/MATLAB_Functions/RainCloudPlots/';
     path_DataViz = '/Users/elaine/desktop/MATLAB_Functions/DataViz/';
+    path_chi2test = '/Users/elaine/desktop/MATLAB_Functions/chi2test/';
     behav_path = '/Volumes/Seagate/MWMB_ADHD_SART/Behaviour/';
     preproc_path='/Volumes/Seagate/MWMB_ADHD_SART/preproc/';
     save_path = '/Users/elaine/desktop/Git_Studies/MWMB_ADHD/tables';
@@ -24,6 +25,7 @@ addpath(genpath(path_LSCPtools))
 addpath(genpath(path_RainCloudPlot));
 addpath(genpath(path_DataViz));
 addpath(path_fieldtrip)
+addpath(path_chi2test)
 ft_defaults;
 % addpath(genpath(path_ExGauss))
 % addpath(genpath(path_FMINSEARCHBND))

@@ -330,8 +330,12 @@ figure;
 Colors=[253,174,97;
     171,217,233;
     44,123,182]/256;
+
+all_probe_table.Group = reordercats(all_probe_table.Group, {'C', 'A'});
+% myReportedSubtype=categories(probe_subtype_table.ReportedSubtype);
 myGroups=unique(all_probe_table.Group);
 myStates=unique(all_probe_table.StateC);
+
 hb=[];
 Int_Paired_test=[];
 for nSta=1:4
@@ -397,8 +401,42 @@ mdldist2 = fitlme(all_probe_table,'Distraction~1+Block*Group+(Block|SubID)'); % 
 
 anova(mdldist2)
 
+%%% t-test to determine if there are group differences for reported distraction
+ADHD_dis = all_probe_table.Distraction(strcmp(all_probe_table.Group, 'A'));
+ADHD_dis = ADHD_dis(~isnan(ADHD_dis));
+ctr_dis = all_probe_table.Distraction(strcmp(all_probe_table.Group, 'C'));
+ctr_dis = ctr_dis(~isnan(ctr_dis));
+distraction_types = unique([ADHD_dis; ctr_dis]);
 
-% Intentionality (1 = Entirely intentional to 4 = Entirely unintentional)
+num_types = numel(distraction_types);
+ADHD_props = zeros(1, num_types);
+ctr_props = zeros(1, num_types);
+% Calculate proportions for each distraction type in both groups
+for i = 1:num_types
+    ADHD_props(i) = sum(ADHD_dis == distraction_types(i)) / numel(ADHD_dis);
+    ctr_props(i) = sum(ctr_dis == distraction_types(i)) / numel(ctr_dis);
+end
+
+% Perform separate t-tests for each distraction type
+p_values = zeros(1, num_types);
+for i = 1:num_types
+    [~, p] = ttest2(double(ADHD_dis == distraction_types(i)), double(ctr_dis == distraction_types(i)));
+    p_values(i) = p;
+end
+
+% Correct for multiple comparisons using Bonferroni correction
+bonferroni_corrected_p = p_values * num_types; % Multiply by the number of tests
+bonferroni_corrected_p(bonferroni_corrected_p > 1) = 1; % p-values cannot exceed 1
+
+% Display results
+disp('Distraction Type | Proportion (ADHD) | Proportion (Control) | Raw p-value | Bonferroni Corrected p-value');
+for i = 1:num_types
+    fprintf('%15d | %16.2f%% | %20.2f%% | %11.4f | %25.4f\n', ...
+        distraction_types(i), ADHD_props(i) * 100, ctr_props(i) * 100, p_values(i), bonferroni_corrected_p(i));
+end
+
+
+%% Intentionality (1 = Entirely intentional to 4 = Entirely unintentional)
 % mdlint0 = fitlme(all_probe_table,'Intention~1+Block+Group+(1|SubID)');
 % mdlint1 = fitlme(all_probe_table,'Intention~1+Block*Group+(1|SubID)');
 mdlint2 = fitlme(all_probe_table,'Intention~1+Block*Group+(Block|SubID)'); % Winning AIC & BIC model; Group: p <.001, Block: p <.001
@@ -413,7 +451,7 @@ mdlint2 = fitlme(all_probe_table,'Intention~1+Block*Group+(Block|SubID)'); % Win
 anova(mdlint2)
 
 
-% Vigilance (1 = Extremely alert to 4 = Extremely sleepy)
+%% Vigilance (1 = Extremely alert to 4 = Extremely sleepy)
 mdlvig0 = fitlme(all_probe_table,'Vigilance~1+Block+Group+(1|SubID)');
 mdlvig1 = fitlme(all_probe_table,'Vigilance~1+Block*Group+(1|SubID)');
 mdlvig2 = fitlme(all_probe_table,'Vigilance~1+Block*Group+(Block|SubID)'); % Winning AIC & BIC model; Group: p <.001, Block: p <.001
@@ -427,42 +465,44 @@ mdlvig2 = fitlme(all_probe_table,'Vigilance~1+Block*Group+(Block|SubID)'); % Win
 
 anova(mdlvig2)
 
-% Define unique levels for Vigilance and Group
-myVigLevels = unique(all_probe_table.Vigilance);
-myGroups = categorical(unique(all_probe_table.Group));
 
-% Initialize matrix to store p-values and test statistics
-Vig_Paired_test = nan(length(myVigLevels), 3); % Rows for each vigilance level, columns for p-value, t-stat, and df
-
-for nVig = 1:length(myVigLevels)
-    for_paired_groups = {}; % Cell array to store data for each group for current vigilance level
-    
-    for nG = 1:2
-        % Extract values of `Vigilance` for the current group and vigilance level
-        vig_values = all_probe_table.Vigilance(all_probe_table.Vigilance == myVigLevels(nVig) & all_probe_table.Group == myGroups(nG));
-        
-        % Store group-specific vigilance data for the t-test
-        for_paired_groups{nG} = vig_values;
-    end
-    
-    % Check that both groups have data for this vigilance level
-    if numel(for_paired_groups{1}) > 1 && numel(for_paired_groups{2}) > 1%~isempty(for_paired_groups{1}) && ~isempty(for_paired_groups{2})
-        % Perform two-sample t-test between groups for the current vigilance level
-        [h, p, ci, stats] = ttest2(for_paired_groups{1}, for_paired_groups{2});
-        
-        % Store results in matrix
-        Vig_Paired_test(nVig, 1) = p;          % p-value
-        Vig_Paired_test(nVig, 2) = stats.tstat; % t-statistic
-        Vig_Paired_test(nVig, 3) = stats.df;    % degrees of freedom
-    else
-        % Display a message if data is missing for this vigilance level/group
-        fprintf('Warning: Missing data for Vigilance level %d\n', myVigLevels(nVig));
-    end
-end
-
-% Display the results
-disp('Paired t-test results for each Vigilance level (p-value, t-stat, df):');
-disp(Vig_Paired_test);
+%%% TO BE FIXED
+% % Define unique levels for Vigilance and Group
+% myVigLevels = unique(all_probe_table.Vigilance);
+% myGroups = categorical(unique(all_probe_table.Group));
+% 
+% % Initialize matrix to store p-values and test statistics
+% Vig_Paired_test = nan(length(myVigLevels), 3); % Rows for each vigilance level, columns for p-value, t-stat, and df
+% 
+% for nVig = 1:length(myVigLevels)
+%     for_paired_groups = {}; % Cell array to store data for each group for current vigilance level
+%     
+%     for nG = 1:2
+%         % Extract values of `Vigilance` for the current group and vigilance level
+%         vig_values = all_probe_table.Vigilance(all_probe_table.Vigilance == myVigLevels(nVig) & all_probe_table.Group == myGroups(nG));
+%         
+%         % Store group-specific vigilance data for the t-test
+%         for_paired_groups{nG} = vig_values;
+%     end
+%     
+%     % Check that both groups have data for this vigilance level
+%     if numel(for_paired_groups{1}) > 1 && numel(for_paired_groups{2}) > 1%~isempty(for_paired_groups{1}) && ~isempty(for_paired_groups{2})
+%         % Perform two-sample t-test between groups for the current vigilance level
+%         [h, p, ci, stats] = ttest2(for_paired_groups{1}, for_paired_groups{2});
+%         
+%         % Store results in matrix
+%         Vig_Paired_test(nVig, 1) = p;          % p-value
+%         Vig_Paired_test(nVig, 2) = stats.tstat; % t-statistic
+%         Vig_Paired_test(nVig, 3) = stats.df;    % degrees of freedom
+%     else
+%         % Display a message if data is missing for this vigilance level/group
+%         fprintf('Warning: Missing data for Vigilance level %d\n', myVigLevels(nVig));
+%     end
+% end
+% 
+% % Display the results
+% disp('Paired t-test results for each Vigilance level (p-value, t-stat, df):');
+% disp(Vig_Paired_test);
 
 
 %% GLMEs for subtype and behaviour (NOTE: no ADHD ppts reported an impulsive/hyperactive subtype)
@@ -716,14 +756,14 @@ format_fig
 [depression_table, subtypeLabels, varLabels] = crosstab(agg_data_ADHD.ReportedSubtype, agg_data_ADHD.max_Depression);
 
 % Perform Fisher's exact test on the contingency table; I have too few observations for Chi test and was getting NaN values
-%[p, chi2stat, df] = chi2gof(depression_table(:));  
-[p, h] = fishertest(depression_table);
-disp(['Fisher''s exact test p-value: ', num2str(p)]); % No sig difference between depression and subtype (might just also be underpowered)
+[p, q] = chi2test(depression_table);  
+% [p, h] = fishertest(depression_table);
+% disp(['Fisher''s exact test p-value: ', num2str(p)]); % No sig difference between depression and subtype (might just also be underpowered)
 
 % Anxiety
 [anxiety_table, subtypeLabels, varLabels] = crosstab(agg_data_ADHD.ReportedSubtype, agg_data_ADHD.max_Anxiety);
 
 % Perform Fisher's exact test on the contingency table; I have too few observations for Chi test and was getting NaN values
-%[p, chi2stat, df] = chi2gof(anxiety_table(:));  
+[p, q] = chi2test(anxiety_table);  
 [p, h] = fishertest(anxiety_table);
 disp(['Fisher''s exact test p-value: ', num2str(p)]); % Small sig difference between anxiety and subtype 
