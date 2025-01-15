@@ -491,22 +491,6 @@ summary_table = table(distraction_levels', p_values, Q_values, ...
                       'VariableNames', {'DistractionLevel', 'pValues', 'QStatistics'});
 disp(summary_table);
 
-% Bonferroni correction
-num_tests = 3; % Number of pairwise comparisons per distraction level
-corrected_alpha = 0.05 / num_tests;
-
-% Check for significance after Bonferroni correction
-significant_results = p_values < corrected_alpha;
-
-% Display corrected results
-disp('Summary with Bonferroni correction:');
-for distraction_level = 1:length(distraction_levels)
-    disp(['Distraction Level ', num2str(distraction_level)]);
-    disp(['Corrected alpha: ', num2str(corrected_alpha)]);
-    disp(['Significant Comparisons (Inattention vs. Control, Combined vs. Control, Inattention vs. Combined): ', ...
-        num2str(significant_results(distraction_level, :))]);
-end
-
 
 %% Intentionality  (Note: 1 = Entirely intentional to 4 = Entirely unintentional)
   numbers_of_interest = [1, 2, 3, 4];

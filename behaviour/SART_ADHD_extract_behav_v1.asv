@@ -170,7 +170,6 @@ for nF=1:length(files)
         tempRT=go_trials(:,10)-go_trials(:,8); tempRT(tempRT<0.150)=NaN;
         probe_table.RT(nP)=nanmean(tempRT);
         probe_table.FA(nP)=nanmean(nogo_trials(:,end-1)==0);
-%         probe_table.stdRT = grpstats(all_RT, test_res(:,1), 'std');% EP added 14/01/25
     end
     if File_Name(19)=='C' || File_Name(19)=='A'
         writetable(probe_table,[save_path filesep 'MWMB_ADHD_probeBehav_' File_Name(19:22) '.txt']);
