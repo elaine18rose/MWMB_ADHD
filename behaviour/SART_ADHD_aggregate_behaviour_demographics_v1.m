@@ -54,7 +54,10 @@ table_behav_demo.SubID=categorical(table_behav_demo.SubID);
 table_behav_demo.Age=nan(size(table_behav_demo,1),1);
 table_behav_demo.Sex=nan(size(table_behav_demo,1),1);
 table_behav_demo.Education_Years=nan(size(table_behav_demo,1),1);
-table_behav_demo.Subtype=nan(size(table_behav_demo,1),1);
+table_behav_demo.Depression=nan(size(table_behav_demo,1),1);
+table_behav_demo.Anxiety=nan(size(table_behav_demo,1),1);
+table_behav_demo.ReportedSubtype=nan(size(table_behav_demo,1),1);
+table_behav_demo.DIVASubtype=nan(size(table_behav_demo,1),1);
 
 table_behav_demo.ASRS_Inattentiveness=nan(size(table_behav_demo,1),1);
 table_behav_demo.ASRS_Hyperactivity=nan(size(table_behav_demo,1),1);
@@ -67,7 +70,8 @@ table_behav_demo.CAARS_InconsistencyIndex=nan(size(table_behav_demo,1),1);
 table_behav_demo.Epworth=nan(size(table_behav_demo,1),1);
 table_behav_demo.Epworth_Rating=nan(size(table_behav_demo,1),1);
 
-table_behav_demo.Subtype=string(table_behav_demo.Subtype);
+table_behav_demo.ReportedSubtype=string(table_behav_demo.ReportedSubtype);
+table_behav_demo.DIVASubtype=string(table_behav_demo.DIVASubtype);
 table_behav_demo.Sex=string(table_behav_demo.Sex);
 table_behav_demo.CAARS_InconsistencyIndex=string(table_behav_demo.CAARS_InconsistencyIndex);
 table_behav_demo.Epworth_Rating=string(table_behav_demo.Epworth_Rating);
@@ -83,8 +87,16 @@ for k=1:length(unique_IDs)
     table_behav_demo.Education_Years(table_behav_demo.SubID==unique_IDs(k))=...
         table_ques.YearsOfEducation(table_ques.SubID==unique_IDs(k));
 
-    table_behav_demo.Subtype(table_behav_demo.SubID==unique_IDs(k))=...
-        table_ques.Subtype(table_ques.SubID==unique_IDs(k));
+    table_behav_demo.Depression(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.Depression(table_ques.SubID==unique_IDs(k));
+    table_behav_demo.Anxiety(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.Anxiety(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.ReportedSubtype(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.ReportedSubtype(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.DIVASubtype(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.DIVASubtype(table_ques.SubID==unique_IDs(k));
 
     table_behav_demo.ASRS_Inattentiveness(table_behav_demo.SubID==unique_IDs(k))=...
         table_ques.ASRS_Inattentiveness(table_ques.SubID==unique_IDs(k));
