@@ -515,12 +515,12 @@ f1 = figure;
 %             [real_out, ~, perm_out, ~, out_pred_perm] = lme_perm_bygroup(sub_table, 'Group', ...
 %                 sprintf('SW_density~1+%s+pred+Block+(1|SubID)', VOI{nV}), totperm);
                 [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
-                'SW_density~1+Behav_FA+pred+Block+(1|SubID)', totperm); 
+                'SW_density~1+Block+Behav_FA+pred+(1|SubID)', totperm); 
         else
 %             [real_out, ~, perm_out, ~, next_out_pred_perm] = lme_perm_bygroup(sub_table, 'Group', ...
 %                 sprintf('SW_density~1+%s+pred+Block+(1|SubID)', VOI{nV}), totperm, out_pred_perm);
               [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
-                  'SW_density~1+Behav_FA+pred+(1|SubID)',totperm,out_pred_perm);
+                  'SW_density~1+Block+Behav_FA+pred+(1|SubID)',totperm,out_pred_perm);
         end
         
         % Store results
@@ -529,14 +529,17 @@ f1 = figure;
     end
     
     % Perform Cluster-Based Permutation
-    [SW_clusters] = get_clusterperm_lme_bygroup(SW_est, clus_alpha, montecarlo_alpha, totperm, neighbours, 1);
+    SW_est2=SW_est;
+    SW_est2{1}=SW_est{1}(:,[1 2 4 3]);
+    SW_est2{2}=SW_est{2}(:,[1 2 4 3 5]);
+    [SW_clusters] = get_clusterperm_lme_bygroup(SW_est2, clus_alpha, montecarlo_alpha, totperm, neighbours, 1);
     
     % Plotting Results
     cmap2 = cbrewer('div', 'RdBu', 64);
     cmap2 = flipud(cmap2);
-    limMax = 10;
+    limMax = 3;
     
-    temp_topo = SW_est{1}(:, 2);
+    temp_topo = SW_est2{1}(:, 4);
     temp_topo2 = zeros(size(temp_topo));
      
     figure(f1);
@@ -580,11 +583,11 @@ f2 = figure;
         % Run LME for the behavioral variable
         if nE == 1
 
-                [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
-                'SW_density~1+Behav_Miss+pred+Block+(1|SubID)', totperm); 
+                [real_out, ~, perm_out, ~, out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
+                'SW_density~1+Block+Behav_Miss+pred+(1|SubID)', totperm); 
         else
               [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
-                  'SW_density~1+Behav_Miss+pred+(1|SubID)',totperm,out_pred_perm);
+                  'SW_density~1+Block+Behav_Miss+pred+(1|SubID)',totperm,out_pred_perm);
         end
         
         % Store results
@@ -593,14 +596,17 @@ f2 = figure;
     end
     
     % Perform Cluster-Based Permutation
-    [SW_clusters] = get_clusterperm_lme_bygroup(SW_est, clus_alpha, montecarlo_alpha, totperm, neighbours, 1);
+SW_est2=SW_est;
+    SW_est2{1}=SW_est{1}(:,[1 2 4 3]);
+    SW_est2{2}=SW_est{2}(:,[1 2 4 3 5]);
+    [SW_clusters] = get_clusterperm_lme_bygroup(SW_est2, clus_alpha, montecarlo_alpha, totperm, neighbours, 1);
     
     % Plotting Results
     cmap2 = cbrewer('div', 'RdBu', 64);
     cmap2 = flipud(cmap2);
-    limMax = 10;
+    limMax = 3;
     
-    temp_topo = SW_est{1}(:, 2);
+    temp_topo = SW_est{1}(:, 4);
     temp_topo2 = zeros(size(temp_topo));
      
     figure(f2);
@@ -644,10 +650,10 @@ f3 = figure;
         if nE == 1
 
                 [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
-                'SW_density~1+Behav_RT+pred+Block+(1|SubID)', totperm); 
+                'SW_density~1+Block+Behav_RT+pred+(1|SubID)', totperm); 
         else
               [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
-                  'SW_density~1+Behav_RT+pred+(1|SubID)',totperm,out_pred_perm);
+                  'SW_density~1+Block+Behav_RT+pred+(1|SubID)',totperm,out_pred_perm);
         end
         
         % Store results
@@ -656,14 +662,17 @@ f3 = figure;
     end
     
     % Perform Cluster-Based Permutation
-    [SW_clusters] = get_clusterperm_lme_bygroup(SW_est, clus_alpha, montecarlo_alpha, totperm, neighbours, 1);
-    
+   SW_est2=SW_est;
+    SW_est2{1}=SW_est{1}(:,[1 2 4 3]);
+    SW_est2{2}=SW_est{2}(:,[1 2 4 3 5]);
+    [SW_clusters] = get_clusterperm_lme_bygroup(SW_est2, clus_alpha, montecarlo_alpha, totperm, neighbours, 1);
+
     % Plotting Results
     cmap2 = cbrewer('div', 'RdBu', 64);
     cmap2 = flipud(cmap2);
-    limMax = 10;
+    limMax = 3;
     
-    temp_topo = SW_est{1}(:, 2);
+    temp_topo = SW_est{1}(:, 4);
     temp_topo2 = zeros(size(temp_topo));
      
     figure(f3);
@@ -712,77 +721,87 @@ SW_table.Group=reordercats(SW_table.Group,["Control" "ADHD"]);
 
 Groups={'ADHD','Control'};
 VOI={'Behav_FA','Behav_Miss','Behav_RT'};%,'Probe_Vig','Probe_MW','Probe_MB'};
-f1=figure;
-f2=figure;
-f3=figure;
-f4=figure;
+
+
 for nV=1:length(VOI)
-    topo_tV=[];
-    topo_pV=[];
-    topo_comp_tV=[];
-    topo_comp_pV=[];
+    topo_tV{nV}=[];
+    topo_pV{nV}=[];
+    topo_comp_tV{nV}=[];
+    topo_comp_pV{nV}=[];
     for nE=1:length(layout.label)-2
         fprintf('... %g/%g\n',nE,length(layout.label)-2)
         sub_table=SW_table(SW_table.Elec==layout.label(nE),:);
         temp_mdl_byBehav=fitlme(sub_table,sprintf('SW_density~1+%s+Block+(1|SubID)',VOI{nV}));
 
-        topo_tV(nE,1)=temp_mdl_byBehav.Coefficients.tStat(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
-        topo_pV(nE,1)=temp_mdl_byBehav.Coefficients.pValue(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
+        topo_tV{nV}(nE,1)=temp_mdl_byBehav.Coefficients.tStat(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
+        topo_pV{nV}(nE,1)=temp_mdl_byBehav.Coefficients.pValue(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
 
         temp_mdl_byBehav2=fitlme(sub_table,sprintf('SW_density~1+Group*%s+Block+(1|SubID)',VOI{nV}));
         mod_comp=compare(temp_mdl_byBehav,temp_mdl_byBehav2);
-        topo_comp_tV(nE)=mod_comp.LRStat(end);
-        topo_comp_pV(nE)=mod_comp.pValue(end);
+        topo_comp_tV{nV}(nE)=mod_comp.LRStat(end);
+        topo_comp_pV{nV}(nE)=mod_comp.pValue(end);
 
         for nG=1:2
             temp_mdl_byBehav=fitlme(sub_table(sub_table.Group==Groups{nG},:),sprintf('SW_density~1+%s+Block+(1|SubID)',VOI{nV}));
-            topo_tV(nE,nG+1)=temp_mdl_byBehav.Coefficients.tStat(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
-            topo_pV(nE,nG+1)=temp_mdl_byBehav.Coefficients.pValue(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
+            topo_tV{nV}(nE,nG+1)=temp_mdl_byBehav.Coefficients.tStat(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
+            topo_pV{nV}(nE,nG+1)=temp_mdl_byBehav.Coefficients.pValue(find_trials(temp_mdl_byBehav.Coefficients.Name,VOI{nV}));
         end
 
     end
+end
+%%
+all_pval=[];
+for nV=1:length(VOI)
+all_pval=[all_pval ; topo_pV{nV}(:,1) ; topo_pV{nV}(:,2) ; topo_pV{nV}(:,3) ; topo_comp_pV{nV}'];
+end
+FDR_thr=fdr(all_pval,0.05);
+f1=figure;
+f2=figure;
+for nV=1:length(VOI)
     figure(f1);
     subplot(2,3,nV)
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
-    simpleTopoPlot_ft(topo_tV(:,1)', layout,'on',[],0,1);
-    ft_plot_lay_me(layout, 'chanindx', find(topo_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    simpleTopoPlot_ft(topo_tV{nV}(:,1)', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(topo_pV{nV}(:,1)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
     %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     colormap(cmap2);
     title({'All',VOI{nV}})
-    caxis([-1 1]*max(max(abs(topo_tV))))
+    caxis([-1 1]*max(max(abs(topo_tV{nV}))))
     format_fig;
+    colorbar;
 
-    figure(f2);
-    subplot(2,3,nV)
-    cmap2=cbrewer('seq','PuBu',64); %cmap2=flipud(cmap2);
-    simpleTopoPlot_ft(topo_comp_tV', layout,'on',[],0,1);
-    ft_plot_lay_me(layout, 'chanindx', find(topo_comp_pV<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    subplot(2,3,nV+3)
+%     cmap2=cbrewer('seq','PuBu',64); %cmap2=flipud(cmap2);
+    simpleTopoPlot_ft(topo_comp_tV{nV}', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(topo_comp_pV{nV}<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
     %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     colormap(cmap2);
     title({VOI{nV},'Mod Comp'})
-    caxis([0 1]*max((topo_comp_tV)))
+    caxis([0 1]*max((topo_comp_tV{nV})))
     format_fig;
+    colorbar;
 
-    figure(f3);
+    figure(f2);
     subplot(2,3,nV)
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
-    simpleTopoPlot_ft(topo_tV(:,2)', layout,'on',[],0,1);
-    ft_plot_lay_me(layout, 'chanindx', find(topo_pV(:,2)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    simpleTopoPlot_ft(topo_tV{nV}(:,2)', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(topo_pV{nV}(:,2)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
     %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     colormap(cmap2);
     title({'ADHD',VOI{nV}})
-    caxis([-1 1]*max(max(abs(topo_tV))))
+    caxis([-1 1]*6)
     format_fig;
+    colorbar;
 
-    figure(f4);
-    subplot(2,3,nV)
+    subplot(2,3,nV+3)
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
-    simpleTopoPlot_ft(topo_tV(:,3)', layout,'on',[],0,1);
-    ft_plot_lay_me(layout, 'chanindx', find(topo_pV(:,3)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    simpleTopoPlot_ft(topo_tV{nV}(:,3)', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(topo_pV{nV}(:,3)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
     %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     colormap(cmap2);
     title({'Controls',VOI{nV}})
-    caxis([-1 1]*max(max(abs(topo_tV))))
+    caxis([-1 1]*6)
     format_fig;
+    colorbar;
 
 end

@@ -474,7 +474,7 @@ end
   colormap(cmap2);
   colorbar('Ticks',[-5:5]);
 
-  %% Correlation with behaviour (Cluster permutated)
+  %% SWDens x behaviour (Cluster permutated)
 cfg_neighb = [];
 cfg_neighb.method = 'template';
 cfg_neighb.layout = 'EEG1010.lay';
@@ -501,7 +501,7 @@ SW_table.Group = reordercats(SW_table.Group, ["Control", "ADHD"]);
 %VOI = {'Behav_FA', 'Behav_Miss', 'Behav_RT'};%, 'Probe_Vig', 'Probe_MW', 'Probe_MB'};
 f1 = figure;
 
-% for nV = 1:length(VOI)
+% for nV = 1:length(VOI) %% EP - Commented these out for now to make sure that the script is running correctly 
 %     fprintf('Analyzing VOI: %s\n', VOI{nV});
     
     SW_est = cell(1, 2);
@@ -515,12 +515,12 @@ f1 = figure;
 %             [real_out, ~, perm_out, ~, out_pred_perm] = lme_perm_bygroup(sub_table, 'Group', ...
 %                 sprintf('SW_density~1+%s+pred+Block+(1|SubID)', VOI{nV}), totperm);
                 [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
-                'SW_density~1+Behav_FA+pred+Block+(1|SubID)', totperm); 
+                'SW_density~1+Block+Behav_FA+pred+(1|SubID)', totperm); 
         else
 %             [real_out, ~, perm_out, ~, next_out_pred_perm] = lme_perm_bygroup(sub_table, 'Group', ...
 %                 sprintf('SW_density~1+%s+pred+Block+(1|SubID)', VOI{nV}), totperm, out_pred_perm);
               [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
-                  'SW_density~1+Behav_FA+pred+(1|SubID)',totperm,out_pred_perm);
+                  'SW_density~1+Block+Behav_FA+pred+(1|SubID)',totperm,out_pred_perm);
         end
         
         % Store results
@@ -529,14 +529,17 @@ f1 = figure;
     end
     
     % Perform Cluster-Based Permutation
-    [SW_clusters] = get_clusterperm_lme_bygroup(SW_est, clus_alpha, montecarlo_alpha, totperm, neighbours, 1);
+    SW_est2=SW_est;
+    SW_est2{1}=SW_est{1}(:,[1 2 4 3]);
+    SW_est2{2}=SW_est{2}(:,[1 2 4 3 5]);
+    [SW_clusters] = get_clusterperm_lme_bygroup(SW_est2, clus_alpha, montecarlo_alpha, totperm, neighbours, 1);
     
     % Plotting Results
     cmap2 = cbrewer('div', 'RdBu', 64);
     cmap2 = flipud(cmap2);
-    limMax = 10;
+    limMax = 3;
     
-    temp_topo = SW_est{1}(:, 2);
+    temp_topo = SW_est2{1}(:, 4);
     temp_topo2 = zeros(size(temp_topo));
      
     figure(f1);
@@ -568,7 +571,7 @@ f1 = figure;
     end
 % end
 
-%% Miss and RT
+%% Miss  
 f2 = figure; 
     
     SW_est = cell(1, 2);
@@ -580,11 +583,11 @@ f2 = figure;
         % Run LME for the behavioral variable
         if nE == 1
 
-                [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_bygroup(sub_table,'Behav_Miss',...
-                'SW_density~1+Group+pred+Block+(1|SubID)', totperm); 
+                [real_out, ~, perm_out, ~, out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
+                'SW_density~1+Block+Behav_Miss+pred+(1|SubID)', totperm); 
         else
-              [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_bygroup(sub_table,'Behav_Miss',...
-                  'SW_density~1+Group+pred+(1|SubID)',totperm,out_pred_perm);
+              [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
+                  'SW_density~1+Block+Behav_Miss+pred+(1|SubID)',totperm,out_pred_perm);
         end
         
         % Store results
@@ -593,14 +596,17 @@ f2 = figure;
     end
     
     % Perform Cluster-Based Permutation
-    [SW_clusters] = get_clusterperm_lme_bygroup(SW_est, clus_alpha, montecarlo_alpha, totperm, neighbours, 1);
+SW_est2=SW_est;
+    SW_est2{1}=SW_est{1}(:,[1 2 4 3]);
+    SW_est2{2}=SW_est{2}(:,[1 2 4 3 5]);
+    [SW_clusters] = get_clusterperm_lme_bygroup(SW_est2, clus_alpha, montecarlo_alpha, totperm, neighbours, 1);
     
     % Plotting Results
     cmap2 = cbrewer('div', 'RdBu', 64);
     cmap2 = flipud(cmap2);
-    limMax = 10;
+    limMax = 3;
     
-    temp_topo = SW_est{1}(:, 2);
+    temp_topo = SW_est{1}(:, 4);
     temp_topo2 = zeros(size(temp_topo));
      
     figure(f2);
@@ -623,6 +629,72 @@ f2 = figure;
     colorbar
 %     title(sprintf('%s Clusters', VOI{nV}));
     title('Miss')
+
+    if ~isempty(SW_clusters)
+        for nclus = 1:length(SW_clusters)
+            ft_plot_lay_me(layout, 'chanindx', match_str(layout.label, SW_clusters{nclus}{2}), ...
+                'pointsymbol', 'o', 'pointcolor', 'k', 'pointsize', 96, 'box', 'no', 'label', 'no');
+        end
+    end
+
+    %% RT  
+f3 = figure; 
+    
+    SW_est = cell(1, 2);
+    for nE = 1:length(layout.label) - 2
+        fprintf('... Processing electrode %g/%g\n', nE, length(layout.label) - 2);
+        
+        sub_table = SW_table(SW_table.Elec == layout.label(nE), :);
+        
+        % Run LME for the behavioral variable
+        if nE == 1
+
+                [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
+                'SW_density~1+Block+Behav_RT+pred+(1|SubID)', totperm); 
+        else
+              [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_bygroup(sub_table,'Group',...
+                  'SW_density~1+Block+Behav_RT+pred+(1|SubID)',totperm,out_pred_perm);
+        end
+        
+        % Store results
+        SW_est{1} = [SW_est{1}; [nE, real_out]];
+        SW_est{2} = [SW_est{2}; [nE * ones(totperm, 1), perm_out]];
+    end
+    
+    % Perform Cluster-Based Permutation
+   SW_est2=SW_est;
+    SW_est2{1}=SW_est{1}(:,[1 2 4 3]);
+    SW_est2{2}=SW_est{2}(:,[1 2 4 3 5]);
+    [SW_clusters] = get_clusterperm_lme_bygroup(SW_est2, clus_alpha, montecarlo_alpha, totperm, neighbours, 1);
+
+    % Plotting Results
+    cmap2 = cbrewer('div', 'RdBu', 64);
+    cmap2 = flipud(cmap2);
+    limMax = 3;
+    
+    temp_topo = SW_est{1}(:, 4);
+    temp_topo2 = zeros(size(temp_topo));
+     
+    figure(f3);
+%     subplot(1, 3, nV);
+    if ~isempty(SW_clusters)
+        for nclus = 1:length(SW_clusters)
+            if length(match_str(layout.label, SW_clusters{nclus}{2})) < 1 % Minimum cluster size
+                continue;
+            end
+            temp_topo2(match_str(layout.label, SW_clusters{nclus}{2})) = temp_topo(match_str(layout.label, SW_clusters{nclus}{2}));
+            fprintf('Cluster %g: t-value = %g, P_mc = %g\n', nclus, SW_clusters{nclus}{3}, SW_clusters{nclus}{4});
+        end
+    end
+
+    % Topographical Plot
+    simpleTopoPlot_ft(temp_topo, layout, 'on', [], 0, 1);
+    format_fig;
+    caxis([-1 1] * limMax);
+    colormap(cmap2);
+    colorbar
+%     title(sprintf('%s Clusters', VOI{nV}));
+    title('RT')
 
     if ~isempty(SW_clusters)
         for nclus = 1:length(SW_clusters)
@@ -689,8 +761,7 @@ for nV=1:length(VOI)
     caxis([-1 1]*max(max(abs(topo_tV))))
     format_fig;
 
-    figure(f2);
-    subplot(2,3,nV)
+    subplot(2,3,nV+3)
     cmap2=cbrewer('seq','PuBu',64); %cmap2=flipud(cmap2);
     simpleTopoPlot_ft(topo_comp_tV', layout,'on',[],0,1);
     ft_plot_lay_me(layout, 'chanindx', find(topo_comp_pV<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
@@ -700,7 +771,7 @@ for nV=1:length(VOI)
     caxis([0 1]*max((topo_comp_tV)))
     format_fig;
 
-    figure(f3);
+    figure(f2);
     subplot(2,3,nV)
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
     simpleTopoPlot_ft(topo_tV(:,2)', layout,'on',[],0,1);
@@ -711,8 +782,7 @@ for nV=1:length(VOI)
     caxis([-1 1]*max(max(abs(topo_tV))))
     format_fig;
 
-    figure(f4);
-    subplot(2,3,nV)
+    subplot(2,3,nV+3)
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
     simpleTopoPlot_ft(topo_tV(:,3)', layout,'on',[],0,1);
     ft_plot_lay_me(layout, 'chanindx', find(topo_pV(:,3)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
