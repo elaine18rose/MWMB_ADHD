@@ -312,27 +312,27 @@ for nE=1:length(layout.label)-2
     topo_GroupOnSW_pV(nE,2)=temp_mdl_byG.Coefficients.pValue(match_str(temp_mdl_byG.Coefficients.Name,"Group_ADHD:Block"));
 end
 
-cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
-figure;
-subplot(2,1,1)
-simpleTopoPlot_ft(topo_GroupOnSW_tV(:,1)', layout,'on',[],0,1);
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<fdr([topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,2)],0.05)), 'pointsymbol','o','pointcolor',[0 0 0],'pointsize',72,'box','no','label','no');
-colormap(cmap2);
-colorbar('Ticks',[-5:5]);
-title({'SW density','A vs C'})
-caxis([-1 1]*5)
-format_fig;
-
-subplot(2,1,2)
-simpleTopoPlot_ft(topo_GroupOnSW_tV(:,2)', layout,'on',[],0,1);
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<fdr([topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,2)],0.05)), 'pointsymbol','o','pointcolor',[0 0 0],'pointsize',72,'box','no','label','no');
-colormap(cmap2);
-colorbar('Ticks',[-5:5]);
-title({'SW density','Group*Block'})
-caxis([-1 1]*5)
-format_fig;
+% cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
+% figure;
+% subplot(2,1,1)
+% simpleTopoPlot_ft(topo_GroupOnSW_tV(:,1)', layout,'on',[],0,1);
+% ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+% ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<fdr([topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,2)],0.05)), 'pointsymbol','o','pointcolor',[0 0 0],'pointsize',72,'box','no','label','no');
+% colormap(cmap2);
+% colorbar('Ticks',[-5:5]);
+% title({'SW density','A vs C'})
+% caxis([-1 1]*5)
+% format_fig;
+% 
+% subplot(2,1,2)
+% simpleTopoPlot_ft(topo_GroupOnSW_tV(:,2)', layout,'on',[],0,1);
+% ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+% ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<fdr([topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,2)],0.05)), 'pointsymbol','o','pointcolor',[0 0 0],'pointsize',72,'box','no','label','no');
+% colormap(cmap2);
+% colorbar('Ticks',[-5:5]);
+% title({'SW density','Group*Block'})
+% caxis([-1 1]*5)
+% format_fig;
 
 %% SW on behav
 
@@ -382,11 +382,14 @@ for nV=1:length(VOI)
         sub_table.res2=res_mdl2;
         temp_mdl3=fitlme(sub_table,'res1~1+res2+(1|SubID)');
 
+        temp_mdl4=fitlme(sub_table,sprintf('%s~1+Block+SW_density+(1|SubID)',VOI{nV}));
+
         topo_med_tV{nV}(nE,1)=temp_mdl3.Coefficients.tStat(end);
         topo_med_pV{nV}(nE,1)=temp_mdl3.Coefficients.pValue(end);
         topo_med_pV{nV}(nE,2)=temp_mdl2.Coefficients.pValue(match_str(temp_mdl2.Coefficients.Name,'Group_ADHD'));
         topo_med_pV{nV}(nE,3)=temp_mdl2.Coefficients.pValue(match_str(temp_mdl2.Coefficients.Name,'Group_ADHD:Block'));
         topo_med_pV{nV}(nE,4)=max(topo_med_pV{nV}(nE,1),min([topo_med_pV{nV}(nE,2) topo_med_pV{nV}(nE,3)]));
+        topo_med_pV{nV}(nE,4)=temp_mdl4.Coefficients.pValue(match_str(temp_mdl4.Coefficients.Name,'SW_density'));
     end
 end
 
