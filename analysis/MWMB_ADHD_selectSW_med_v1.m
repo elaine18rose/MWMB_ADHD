@@ -73,7 +73,7 @@ colormap(cmap); colorbar;
 load([pwd filesep '..' filesep 'Preproc' filesep 'all_badChannels_badProbes.mat']);
 
 %%
-SW_table=array2table(zeros(0,17),'VariableNames',{'SubID','Group','Block','Elec','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope','SW_threshold','SW_peakneg','SW_peakpos','Probe_MS','Probe_Vig','Behav_Miss','Behav_FA','Behav_RT'});
+SW_table=array2table(zeros(0,18),'VariableNames',{'SubID','Group','Block','Probe','Elec','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope','SW_threshold','SW_peakneg','SW_peakpos','Probe_MS','Probe_Vig','Behav_Miss','Behav_FA','Behav_RT'});
 SW_table.SubID=categorical(SW_table.SubID);
 SW_table.Group=categorical(SW_table.Group);
 SW_table.Elec=categorical(SW_table.Elec);
@@ -206,9 +206,10 @@ for nF=1:length(SW_files)
         table_length=size(SW_table,1);
         SW_table.SubID(table_length+(1:length(labels)))=repmat({SubID},length(labels),1);
         SW_table.Group(table_length+(1:length(labels)))=repmat({GroupID},length(labels),1);
-        SW_table.Block(table_length+(1:length(labels)))=repmat(nBl,length(labels),1);
+        SW_table.Probe(table_length+(1:length(labels)))=repmat(nBl,length(labels),1);
+        SW_table.Block(table_length+(1:length(labels)))=repmat(probe_res(nBl,4),length(labels),1);
         SW_table.Elec(table_length+(1:length(labels)))=labels;
-        SW_table.SW_density(table_length+(1:length(labels)))=slow_Waves_perE(:,1);
+        SW_table.SW_density(table_length+(1 :length(labels)))=slow_Waves_perE(:,1);
         SW_table.SW_amplitude(table_length+(1:length(labels)))=slow_Waves_perE(:,2);
         SW_table.SW_frequency(table_length+(1:length(labels)))=slow_Waves_perE(:,3);
         SW_table.SW_downslope(table_length+(1:length(labels)))=slow_Waves_perE(:,4);
@@ -363,6 +364,7 @@ SW_table.Group=reordercats(SW_table.Group,["Control" "ADHD"]);
 
 Groups={'ADHD','Control'};
 VOI={'Behav_stdRT','Probe_Vig'}; %Miss: not affect by group | FA, MW not MB: not predicted by SW
+VOI={'Behav_stdRT','Behav_FA','Behav_Miss','Behav_RT','Probe_Vig','Probe_MW','Probe_MB'};
 
 
 for nV=1:length(VOI)
