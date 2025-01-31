@@ -364,7 +364,7 @@ SW_table.Group=reordercats(SW_table.Group,["Control" "ADHD"]);
 
 Groups={'ADHD','Control'};
 VOI={'Behav_stdRT','Probe_Vig'}; %Miss: not affect by group | FA, MW not MB: not predicted by SW
-VOI={'Behav_stdRT','Behav_FA','Behav_Miss','Behav_RT','Probe_Vig','Probe_MW','Probe_MB'};
+VOI={'Behav_stdRT','Behav_Miss','Behav_RT','Probe_Vig'};
 
 
 for nV=1:length(VOI)
@@ -410,11 +410,11 @@ for nV=1:length(VOI)
         topo_med_pV{nV}(nE,2)=temp_mdl2.Coefficients.pValue(match_str(temp_mdl2.Coefficients.Name,'Group_ADHD'));
         topo_med_pV{nV}(nE,3)=temp_mdl2.Coefficients.pValue(match_str(temp_mdl2.Coefficients.Name,'Group_ADHD:Block'));
         topo_med_pV{nV}(nE,4)=max(topo_med_pV{nV}(nE,1),min([topo_med_pV{nV}(nE,2) topo_med_pV{nV}(nE,3)]));
-        topo_med_pV{nV}(nE,4)=temp_mdl4.Coefficients.pValue(match_str(temp_mdl4.Coefficients.Name,'SW_density'));
+        topo_med_pV{nV}(nE,5)=temp_mdl4.Coefficients.pValue(match_str(temp_mdl4.Coefficients.Name,'SW_density'));
     end
 end
 
-%%
+%
 all_pval_SWonBehav=[];
 all_pval_med=[];
 for nV=1:length(VOI)
@@ -450,7 +450,7 @@ colorbar;
 f1=figure;
 for nV=1:length(VOI)
     figure(f1);
-    subplot(1,length(VOI),nV)
+    subplot(2,length(VOI)/2,nV)
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
     simpleTopoPlot_ft(topo_SWonBehav_tV{nV}(:,1)', layout,'on',[],0,1);
     ft_plot_lay_me(layout, 'chanindx', find(topo_SWonBehav_pV{nV}(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
@@ -466,7 +466,7 @@ end
 f2=figure;
 for nV=1:length(VOI)
     figure(f2);
-    subplot(1,length(VOI),nV)
+    subplot(2,length(VOI)/2,nV)
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
     simpleTopoPlot_ft(topo_med_tV{nV}(:,1)', layout,'on',[],0,1);
     ft_plot_lay_me(layout, 'chanindx', find(topo_med_pV{nV}(:,4)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
