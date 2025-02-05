@@ -11,6 +11,7 @@ if isempty(findstr(pwd,'thandrillon'))==0
     path_ICAlabel='/Users/thandrillon/WorkGit/projects/ext/ICLabel/';
     path_FMINSEARCHBND='/Users/thandrillon/Work/local/FMINSEARCHBND';
     path_ExGauss='/Users/thandrillon/WorkGit/projects/ext/exgauss/';
+    path_RainClould='/Users/thandrillon/WorkGit/projects/ext/RainCloudPlots';
 else
     path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
     path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
@@ -31,6 +32,7 @@ addpath(path_fieldtrip)
 ft_defaults;
 addpath(genpath(path_ExGauss))
 addpath(genpath(path_FMINSEARCHBND))
+addpath(genpath(path_RainClould))
 
 % select relevant files, here task
 SW_files=dir([preproc_path filesep 'SW_clean_i_probe_*.mat']);
@@ -486,34 +488,61 @@ end
     44,123,182]/256;
 
 
-    %Miss
-    subjects = [];
-    data_to_plot=[];
-    group_labels={'Control','ADHD'};
-    %all_block_table.Group=categorical(all_block_table.Group);
-    for i = 1:4 % number of repetitions
-        for j = 1:2 % number of group
-             subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
-             subject_means = [];
-             for s = 1:length(subjects)
-                 subject_mean = mean(SW_table.Behav_Miss( SW_table.Block == i & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
-                 subject_means = [subject_means; subject_mean];
-             end
-            data_to_plot{i, j} = subject_means;
-        end
-    end
+ %Miss
+     figure; hold on;
+subjects = [];
+ data_to_plot=[];
+ meandata_to_plot=[];
+ group_labels={'Control','ADHD'};
+ %all_block_table.Group=categorical(all_block_table.Group);
+ for j = 1:2 % number of group
+     for i = 1:4 % number of repetitions
+         subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+         subject_means = [];
+         for s = 1:length(subjects)
+             subject_mean = mean(SW_table.Behav_Miss( SW_table.Block == i & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+             subject_means = [subject_means; subject_mean];
+         end
+         data_to_plot{i, j} = subject_means;
+         meandata_to_plot(i, j) = nanmean(subject_means);
+     end
+     plot((1:4)+(2*j-3)*0.1,100*meandata_to_plot(:,j)','Color',Colors(j,:),'LineWidth',4)
 
-    figure; hold on;
-    h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-    set(gca, 'XLim', [0.01 0.25]);
-    xtix = get(gca, 'xtick'); %to change y-axis to percentage
-    set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
+     subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+     subject_means = [];
+     for s = 1:length(subjects)
+         subject_mean = mean(SW_table.Behav_Miss(SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+         subject_means = [subject_means; subject_mean];
+     end
+     data_to_plot_perS{j} = subject_means;
+
+ end
+ for i = 1:4 % number of repetitions
+     for j = 1:2 % number of group
+         simpleDotPlot(i+(2*j-3)*0.1,100*data_to_plot{i, j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+     end
+ end
+
+    set(gca, 'xtick',1:4); %to change y-axis to percentage
     title(['Omission Errors per Block']);
-    xlabel('% of Omission Errors'); ylabel('Block Number');
+    ylabel('% of Omission Errors'); xlabel('Block Number');
     format_fig;
     set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
+ylim([0 0.04]*100)
+xlim([0.5 4.5])
 
-    %False Alarms
+    figure('Position',[2245         400         210         428])
+      for j = 1:2 % number of group
+         simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+     end
+ylim([0 0.04]*100)
+ set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
+    title(['Omission']);
+%     ylabel('% of Omission Errors'); xlabel('Block Number');
+    format_fig;
+    set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
+xlabel('ADHD');
+    %% False Alarms
     subjects =[];
     data_to_plot=[];
     group_labels={'Control','ADHD'};
@@ -538,7 +567,6 @@ end
     xlabel('% of Commission Errors'); ylabel('Block Number');
     format_fig;
     set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
-
     %StdRT
     subjects = [];
     data_to_plot=[];

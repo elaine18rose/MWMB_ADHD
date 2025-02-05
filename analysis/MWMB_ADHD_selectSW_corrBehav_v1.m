@@ -42,7 +42,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 %redo=0;
-all_threshold_SW=readtable([preproc_path filesep 'all_threshold_SW_v2.csv']); %EP - This is 
+all_threshold_SW=readtable([preproc_path filesep 'all_threshold_SW_v2.csv']); %EP - This is
 all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
 all_threshold_SW.Group=categorical(all_threshold_SW.Group);
 all_threshold_SW.Elec=categorical(all_threshold_SW.Elec);
@@ -298,20 +298,20 @@ clear sub_table
 clear temp_mdl_*
 for nCh=1:length(layout.label)-2
     fprintf('... %g/%g\n',nCh,length(layout.label)-2)
-    temp_mdl_RT=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Err==0,:),sprintf('RT~1+%s*Group+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+    temp_mdl_RT=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Err==0,:),sprintf('RT~1+%s+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
 
     topo_tV_RT(nCh,1)=temp_mdl_RT.Coefficients.tStat(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
     topo_pV_RT(nCh,1)=temp_mdl_RT.Coefficients.pValue(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
 
-    temp_aov_RT=anova(temp_mdl_RT);
-    topo_FV_int_RT(nCh)=temp_aov_RT.FStat(match_str(temp_aov_RT.Term,sprintf('Group:SW_%s',layout.label{nCh})));
-    topo_pV_int_RT(nCh)=temp_aov_RT.pValue(match_str(temp_aov_RT.Term,sprintf('Group:SW_%s',layout.label{nCh})));
-
-    for nG=1:2
-        temp_mdl_RT=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Err==0 & SW_table_perT.Group==Group_labels{nG},:),sprintf('RT~1+%s+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
-        topo_tV_RT(nCh,nG+1)=temp_mdl_RT.Coefficients.tStat(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
-        topo_pV_RT(nCh,nG+1)=temp_mdl_RT.Coefficients.pValue(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
-    end
+%     temp_aov_RT=anova(temp_mdl_RT);
+%     topo_FV_int_RT(nCh)=temp_aov_RT.FStat(match_str(temp_aov_RT.Term,sprintf('Group:SW_%s',layout.label{nCh})));
+%     topo_pV_int_RT(nCh)=temp_aov_RT.pValue(match_str(temp_aov_RT.Term,sprintf('Group:SW_%s',layout.label{nCh})));
+% 
+%     for nG=1:2
+%         temp_mdl_RT=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Err==0 & SW_table_perT.Group==Group_labels{nG},:),sprintf('RT~1+%s+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+%         topo_tV_RT(nCh,nG+1)=temp_mdl_RT.Coefficients.tStat(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+%         topo_pV_RT(nCh,nG+1)=temp_mdl_RT.Coefficients.pValue(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+%     end
 end
 
 cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
@@ -414,20 +414,20 @@ clear sub_table
 clear temp_mdl_*
 for nCh=1:length(layout.label)-2
     fprintf('... %g/%g\n',nCh,length(layout.label)-2)
-    temp_mdl_Err=fitlme(SW_table_perT(SW_table_perT.Type=='Go',:),sprintf('Err~1+%s*Group+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+    temp_mdl_Err=fitlme(SW_table_perT(SW_table_perT.Type=='Go',:),sprintf('Err~1+%s+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
 
     topo_tV_Err(nCh,1)=temp_mdl_Err.Coefficients.tStat(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
     topo_pV_Err(nCh,1)=temp_mdl_Err.Coefficients.pValue(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
 
-    temp_aov_Err=anova(temp_mdl_Err);
-    topo_FV_int_Err(nCh)=temp_aov_Err.FStat(match_str(temp_aov_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
-    topo_pV_int_Err(nCh)=temp_aov_Err.pValue(match_str(temp_aov_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
-
-    for nG=1:2
-        temp_mdl_Err=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Group==Group_labels{nG},:),sprintf('Err~1+%s+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
-        topo_tV_Err(nCh,nG+1)=temp_mdl_Err.Coefficients.tStat(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
-        topo_pV_Err(nCh,nG+1)=temp_mdl_Err.Coefficients.pValue(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
-    end
+%     temp_aov_Err=anova(temp_mdl_Err);
+%     topo_FV_int_Err(nCh)=temp_aov_Err.FStat(match_str(temp_aov_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
+%     topo_pV_int_Err(nCh)=temp_aov_Err.pValue(match_str(temp_aov_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
+% 
+%     for nG=1:2
+%         temp_mdl_Err=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Group==Group_labels{nG},:),sprintf('Err~1+%s+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+%         topo_tV_Err(nCh,nG+1)=temp_mdl_Err.Coefficients.tStat(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+%         topo_pV_Err(nCh,nG+1)=temp_mdl_Err.Coefficients.pValue(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+%     end
 end
 
 cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
@@ -465,7 +465,7 @@ clear sub_table
 clear temp_mdl_*
 for nCh=1:length(layout.label)-2
     fprintf('... %g/%g\n',nCh,length(layout.label)-2)
-    temp_mdl_NoGo_Err=fitlme(SW_table_perT(SW_table_perT.Type=='NoGo',:),sprintf('Err~1+%s+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+    temp_mdl_NoGo_Err=fitlme(SW_table_perT(SW_table_perT.Type=='NoGo',:),sprintf('Err~1+Probe+%s+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
 
     topo_tV_NoGo_Err(nCh,1)=temp_mdl_NoGo_Err.Coefficients.tStat(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
     topo_pV_NoGo_Err(nCh,1)=temp_mdl_NoGo_Err.Coefficients.pValue(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
@@ -474,11 +474,11 @@ for nCh=1:length(layout.label)-2
 %     topo_FV_int_NoGo_Err(nCh)=temp_aov_NoGo_Err.FStat(match_str(temp_aov_NoGo_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
 %     topo_pV_int_NoGo_Err(nCh)=temp_aov_NoGo_Err.pValue(match_str(temp_aov_NoGo_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
 
-    for nG=1:2
-        temp_mdl_NoGo_Err=fitlme(SW_table_perT(SW_table_perT.Type=='NoGo' & SW_table_perT.Group==Group_labels{nG},:),sprintf('Err~1+%s+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
-        topo_tV_NoGo_Err(nCh,nG+1)=temp_mdl_NoGo_Err.Coefficients.tStat(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
-        topo_pV_NoGo_Err(nCh,nG+1)=temp_mdl_NoGo_Err.Coefficients.pValue(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
-    end
+%     for nG=1:2
+%         temp_mdl_NoGo_Err=fitlme(SW_table_perT(SW_table_perT.Type=='NoGo' & SW_table_perT.Group==Group_labels{nG},:),sprintf('Err~1+%s+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+%         topo_tV_NoGo_Err(nCh,nG+1)=temp_mdl_NoGo_Err.Coefficients.tStat(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+%         topo_pV_NoGo_Err(nCh,nG+1)=temp_mdl_NoGo_Err.Coefficients.pValue(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+%     end
 end
 
 cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
