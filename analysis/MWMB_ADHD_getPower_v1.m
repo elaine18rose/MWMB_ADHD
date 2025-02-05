@@ -513,17 +513,20 @@ end
 legend;
 xlabel('Frequency (Hz)');
 ylabel('Power');
-title('Group Differences in Power - Pz');
+title('Group Differences in Power - Fz');
+format_fig
 hold off;
 
 %% Topo of Sig PS cluster found for Fz
-freq_band = [3 8.7];
+sig_freq_range = newfaxis(sig_freqs);
+freq_band = [min(sig_freq_range) max(sig_freq_range)];
 freq_idx = pow.freq >= freq_band(1) & pow.freq <= freq_band(2);
-avg_power = mean(all_pow(:, :, freq_idx), 3); % Participants x Channels
+%avg_power = mean(all_pow(:, :, freq_idx), 3); % Participants x Channels
 
 % adhd_idx    = find(design_PowData == 1);  
 % control_idx = find(design_PowData == 0); 
 
+%ADHD Topo
 temp_topo_adhd = [];
 topo_adhd = [];
 for nCh = 1:length(layout.label)-2
@@ -539,7 +542,7 @@ title('Sig Cluster found for Fz - ADHD');
 caxis([-1.8 -1]) 
 format_fig;
 
-
+%Control Topo
 temp_topo_control = [];
 topo_control = [];
 for nCh = 1:length(layout.label)-2
@@ -559,6 +562,7 @@ format_fig;
 topo_tval = STATS.tstat; % T-values for each channel
 topo_pval = P;           % P-values for each channel
 
+fdr_sig = fdr(topo_pval, 0.05);
 
 subplot(1,3,3)
 simpleTopoPlot_ft(topo_tval, layout,'on',[],0,1);
@@ -569,11 +573,67 @@ title('Diff btw Group (ADHD-CTR)(tvalue)')
 sig_elec =[];
 sig_elec = find(topo_pval < 0.05);
 
+%Plotting uncorrected sig electrodes
 if ~isempty(sig_elec)
-    ft_plot_lay_me(layout, 'chanindx',sig_elec,'pointsymbol','o','pointcolor','k','pointsize',64,'box','no','label','no')
+    ft_plot_lay_me(layout, 'chanindx',sig_elec,'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',64,'box','no','label','no')
 end
+
+%Plotting FDR-corrected sig electrodes 
+ft_plot_lay_me(layout, 'chanindx', find(topo_pval < fdr_sig),'pointsymbol', 'o', 'pointcolor', [0 0 0], 'pointsize', 64, 'box', 'no', 'label', 'no');
 caxis([-1 1]*2.5)
 format_fig;
+
+%% APERIODIC: Cluster perm to see if there are sig group diff between pow and freq 
+thisCh=match_str(chLabels,'Fz'); %Pz, Fz, Cz, Oz
+Group_A=squeeze(all_osci(match_str(group_PowData,'Control'),thisCh,faxis>1 & faxis<15)); % 3:end removes NA columns
+Group_B=squeeze(all_osci(match_str(group_PowData,'ADHD'),thisCh,faxis>1 & faxis<15));
+
+% Group_A=squeeze(all_pow(match_str(group_PowData,'Control'),thisCh,faxis>1 & faxis<15)); % 3:end removes NA columns
+% Group_B=squeeze(all_pow(match_str(group_PowData,'ADHD'),thisCh,faxis>1 & faxis<15));
+
+newfaxis=faxis(faxis>1 & faxis<15); 
+
+Groups=[ones(size(Group_A,1),1) ; 2*ones(size(Group_B,1),1)];
+totPerm=1000;
+[realpos]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.05,0.05,totPerm,faxis,[],[]); % Runs an ANOVA - Main effect of group on the diff
+% Change 2nd val after Groups to 0.1 
+
+%significant_freqs = faxis(realpos.clusters == 1);
+% disp(['Significant frequencies: ', num2str(significant_freqs)]);
+for nF=1:length(newfaxis)
+[p,anovatab,stats] =anova1([Group_A(:,nF) ; Group_B(:,nF)],Groups,'off');
+allFvalues(nF)=anovatab{2,5};
+allPvalues(nF)=p;
+end
+
+
+if realpos.pmonte < 0.05 % Check if the cluster is significant
+    sig_freqs = find(realpos.clusters); % Extract significant frequency indices
+else
+    sig_freqs = [];
+end
+
+figure;
+hold on;
+plot(newfaxis, mean(Group_A, 1), 'b', 'DisplayName', 'Control');
+plot(newfaxis, mean(Group_B, 1), 'r', 'DisplayName', 'ADHD');
+
+% Highlight significant regions
+ylimits = ylim;
+if ~isempty(sig_freqs)
+    sig_freq_values = newfaxis(sig_freqs); % Map indices to frequency values
+    fill([sig_freq_values, fliplr(sig_freq_values)], ...
+         [ylimits(1)*ones(1, length(sig_freq_values)), ylimits(2)*ones(1, length(sig_freq_values))], ...
+         'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', 'Significant');
+end
+
+legend;
+xlabel('Frequency (Hz)');
+ylabel('Power');
+title('Group Differences in Power - Fz');
+format_fig
+hold off;
+
 
 %% Alpha 
 % fractal.foofparams: 1: Centre frequency, 2: power and 3: width

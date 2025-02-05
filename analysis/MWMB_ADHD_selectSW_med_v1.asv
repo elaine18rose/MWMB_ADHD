@@ -589,40 +589,40 @@ end
     %% block-level stats
 
 % FAs/Commission Errors
-mdlblockFA0    = fitlme(SW_table,'Behav_FA~1+Block+Group+(1|SubID)'); 
+mdlblockFA0    = fitlme(SW_table,'Behav_FA~1+Block+Group+(1|SubID)'); % 
 mdlblockFA1    = fitlme(SW_table,'Behav_FA~1+Block*Group+(1|SubID)');
-mdlblockFA2    = fitlme(SW_table,'Behav_FA~1+Block*Group+(Block|SubID)'); % Winning AIC & BIC model but will be presenting stat results from mdlblockFA1 to keep it consistent with the SW models where Block wasn't put as a random slope
+mdlblockFA2    = fitlme(SW_table,'Behav_FA~1+Block*Group+(Block|SubID)'); % Winning AIC & BI model - Group: p =.02, BlockN: p <.001
  %%% Extract fit statistics for each model
-% AIC_values = [mdlblockFA0.ModelCriterion.AIC, mdlblockFA1.ModelCriterion.AIC, mdlblockFA2.ModelCriterion.AIC];
-% BIC_values = [mdlblockFA0.ModelCriterion.BIC, mdlblockFA1.ModelCriterion.BIC, mdlblockFA2.ModelCriterion.BIC];
-% % Display results in a table
-% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
-% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
-% disp(fit_table);
+AIC_values = [mdlblockFA0.ModelCriterion.AIC, mdlblockFA1.ModelCriterion.AIC, mdlblockFA2.ModelCriterion.AIC];
+BIC_values = [mdlblockFA0.ModelCriterion.BIC, mdlblockFA1.ModelCriterion.BIC, mdlblockFA2.ModelCriterion.BIC];
+% Display results in a table
+ModelNames = {'Model 0', 'Model 1', 'Model 2'};
+fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
+disp(fit_table);
 
-anova(mdlblockFA1)
+anova(mdlblockFA2)
 
 
 % Misses/Omission Errors
-mdlblockMiss0  = fitlme(SW_table,'Behav_Miss~1+Block+Group+(1|SubID)');
-mdlblockMiss1  = fitlme(SW_table,'Behav_Miss~1+Block*Group+(1|SubID)');
-mdlblockMiss2  = fitlme(SW_table,'Behav_Miss~1+Block*Group+(Block|SubID)'); % Winning AIC and BIC model 
-%  %%% Extract fit statistics for each model
-% AIC_values = [mdlblockMiss0.ModelCriterion.AIC, mdlblockMiss1.ModelCriterion.AIC, mdlblockMiss2.ModelCriterion.AIC];
-% BIC_values = [mdlblockMiss0.ModelCriterion.BIC, mdlblockMiss1.ModelCriterion.BIC, mdlblockMiss2.ModelCriterion.BIC];
-% % Display results in a table
-% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
-% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
-% disp(fit_table);
+mdlblockMiss0  = fitlme(all_block_table,'Misses~1+BlockN+Group+(1|SubID)');
+mdlblockMiss1  = fitlme(all_block_table,'Misses~1+BlockN*Group+(1|SubID)');
+mdlblockMiss2  = fitlme(all_block_table,'Misses~1+BlockN*Group+(BlockN|SubID)'); % Winning AIC and BIC model - Group: p = .34, BlockN: p = .003
+ %%% Extract fit statistics for each model
+AIC_values = [mdlblockMiss0.ModelCriterion.AIC, mdlblockMiss1.ModelCriterion.AIC, mdlblockMiss2.ModelCriterion.AIC];
+BIC_values = [mdlblockMiss0.ModelCriterion.BIC, mdlblockMiss1.ModelCriterion.BIC, mdlblockMiss2.ModelCriterion.BIC];
+% Display results in a table
+ModelNames = {'Model 0', 'Model 1', 'Model 2'};
+fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
+disp(fit_table);
 
-anova(mdlblockMiss1)
+anova(mdlblockMiss2)
 
 
 % Mean RT per block
-mdlblockRT0  = fitlme(SW_table,'Behav_RT~1+Block+Group+(1|SubID)'); 
-mdlblockRT1  = fitlme(SW_table,'Behav_RT~1+Block*Group+(1|SubID)');% Winning model for AIC & BIC
-mdlblockRT2  = fitlme(SW_table,'Behav_RT~1+Block*Group+(Block|SubID)'); 
-%  %% Extract fit statistics for each model
+mdlblockRT0  = fitlme(all_block_table,'RT~1+BlockN+Group+(1|SubID)'); % Winning model for BIC - Group: p = .581, BlockN: p = .324
+mdlblockRT1  = fitlme(all_block_table,'RT~1+BlockN*Group+(1|SubID)');
+mdlblockRT2  = fitlme(all_block_table,'RT~1+BlockN*Group+(BlockN|SubID)'); % Winning model for AIC - Group: p = .734, BlockN: p = .867
+ %%% Extract fit statistics for each model
 % AIC_values = [mdlblockRT0.ModelCriterion.AIC, mdlblockRT1.ModelCriterion.AIC, mdlblockRT2.ModelCriterion.AIC];
 % BIC_values = [mdlblockRT0.ModelCriterion.BIC, mdlblockRT1.ModelCriterion.BIC, mdlblockRT2.ModelCriterion.BIC];
 % % Display results in a table
@@ -630,14 +630,14 @@ mdlblockRT2  = fitlme(SW_table,'Behav_RT~1+Block*Group+(Block|SubID)');
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
 
-anova(mdlblockRT1)
+anova(mdlblockRT2)
 
 
 % Standard Deviation of Reaction Times
-mdlblockstdRT0 = fitlme(SW_table,'Behav_stdRT~1+Block+Group+(1|SubID)'); 
-mdlblockstdRT1 = fitlme(SW_table,'Behav_stdRT~1+Block*Group+(1|SubID)');
-mdlblockstdRT2 = fitlme(SW_table,'Behav_stdRT~1+Block*Group+(Block|SubID)');
-%%% Extract fit statistics for each model
+mdlblockstdRT0 = fitlme(all_block_table,'stdRT~1+BlockN+Group+(1|SubID)'); % Winning model - Group: p = .037, BlockN: p <.001
+mdlblockstdRT1 = fitlme(all_block_table,'stdRT~1+BlockN*Group+(1|SubID)');
+mdlblockstdRT2 = fitlme(all_block_table,'stdRT~1+BlockN*Group+(BlockN|SubID)');
+% %% Extract fit statistics for each model
 % AIC_values = [mdlblockstdRT0.ModelCriterion.AIC, mdlblockstdRT1.ModelCriterion.AIC, mdlblockstdRT1.ModelCriterion.AIC];
 % BIC_values = [mdlblockstdRT0.ModelCriterion.BIC, mdlblockstdRT1.ModelCriterion.BIC, mdlblockstdRT1.ModelCriterion.BIC];
 % % Display results in a table
@@ -645,4 +645,4 @@ mdlblockstdRT2 = fitlme(SW_table,'Behav_stdRT~1+Block*Group+(Block|SubID)');
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
 
-anova(mdlblockstdRT1)
+anova(mdlblockstdRT0)

@@ -66,7 +66,6 @@ for nF=1:length(files)
 %         continue;
 %     end
 
-    %%% Fix the following when removing probes for by probe ERP analysis
     behav_files = dir([behav_path filesep 'wanderIM_behavres_' SubID '_*.mat']);
     if isempty(behav_files)
         warning('Cannot find the behavioral file for %s\n', SubID);
@@ -74,7 +73,6 @@ for nF=1:length(files)
     end
     if exist([preproc_path  filesep 'ERP_' file_name])==0 || redo==1 || nF==1 
         table=load([behav_path behav_files.name]);  
-%         old_table=readtable([save_path filesep 'CTET_ADHD_behav_' SubID '.txt']);  %%% !! Fix the following when removing probesfor by probe ERP analysis
         orifile=dir([data_path filesep 'ID-' SubID '.eeg']);
         
         nFc=nFc+1;

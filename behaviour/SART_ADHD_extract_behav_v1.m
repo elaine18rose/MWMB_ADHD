@@ -353,6 +353,7 @@ if flag_figures == 1
     set(gca,'XLim', [0 20], 'YLim',ylim.*[1 1.5]); % set(gca,'XLim', [-10 110], 'YLim', ylim.*[0.5 1.7]);
     format_fig; title('MISS'); legend([h1{1} h2{1}], {'Controls', 'ADHDs'});
     set(gca,'YColor','none') % removes Y-axis
+    set(gca, 'YColor', 'none', 'FontSize', 14, 'LineWidth', 1.5);
 
     [h,p,ci,stats] = ttest2(Miss_CTR,Miss_ADHD);
     % Misseffect = meanEffectSize(Miss_CTR,Miss_ADHD);
@@ -452,7 +453,7 @@ if flag_figures == 1
     all_block_table.Group=categorical(all_block_table.Group);
     for i = 1:4 % number of repetitions
         for j = 1:2 % number of group
-            data_to_plot{i, j} = all_block_table.Misses(all_block_table.BlockN==i & all_block_table.Group==group_labels{j});
+            data_to_plot{i, j} = all_block_table.Miss(all_block_table.BlockN==i & all_block_table.Group==group_labels{j});
         end
     end
 
@@ -464,6 +465,7 @@ if flag_figures == 1
     title(['Misses per Block']);
     xlabel('Percentage of Misses'); ylabel('Block Number');
     format_fig;
+    set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
 
     %False Alarms
     data_to_plot=[];
@@ -482,6 +484,7 @@ if flag_figures == 1
     title(['False alarms per Block']);
     xlabel('Percentage of False Alarms'); ylabel('Block Number');
     format_fig;
+    set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
 
     %StdRT
     data_to_plot=[];
@@ -498,22 +501,24 @@ if flag_figures == 1
     title(['Standard Deviation of Hit Reaction Times per Block']);
     xlabel('Standard Deviation of Reaction Times (seconds)'); ylabel('Block Number');
     format_fig;
+    set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
 
     %Hit RT
     data_to_plot=[];
     group_labels={'C','A'};
     for i = 1:4 % number of repetitions
         for j = 1:2 % number of group
-            data_to_plot{i, j} = all_block_table.RT(all_block_table.BlockN==i  & all_block_table.Group==group_labels{j});
+            data_to_plot{i, j} = all_block_table.HitRT(all_block_table.BlockN==i  & all_block_table.Group==group_labels{j});
         end
     end
 
     figure; hold on;
     h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-    set(gca, 'XLim', [0 .75]);
+    set(gca, 'XLim', [0.1 .75]);
     title(['Hit Reaction Times per Block']);
     xlabel('Reaction Times (seconds)'); ylabel('Block Number');
     format_fig;
+    set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
 
     % D prime
     data_to_plot=[];
@@ -530,6 +535,7 @@ if flag_figures == 1
     title(['D prime per Block']);
     xlabel('D Prime'); ylabel('Block Number');
     format_fig;
+    set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
 
     % Criterion 
         data_to_plot=[];
@@ -546,6 +552,7 @@ if flag_figures == 1
     title(['Criterion per Block']);
     xlabel('Criterion'); ylabel('Block Number');
     format_fig;
+    set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
 
     % Coefficient of Variation (CV) using Hit RT - !!need to fix code!! 
 %     data_to_plot=[];

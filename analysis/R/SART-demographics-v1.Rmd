@@ -104,11 +104,11 @@ cor.test(x=CAARSInattentiveness$Group, y=CAARSInattentiveness$CAARSInattentivene
 # ---- Making a CAARS Dataset with Threshold Using Average Dataset ---- 
 # Here we're excluding control participants who score above 60 as well as those flagged with havig inconsistent CAARS scores
 # dataset2 <- dataset[is.na(dataset$CAARS_ADHDIndex)==FALSE,]
-CAARSInattentivenessTH <- dataset2 %>% 
-  filter((Group == "Control" & CAARS_Inattentiveness <61 & CAARS_InconsistencyIndex==0 | (Group == "ADHD" & CAARS_InconsistencyIndex==0)))
-CAARSHyperactivityTH <-  dataset2 %>% filter((Group == "CTR" & CAARS_Hyperactivity <61) & CAARS_InconsistencyIndex==0 | (Group == "ADHD" & CAARS_InconsistencyIndex==0))
-CAARSTotalADHDSymptomsTH <- dataset2 %>% filter((Group == "CTR" & CAARS_TotalADHDSymptoms <61) & CAARS_InconsistencyIndex==0 | (Group == "ADHD" & CAARS_InconsistencyIndex==0))
-CAARSADHDIndexTH <- dataset2 %>% filter((Group == "CTR" & CAARS_ADHDIndex <61) & CAARS_InconsistencyIndex==0 | (Group == "ADHD" & CAARS_InconsistencyIndex==0))
+CAARSInattentivenessTH <- dataset %>% 
+  filter((Group == "Control" & CAARS_Inattentiveness <61 & CAARS_InconsistencyIndex==0))# | (Group == "ADHD" & CAARS_InconsistencyIndex==0)))
+CAARSHyperactivityTH <-  dataset %>% filter((Group == "Control" & CAARS_Hyperactivity <61) & CAARS_InconsistencyIndex==0 ) #| (Group == "ADHD" & CAARS_InconsistencyIndex==0))
+CAARSTotalADHDSymptomsTH <- dataset %>% filter((Group == "Control" & CAARS_TotalADHDSymptoms <61) | (Group == "ADHD" ))#& CAARS_InconsistencyIndex==0))
+CAARSADHDIndexTH <- dataset %>% filter((Group == "Control" & CAARS_ADHDIndex <61) |  (Group == "ADHD"))#& CAARS_InconsistencyIndex==0))
 
 # #65 was the threshold chosen so that ADHD is 'much above average' and 61 for controls so they're, at most,'slightly above average'
 # 
@@ -120,7 +120,7 @@ CAARSADHDIndexTH <- dataset2 %>% filter((Group == "CTR" & CAARS_ADHDIndex <61) &
 ```
 
 ```{r}
-#Boxplot for CAARS ADHD Index and Group ----
+#Boxplot for CAARS ADHD Index and Total ADHD symptoms ----
 Colors = c( "#56B4E9", "#E69F00")
 
 CAARSADHDIndexTH2 <- CAARSADHDIndexTH %>%
@@ -128,9 +128,8 @@ CAARSADHDIndexTH2 <- CAARSADHDIndexTH %>%
   summarise(CAARS_ADHDIndex = mean(CAARS_ADHDIndex))
 CAARSADHDIndexTH2 <- CAARSADHDIndexTH2 %>%
   mutate(Group = case_when(
-    startsWith(SubID, "A") ~ "ADHD", 
-    startsWith(SubID, "C") ~ "CONTROL"
-  ))
+      startsWith(as.character(SubID), "A") ~ "ADHD",
+      startsWith(as.character(SubID), "C") ~ "CONTROL"))
 
 ggplot(CAARSADHDIndexTH2, aes(x = Group, y = CAARS_ADHDIndex)) + 
   geom_boxplot(aes(fill = Group), fill= Colors) +
@@ -138,6 +137,20 @@ ggplot(CAARSADHDIndexTH2, aes(x = Group, y = CAARS_ADHDIndex)) +
   xlab("Group") + ylab("CAARS ADHD Index") +
     theme_classic()+ theme(text=element_text(size = 35), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"))
 
+
+dataset2 <- dataset %>%
+  group_by(SubID) %>%
+  summarise(CAARS_TotalADHDSymptoms = mean(CAARS_TotalADHDSymptoms))
+dataset2 <- dataset2 %>%
+  mutate(Group = case_when(
+      startsWith(as.character(SubID), "A") ~ "ADHD",
+      startsWith(as.character(SubID), "C") ~ "CONTROL"))
+
+ggplot(dataset2, aes(x = Group, y = CAARS_TotalADHDSymptoms)) + 
+  geom_boxplot(aes(fill = Group), fill= Colors) +
+    geom_jitter(shape = 20, position = position_jitter(width = 0.21), size = 5) +
+  xlab("Group") + ylab("CAARS Total ADHD Symptoms") +
+    theme_classic()+ theme(text=element_text(size = 35), axis.text = element_text(face="bold"), axis.title = element_text(face = "bold"), legend.title = element_text(face = "bold"))
 
 ```
 
@@ -150,10 +163,9 @@ CAARSADHDIndex <- dataset %>%
   group_by(SubID) %>%
   summarise(CAARSADHDIndex = mean(CAARS_ADHDIndex))
 CAARSADHDIndex <- CAARSADHDIndex %>%
-  mutate(Group = case_when(
-    startsWith(SubID, "A") ~ "ADHD", 
-    startsWith(SubID, "C") ~ "Control"
-  ))
+ mutate(Group = case_when(
+      startsWith(as.character(SubID), "A") ~ "ADHD",
+      startsWith(as.character(SubID), "C") ~ "CONTROL"))
 
 # CAARSInconsistencyIndex <- dataset %>%
 #   group_by(SubID) %>%
@@ -172,10 +184,9 @@ ggplot(data = CAARSADHDIndex, aes(x = Group, y = CAARSADHDIndex)) +
 
 #CAARS Inattentive Symptoms  ----
 CAARSInattentiveness <- CAARSInattentiveness %>%
-  mutate(Group = case_when(
-    startsWith(SubID, "A") ~ "ADHD", 
-    startsWith(SubID, "C") ~ "CONTROL"
-  ))
+ mutate(Group = case_when(
+      startsWith(as.character(SubID), "A") ~ "ADHD",
+      startsWith(as.character(SubID), "C") ~ "CONTROL"))
 
 ggplot(CAARSInattentiveness, aes(x = Group, y = CAARSInattentiveness)) + 
   geom_boxplot(aes(fill = Group), fill= Colors, outlier.shape=NA) +
@@ -185,10 +196,9 @@ ggplot(CAARSInattentiveness, aes(x = Group, y = CAARSInattentiveness)) +
 
 #CAARS Hyperactive Symptoms  ----
 CAARSHyperactivity <- CAARSHyperactivity %>%
-  mutate(Group = case_when(
-    startsWith(SubID, "A") ~ "ADHD", 
-    startsWith(SubID, "C") ~ "CONTROL"
-  ))
+ mutate(Group = case_when(
+      startsWith(as.character(SubID), "A") ~ "ADHD",
+      startsWith(as.character(SubID), "C") ~ "CONTROL"))
 
 ggplot(CAARSHyperactivity, aes(x = Group, y = CAARSHyperactivity)) + 
   geom_boxplot(aes(fill = Group), fill= Colors) +
@@ -199,10 +209,9 @@ ggplot(CAARSHyperactivity, aes(x = Group, y = CAARSHyperactivity)) +
 
 #Total Symptoms
 CAARSTotalADHDSymptoms <- CAARSTotalADHDSymptoms %>%
-  mutate(Group = case_when(
-    startsWith(SubID, "A") ~ "ADHD", 
-    startsWith(SubID, "C") ~ "CONTROL"
-  ))
+ mutate(Group = case_when(
+      startsWith(as.character(SubID), "A") ~ "ADHD",
+      startsWith(as.character(SubID), "C") ~ "CONTROL"))
 
 ggplot(CAARSTotalADHDSymptoms, aes(x = Group, y = CAARS_TotalADHDSymptoms)) + 
   geom_boxplot(aes(fill = Group), fill= Colors) +
@@ -213,11 +222,29 @@ ggplot(CAARSTotalADHDSymptoms, aes(x = Group, y = CAARS_TotalADHDSymptoms)) +
 
 ```
 ```{r}
+# testing normality for ttest ----
+# Separate data by group
+adhd_group <- dataset %>% filter(Group == "ADHD")
+adhd_group <- adhd_group %>% 
+  group_by(SubID) %>%
+  summarise(CAARSADHDIndex = mean(CAARS_ADHDIndex),
+            CAARSTotalADHDSymptoms = mean(CAARS_TotalADHDSymptoms))
+control_group <- dataset %>% filter(Group == "Control")
+control_group <- control_group %>%
+    group_by(SubID) %>%
+  summarise(CAARSADHDIndex = mean(CAARS_ADHDIndex),
+            CAARSTotalADHDSymptoms = mean(CAARS_TotalADHDSymptoms))
+# Test normality 
+shapiro.test(adhd_group$CAARSTotalADHDSymptoms) 
+shapiro.test(adhd_group$CAARSADHDIndex) 
+shapiro.test(control_group$CAARSTotalADHDSymptoms) 
+shapiro.test(control_group$CAARSADHDIndex) 
+
 # ---- t-test CAARS scores and group ----
-t.test(CAARSADHDIndex ~ Group, data = CAARSADHDIndex)
-t.test(CAARSInattentiveness ~ Group, data = CAARSInattentiveness)
-t.test(CAARSHyperactivity ~ Group, data = CAARSHyperactivity)
-t.test(CAARS_TotalADHDSymptoms ~ Group, data = CAARSTotalADHDSymptoms)
+t.test(CAARS_ADHDIndex ~ Group, data = dataset)
+# t.test(CAARSInattentiveness ~ Group, data = CAARSInattentiveness)
+# t.test(CAARSHyperactivity ~ Group, data = CAARSHyperactivity)
+t.test(CAARS_TotalADHDSymptoms ~ Group, data = dataset)
 
 # partial correlation for SWD and ADHD Index ----
 CAARSADHDIndex$Group<-c(ADHD=1,CONTROL=2)[CAARSADHDIndex$Group]

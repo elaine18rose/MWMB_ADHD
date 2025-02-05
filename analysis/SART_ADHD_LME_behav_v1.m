@@ -12,6 +12,7 @@ else
     path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
     path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
     path_RainCloudPlot='/Users/elaine/desktop/MATLAB_Functions/RainCloudPlots/';
+    path_chi2test= '/Users/elaine/desktop/MATLAB_Functions/chi2test/';
     behav_path = '/Volumes/Seagate/MWMB_ADHD_SART/Behaviour/';
     preproc_path='/Volumes/Seagate/MWMB_ADHD_SART/preproc/';
     path_detectSW = '/Volumes/Seagate/MWMB_ADHD_SART/SW_detection/';
@@ -23,6 +24,7 @@ end
 addpath(genpath(path_LSCPtools))
 addpath(genpath(path_RainCloudPlot));
 addpath(path_fieldtrip)
+addpath(path_chi2test)
 ft_defaults;
 % addpath(genpath(path_ExGauss))
 % addpath(genpath(path_FMINSEARCHBND))
@@ -50,6 +52,17 @@ behav_demo_table.DIVASubtype=categorical(behav_demo_table.DIVASubtype);
 
 all_probe_table.SubID = string(all_probe_table.SubID); % Convert cell array to string
 all_probe_table.Group = string(all_probe_table.Group);
+
+all_probe_table.StateC=categorical(nan(size(all_probe_table,1),1));
+all_probe_table.StateC(all_probe_table.State==1)='ON';
+all_probe_table.StateC(all_probe_table.State==2)='MW';
+all_probe_table.StateC(all_probe_table.State==3)='MB';
+all_probe_table.StateC(all_probe_table.State==4)='DK';
+all_probe_table.VigC=categorical(nan(size(all_probe_table,1),1));
+all_probe_table.VigC(all_probe_table.Vigilance==1)='Ex. Alert';
+all_probe_table.VigC(all_probe_table.Vigilance==2)='Alert';
+all_probe_table.VigC(all_probe_table.Vigilance==3)='Sleepy';
+all_probe_table.VigC(all_probe_table.Vigilance==4)='Ex. Sleepy';
 behav_demo_table.SubID = string(behav_demo_table.SubID); % Convert character array to string
 behav_demo_summary = varfun(@(x) x(1), behav_demo_table, ...
     'GroupingVariables', 'SubID', ...
@@ -63,12 +76,12 @@ probe_subtype_table.Group = categorical(probe_subtype_table.Group);
 % FAs/Commission Errors
 mdlFA0  = fitlme(all_behav_table,'FA~1+BlockN+Group+(1|SubID)');
 mdlFA1  = fitlme(all_behav_table,'FA~1+BlockN*Group+(1|SubID)'); 
-mdlFA2  = fitlme(all_behav_table,'FA~1+BlockN*Group+(BlockN|SubID)'); % Winning AIC and BIC model - Group: p = .02, BlockN p <.001
+%mdlFA2  = fitlme(all_behav_table,'FA~1+BlockN*Group+(BlockN|SubID)'); % Winning AIC and BIC model - Group: p = .02, BlockN p <.001
  %%% Extract fit statistics for each model
-AIC_values = [mdlFA0.ModelCriterion.AIC, mdlFA1.ModelCriterion.AIC, mdlFA2.ModelCriterion.AIC];
-BIC_values = [mdlFA0.ModelCriterion.BIC, mdlFA1.ModelCriterion.BIC, mdlFA2.ModelCriterion.BIC];
+AIC_values = [mdlFA0.ModelCriterion.AIC, mdlFA1.ModelCriterion.AIC];%, mdlFA2.ModelCriterion.AIC];
+BIC_values = [mdlFA0.ModelCriterion.BIC, mdlFA1.ModelCriterion.BIC];%, mdlFA2.ModelCriterion.BIC];
 % Display results in a table
-ModelNames = {'Model 0', 'Model 1', 'Model 2'};
+ModelNames = {'Model 0', 'Model 1'};%, 'Model 2'};
 fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 disp(fit_table);
 
@@ -102,11 +115,11 @@ mdlRT2  = fitlme(all_behav_table,'RT~1+BlockN*Group+(BlockN|SubID)'); % Winning 
 anova(mdlRT2)
 
 
-% Standard Deviation of Reaction Times
-mdlstdRT0  = fitlme(all_behav_table,'stdRT~1+BlockN+Group+(1|SubID)'); % Winning model
-mdlstdRT1  = fitlme(all_behav_table,'stdRT~1+BlockN*Group+(1|SubID)'); 
-mdlstdRT2  = fitlme(all_behav_table,'stdRT~1+BlockN*Group+(BlockN|SubID)'); 
-% %%% Extract fit statistics for each model
+% Standard Deviation of Reaction Times; NOTE: Changed to byBlock data 
+% mdlstdRT0  = fitlme(all_block_table,'stdRT~1+BlockN+Group+(1|SubID)'); 
+% mdlstdRT1  = fitlme(all_block_table,'stdRT~1+BlockN*Group+(1|SubID)'); 
+mdlstdRT2  = fitlme(all_block_table,'stdRT~1+BlockN*Group+(BlockN|SubID)'); % Winning model - Group = .02, Block = .0058
+%%% Extract fit statistics for each model
 % AIC_values = [mdlstdRT0.ModelCriterion.AIC, mdlstdRT1.ModelCriterion.AIC, mdlstdRT2.ModelCriterion.AIC];
 % BIC_values = [mdlstdRT0.ModelCriterion.BIC, mdlstdRT1.ModelCriterion.BIC, mdlstdRT2.ModelCriterion.BIC];
 % % Display results in a table
@@ -114,13 +127,13 @@ mdlstdRT2  = fitlme(all_behav_table,'stdRT~1+BlockN*Group+(BlockN|SubID)');
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
 
-anova(mdlstdRT0)
+anova(mdlstdRT2)
 
 
 % D prime
-mdldprime0 = fitlme(all_behav_table,'dprime~1+BlockN+Group+(1|SubID)');
-mdldprime1 = fitlme(all_behav_table,'dprime~1+BlockN*Group+(1|SubID)');  % Winning model - Group: p = .037, BlockN: p <.001
-mdldprime2 = fitlme(all_behav_table,'dprime~1+BlockN*Group+(BlockN|SubID)');
+mdldprime0 = fitlme(all_block_table,'dprime~1+BlockN+Group+(1|SubID)');% Winning BIC model - Group: p = .034, BlockN: p <.001
+mdldprime1 = fitlme(all_block_table,'dprime~1+BlockN*Group+(1|SubID)');  
+mdldprime2 = fitlme(all_block_table,'dprime~1+BlockN*Group+(BlockN|SubID)');% Winning AIC model - Group: p = .256, BlockN: p <.001
 % %% Extract fit statistics for each model
 % AIC_values = [mdldprime0.ModelCriterion.AIC, mdldprime1.ModelCriterion.AIC, mdldprime2.ModelCriterion.AIC];
 % BIC_values = [mdldprime0.ModelCriterion.BIC, mdldprime1.ModelCriterion.BIC, mdldprime2.ModelCriterion.BIC];
@@ -129,12 +142,12 @@ mdldprime2 = fitlme(all_behav_table,'dprime~1+BlockN*Group+(BlockN|SubID)');
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
 
-anova(mdldprime1)
+anova(mdldprime0)
 
 %criterion
-mdlcrit0 = fitlme(all_behav_table,'crit~1+BlockN+Group+(1|SubID)');
-mdlcrit1 = fitlme(all_behav_table,'crit~1+BlockN*Group+(1|SubID)');  % Winning model - Group: p = .0, BlockN: p = .999
-mdlcrit2 = fitlme(all_behav_table,'crit~1+BlockN*Group+(BlockN|SubID)');
+mdlcrit0 = fitlme(all_block_table,'criterion~1+BlockN+Group+(1|SubID)'); % Winning BIC model - Group: p = .02, BlockN: p = .70
+mdlcrit1 = fitlme(all_block_table,'criterion~1+BlockN*Group+(1|SubID)');  
+mdlcrit2 = fitlme(all_block_table,'criterion~1+BlockN*Group+(BlockN|SubID)'); % Winning AIC model - Group: p = .02, BlockN: p = .77
 % %% Extract fit statistics for each model
 % AIC_values = [mdlcrit0.ModelCriterion.AIC, mdlcrit1.ModelCriterion.AIC, mdlcrit2.ModelCriterion.AIC];
 % BIC_values = [mdlcrit0.ModelCriterion.BIC, mdlcrit1.ModelCriterion.BIC, mdlcrit2.ModelCriterion.BIC];
@@ -157,16 +170,16 @@ anova(mdlcrit1)
 %% block-level stats
 
 % FAs/Commission Errors
-mdlblockFA0    = fitlme(all_block_table,'FA~1+BlockN+Group+(1|SubID)'); % Winning BIC model - Group: p = .0086, BlockN: p <.001
-mdlblockFA1    = fitlme(all_block_table,'FA~1+BlockN*Group+(1|SubID)');
+% mdlblockFA0    = fitlme(all_block_table,'FA~1+BlockN+Group+(1|SubID)'); % Winning BIC model - Group: p = .0086, BlockN: p <.001
+% mdlblockFA1    = fitlme(all_block_table,'FA~1+BlockN*Group+(1|SubID)');
 mdlblockFA2    = fitlme(all_block_table,'FA~1+BlockN*Group+(BlockN|SubID)'); % Winning AIC model - Group: p =.02, BlockN: p <.001
  %%% Extract fit statistics for each model
-AIC_values = [mdlblockFA0.ModelCriterion.AIC, mdlblockFA1.ModelCriterion.AIC, mdlblockFA2.ModelCriterion.AIC];
-BIC_values = [mdlblockFA0.ModelCriterion.BIC, mdlblockFA1.ModelCriterion.BIC, mdlblockFA2.ModelCriterion.BIC];
-% Display results in a table
-ModelNames = {'Model 0', 'Model 1', 'Model 2'};
-fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
-disp(fit_table);
+% AIC_values = [mdlblockFA0.ModelCriterion.AIC, mdlblockFA1.ModelCriterion.AIC, mdlblockFA2.ModelCriterion.AIC];
+% BIC_values = [mdlblockFA0.ModelCriterion.BIC, mdlblockFA1.ModelCriterion.BIC, mdlblockFA2.ModelCriterion.BIC];
+% % Display results in a table
+% ModelNames = {'Model 0', 'Model 1', 'Model 2'};
+% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
+% disp(fit_table);
 
 anova(mdlblockFA2)
 
@@ -374,7 +387,7 @@ for nSta=1:4
     Int_Paired_test(nSta,3)=stats.df;
 end
 xlabels = {'On Task', 'Mind Wandering','Mind Blanking', 'Dont Remember'};
-ylabels = {'Entirely Int.', 'Somewhat Int.','Somewhat Unint.', 'Entirely Unint.'};
+ylabels = {'Entirely Intentional', 'Somewhat Intentional','Somewhat Unintentional', 'Entirely Unintentional'};
 set(gca,'Xtick',1:4,'XTickLabel',xlabels);
 set(gca,'Ytick',1:4,'YTickLabel',ylabels);
 ytickangle(45);
@@ -427,7 +440,7 @@ adhds=unique(all_behav_table.SubID(all_behav_table.Group=='A' ));
 
 
     % Plot the distribution - bar graphs
-    labels = {'Entirely Int.', 'Somewhat Int.','Somewhat Unint.', 'Entirely Unint.'};
+    labels = {'Entirely Intentional', 'Somewhat Intentional','Somewhat Unintentional', 'Entirely Unintentional'};
     numGroups = 2;  % Control, ADHD
     groupOffsets = linspace(-0.2, 0.2, numGroups);  % Calculate offsets for each group
     barWidth = 0.29;
@@ -642,6 +655,7 @@ for vigilance_level = vigilance_levels
     % Store results
     p_values(vigilance_level) = p;
     Q_values(vigilance_level) = Q;
+    N_values(vigilance_level) = sum(count_matrix, 'all'); % Compute total sample size
 
     % Display results for this vigilance level
     disp(['Vigilance Level ', num2str(vigilance_level)]);
@@ -649,6 +663,7 @@ for vigilance_level = vigilance_levels
     disp(count_matrix);
     disp(['Chi-square test p-value: ', num2str(p)]);
     disp(['Chi-square statistic (Q): ', num2str(Q)]);
+    disp(['Total sample size (N): ', num2str(N_values(vigilance_level))]);
     disp('------------------------------');
 end
 
