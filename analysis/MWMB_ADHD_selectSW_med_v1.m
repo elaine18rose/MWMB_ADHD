@@ -278,6 +278,7 @@ for nF=1:length(SW_files)
 
 end
 % writetable(SW_table,[preproc_path filesep 'all_SW_perProbe_exGaussCTR_v2.csv'])
+SW_table.Block = categorical(SW_table.Block, 1:4, 'Ordinal', true);
 
 %%
 mdl0=fitlme(SW_table,'SW_density~1+(1|SubID)');
@@ -328,11 +329,11 @@ for nE=1:length(layout.label)-2
     fprintf('... %g/%g\n',nE,length(layout.label)-2)
     sub_table=SW_table(SW_table.Elec==layout.label(nE),:);
     temp_mdl_byG=fitlme(sub_table,sprintf('SW_density~1+Block*%s+(1|SubID)','Group'));
-
+temp_aov=anova(temp_mdl_byG);
     topo_GroupOnSW_tV(nE,1)=temp_mdl_byG.Coefficients.tStat(match_str(temp_mdl_byG.Coefficients.Name,"Group_ADHD"));
     topo_GroupOnSW_pV(nE,1)=temp_mdl_byG.Coefficients.pValue(match_str(temp_mdl_byG.Coefficients.Name,"Group_ADHD"));
-    topo_GroupOnSW_tV(nE,2)=temp_mdl_byG.Coefficients.tStat(match_str(temp_mdl_byG.Coefficients.Name,"Group_ADHD:Block"));
-    topo_GroupOnSW_pV(nE,2)=temp_mdl_byG.Coefficients.pValue(match_str(temp_mdl_byG.Coefficients.Name,"Group_ADHD:Block"));
+    topo_GroupOnSW_tV(nE,2)=temp_aov.FStat(match_str(temp_aov.Term,"Group:Block"));
+    topo_GroupOnSW_pV(nE,2)=temp_aov.pValue(match_str(temp_aov.Term,"Group:Block"));
 end
 
 % cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
@@ -400,6 +401,7 @@ for nV=1:length(VOI)
         res_mdl1=residuals(temp_mdl1);
 
         temp_mdl2=fitlme(sub_table,'SW_density~1+Block*Group+(1|SubID)');
+        aov_temp_mdl2=anova(temp_mdl2);
         res_mdl2=residuals(temp_mdl2);
 
         sub_table.res1=res_mdl1;
@@ -411,13 +413,13 @@ for nV=1:length(VOI)
         topo_med_tV{nV}(nE,1)=temp_mdl3.Coefficients.tStat(end);
         topo_med_pV{nV}(nE,1)=temp_mdl3.Coefficients.pValue(end);
         topo_med_pV{nV}(nE,2)=temp_mdl2.Coefficients.pValue(match_str(temp_mdl2.Coefficients.Name,'Group_ADHD'));
-        topo_med_pV{nV}(nE,3)=temp_mdl2.Coefficients.pValue(match_str(temp_mdl2.Coefficients.Name,'Group_ADHD:Block'));
+        topo_med_pV{nV}(nE,3)=aov_temp_mdl2.pValue(match_str(aov_temp_mdl2.Term,'Group:Block'));
         topo_med_pV{nV}(nE,4)=max(topo_med_pV{nV}(nE,1),min([topo_med_pV{nV}(nE,2) topo_med_pV{nV}(nE,3)]));
         topo_med_pV{nV}(nE,5)=temp_mdl4.Coefficients.pValue(match_str(temp_mdl4.Coefficients.Name,'SW_density'));
     end
 end
 
-%
+%%
 all_pval_SWonBehav=[];
 all_pval_med=[];
 for nV=1:length(VOI)
@@ -472,7 +474,8 @@ for nV=1:length(VOI)
     subplot(2,length(VOI)/2,nV)
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
     simpleTopoPlot_ft(topo_med_tV{nV}(:,1)', layout,'on',[],0,1);
-    ft_plot_lay_me(layout, 'chanindx', find(topo_med_pV{nV}(:,4)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+     ft_plot_lay_me(layout, 'chanindx', find(topo_med_pV{nV}(:,1)<FDR_thr), 'pointsymbol','*','pointcolor',[1 1 1]*0.7,'pointsize',36,'box','no','label','no');
+   ft_plot_lay_me(layout, 'chanindx', find(topo_med_pV{nV}(:,4)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     ft_plot_lay_me(layout, 'chanindx', find(topo_med_pV{nV}(:,4)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
     %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     colormap(cmap2);
@@ -500,7 +503,7 @@ subjects = [];
          subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
          subject_means = [];
          for s = 1:length(subjects)
-             subject_mean = mean(SW_table.Behav_Miss( SW_table.Block == i & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+             subject_mean = mean(SW_table.Behav_Miss( SW_table.Block == num2str(i) & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
              subject_means = [subject_means; subject_mean];
          end
          data_to_plot{i, j} = subject_means;
@@ -542,6 +545,63 @@ ylim([0 0.04]*100)
     format_fig;
     set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
 xlabel('ADHD');
+
+
+%FA
+figure; hold on;
+subjects = [];
+data_to_plot=[];
+meandata_to_plot=[];
+group_labels={'Control','ADHD'};
+%all_block_table.Group=categorical(all_block_table.Group);
+for j = 1:2 % number of group
+    for i = 1:4 % number of repetitions
+        subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+        subject_means = [];
+        for s = 1:length(subjects)
+            subject_mean = mean(SW_table.Behav_FA( SW_table.Block == num2str(i) & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+            subject_means = [subject_means; subject_mean];
+        end
+        data_to_plot{i, j} = subject_means;
+        meandata_to_plot(i, j) = nanmean(subject_means);
+    end
+    plot((1:4)+(2*j-3)*0.1,100*meandata_to_plot(:,j)','Color',Colors(j,:),'LineWidth',4)
+
+    subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+    subject_means = [];
+    for s = 1:length(subjects)
+        subject_mean = mean(SW_table.Behav_FA(SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+        subject_means = [subject_means; subject_mean];
+    end
+    data_to_plot_perS{j} = subject_means;
+
+end
+for i = 1:4 % number of repetitions
+    for j = 1:2 % number of group
+        simpleDotPlot(i+(2*j-3)*0.1,100*data_to_plot{i, j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+    end
+end
+
+set(gca, 'xtick',1:4); %to change y-axis to percentage
+title(['Commission Errors per Block']);
+ylabel('% of Commission Errors'); xlabel('Block Number');
+format_fig;
+set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
+% ylim([0 0.04]*100)
+xlim([0.5 4.5])
+
+figure('Position',[2245         400         210         428])
+for j = 1:2 % number of group
+    simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+end
+% ylim([0 0.04]*100)
+set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
+title(['Commission']);
+%     ylabel('% of Omission Errors'); xlabel('Block Number');
+format_fig;
+set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
+xlabel('ADHD');
+
     %% False Alarms
     subjects =[];
     data_to_plot=[];
