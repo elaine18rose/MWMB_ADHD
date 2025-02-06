@@ -1,4 +1,4 @@
-%% version 2 - uses version 2 getSW table with NA values 
+%% version 2 - uses version 2 getSW table with NA values
 clear all;
 close all;
 %%
@@ -75,9 +75,9 @@ load([pwd filesep '..' filesep 'Preproc' filesep 'all_badChannels_badProbes.mat'
 %%
 ColSW=[];
 for nCh=1:length(layout.label)-2
-ColSW{nCh}=sprintf('SW_%s',layout.label{nCh});
+    ColSW{nCh}=sprintf('SW_%s',layout.label{nCh});
 end
-SW_table_perT=array2table(zeros(0,12+64),'VariableNames',[{'SubID','Group','Probe','MS','ON','MW','MB','DR','Vig','Type','Err','RT'}  ColSW]);
+SW_table_perT=array2table(zeros(0,13+64),'VariableNames',[{'SubID','Group','Block','Probe','MS','ON','MW','MB','DR','Vig','Type','Err','RT'}  ColSW]);
 SW_table_perT.SubID=categorical(SW_table_perT.SubID);
 SW_table_perT.Group=categorical(SW_table_perT.Group);
 SW_table_perT.Type=categorical(SW_table_perT.Type);
@@ -112,6 +112,7 @@ for nF=1:length(SW_files)
         continue;
     end
 
+    load([preproc_path filesep 'SW_clean_i_probe_' SubID]);
 
     behav_file=dir([data_path filesep '..' filesep 'Behaviour' filesep 'wanderIM_behavres_' SubID '*.mat']);
     if length(behav_file)
@@ -212,6 +213,7 @@ for nF=1:length(SW_files)
         SW_table_perT.SubID(table_length+(1:size(temp_SW_perTrial,1)))=repmat({SubID},size(temp_SW_perTrial,1),1);
         SW_table_perT.Group(table_length+(1:size(temp_SW_perTrial,1)))=repmat({GroupID},size(temp_SW_perTrial,1),1);
         SW_table_perT.Probe(table_length+(1:size(temp_SW_perTrial,1)))=repmat(nBl,size(temp_SW_perTrial,1),1);
+        SW_table_perT.Block(table_length+(1:size(temp_SW_perTrial,1)))=repmat(probe_res(nBl,4),size(temp_SW_perTrial,1),1);
         SW_table_perT.MS(table_length+(1:size(temp_SW_perTrial,1)))=repmat(MS_labels(probe_res(nBl,19)),size(temp_SW_perTrial,1),1);
         SW_table_perT.ON(table_length+(1:size(temp_SW_perTrial,1)))=repmat(probe_res(nBl,19)==1,size(temp_SW_perTrial,1),1);
         SW_table_perT.MW(table_length+(1:size(temp_SW_perTrial,1)))=repmat(probe_res(nBl,19)==2,size(temp_SW_perTrial,1),1);
@@ -241,7 +243,7 @@ for nCh=1:length(layout.label)-2
 end
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 colormap(cmap); colorbar;
-    caxis([0.1 0.2])
+caxis([0.1 0.2])
 title('ADHD')
 
 subplot(2,1,2)
@@ -255,7 +257,7 @@ for nCh=1:length(layout.label)-2
 end
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 colormap(cmap); colorbar;
-    caxis([0.1 0.2])
+caxis([0.1 0.2])
 title('Control')
 
 %%
@@ -293,219 +295,166 @@ for nVig=1:4
 end
 
 %% Predicting correct GO RT with Slow Waves
-clear topo_*
+% clear topo_*
 clear sub_table
 clear temp_mdl_*
 for nCh=1:length(layout.label)-2
     fprintf('... %g/%g\n',nCh,length(layout.label)-2)
-    temp_mdl_RT=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Err==0,:),sprintf('RT~1+%s+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+    temp_mdl_RT=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Err==0,:),sprintf('RT~1+%s+Block+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
 
     topo_tV_RT(nCh,1)=temp_mdl_RT.Coefficients.tStat(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
     topo_pV_RT(nCh,1)=temp_mdl_RT.Coefficients.pValue(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
 
-%     temp_aov_RT=anova(temp_mdl_RT);
-%     topo_FV_int_RT(nCh)=temp_aov_RT.FStat(match_str(temp_aov_RT.Term,sprintf('Group:SW_%s',layout.label{nCh})));
-%     topo_pV_int_RT(nCh)=temp_aov_RT.pValue(match_str(temp_aov_RT.Term,sprintf('Group:SW_%s',layout.label{nCh})));
-% 
-%     for nG=1:2
-%         temp_mdl_RT=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Err==0 & SW_table_perT.Group==Group_labels{nG},:),sprintf('RT~1+%s+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
-%         topo_tV_RT(nCh,nG+1)=temp_mdl_RT.Coefficients.tStat(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
-%         topo_pV_RT(nCh,nG+1)=temp_mdl_RT.Coefficients.pValue(match_str(temp_mdl_RT.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
-%     end
-end
-
-cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
-figure;
-for nG=1:3
-    subplot(1,3,nG)
-    simpleTopoPlot_ft(topo_tV_RT(:,nG)', layout,'on',[],0,1);
-    ft_plot_lay_me(layout, 'chanindx', find(topo_pV_RT(:,nG)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-    ft_plot_lay_me(layout, 'chanindx', find(topo_pV_RT(:,nG)<fdr(topo_pV_RT(:,nG),0.05)), 'pointsymbol','o','pointcolor','k','pointsize',72,'box','no','label','no');
-    colormap(cmap2);
-    colorbar('Ticks',[-5:5]);
-    if nG==1
-    title({'RT','all'})
-    else
-    title({'RT',Group_labels{nG-1}})
-    end
-    caxis([-1 1]*4)
-    format_fig;
-end
-
-figure;
-cmap3=cbrewer('seq','PuBu',64);
-simpleTopoPlot_ft(topo_FV_int_RT', layout,'on',[],0,1);
-ft_plot_lay_me(layout, 'chanindx', find(topo_pV_int_RT<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-%ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-colormap(cmap3);
-colorbar('Ticks',[0:8]);
-title({'RT - Group Int.'})
-% caxis([-1 1]*4)
-format_fig;
-
-% %%
-% SWdens_est=cell(1,2);
-% totperm=500;
-% for nCh=1:length(layout.label)-2
-%     sub_table=SW_table(SW_table.Elec==layout.label(nCh),:);
-%     if nCh==1
-%         out_pred_perm=[];
-%         [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_bygroup(sub_table,'Group','SW_density~1+Block+pred+(1|SubID)',totperm);
-%     else
-%         [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_bygroup(sub_table,'Group','SW_density~1+Block+pred+(1|SubID)',totperm,out_pred_perm);
-%     end
-%     SWdens_est{1}=[SWdens_est{1} ; [nCh real_out]];
-%     SWdens_est{2}=[SWdens_est{2} ; [nCh*ones(totperm,1) perm_out]];
-% end
-% 
-% %%
-% clus_alpha=0.1;
-% montecarlo_alpha=0.05;
-% 
-% cfg_neighb=[];
-% cfg_neighb.method = 'template';
-% cfg_neighb.layout='EEG1010.lay';
-% cfg_neighb.channel=layout.label(1:end-2);
-% neighbours = ft_prepare_neighbours(cfg_neighb);
-% neighbours(~ismember({neighbours.label},unique(SW_table.Elec)))=[];
-% [SWdens_clus]=get_clusterperm_lme_bygroup(SWdens_est,clus_alpha,montecarlo_alpha,totperm,neighbours,1);
-% 
-% 
-% cmap2=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
-% cmap2=flipud(cmap2);
-% limNumClus=1;
-% limMax=5;
-% 
-% temp_topo=SWdens_est{1}(:,3);
-% temp_topo2=zeros(size(temp_topo));
-% temp_topo3=zeros(size(temp_topo));
-% temp_clus=SWdens_clus;
-% 
-% figure;
-% if ~isempty(temp_clus)
-%     for nclus=1:length(temp_clus)
-%         if length(match_str(layout.label,temp_clus{nclus}{2}))<limNumClus
-%             continue;
-%         end
-%         %             ft_plot_lay_me(layout, 'chanindx',match_str(layout.label,temp_clus{nclus}{2}),'pointsymbol','o','pointcolor','r','pointsize',64,'box','no','label','yes')
-%         temp_topo2(match_str(layout.label,temp_clus{nclus}{2}))=temp_topo(match_str(layout.label,temp_clus{nclus}{2}));
-%         temp_topo3(match_str(layout.label,temp_clus{nclus}{2}))=1;
-%         fprintf('... ... found %s cluster (%g) of %g electrodes (tval cluster=%g, Pmc=%g)\n',temp_clus{nclus}{1},nclus,length(temp_clus{nclus}{2}),temp_clus{nclus}{3},temp_clus{nclus}{4})
-%     end
-% end
-% simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
-% %     ft_plot_lay_me(layout, 'chanindx',1:length(layout.label)-2,'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',6,'box','no','label','no')
-% format_fig;
-% caxis([-1 1]*limMax)
-% if ~isempty(temp_clus)
-%     for nclus=1:length(temp_clus)
-%         if length(match_str(layout.label,temp_clus{nclus}{2}))<limNumClus
-%             continue;
-%         end
-%         ft_plot_lay_me(layout, 'chanindx',match_str(layout.label,temp_clus{nclus}{2}),'pointsymbol','o','pointcolor','k','pointsize',96,'box','no','label','no')
-%     end
-% end
-% hb=colorbar('Position',[0.94    0.6    0.05    0.33]);
-% colormap(cmap2);
-
-%% Predicting Go Corr with Slow Waves
-clear topo_*
-clear sub_table
-clear temp_mdl_*
-for nCh=1:length(layout.label)-2
-    fprintf('... %g/%g\n',nCh,length(layout.label)-2)
-    temp_mdl_Err=fitlme(SW_table_perT(SW_table_perT.Type=='Go',:),sprintf('Err~1+%s+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+    temp_mdl_Err=fitlme(SW_table_perT(SW_table_perT.Type=='Go',:),sprintf('Err~1+%s+Block+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
 
     topo_tV_Err(nCh,1)=temp_mdl_Err.Coefficients.tStat(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
     topo_pV_Err(nCh,1)=temp_mdl_Err.Coefficients.pValue(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
 
-%     temp_aov_Err=anova(temp_mdl_Err);
-%     topo_FV_int_Err(nCh)=temp_aov_Err.FStat(match_str(temp_aov_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
-%     topo_pV_int_Err(nCh)=temp_aov_Err.pValue(match_str(temp_aov_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
-% 
-%     for nG=1:2
-%         temp_mdl_Err=fitlme(SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Group==Group_labels{nG},:),sprintf('Err~1+%s+Probe+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
-%         topo_tV_Err(nCh,nG+1)=temp_mdl_Err.Coefficients.tStat(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
-%         topo_pV_Err(nCh,nG+1)=temp_mdl_Err.Coefficients.pValue(match_str(temp_mdl_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
-%     end
-end
-
-cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
-figure;
-for nG=1:3
-    subplot(1,3,nG)
-    simpleTopoPlot_ft(topo_tV_Err(:,nG)', layout,'on',[],0,1);
-    ft_plot_lay_me(layout, 'chanindx', find(topo_pV_Err(:,nG)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-    ft_plot_lay_me(layout, 'chanindx', find(topo_pV_Err<fdr(topo_pV_Err,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-    colormap(cmap2);
-    colorbar('Ticks',[-5:5]);
-    if nG==1
-    title({'Err','all'})
-    else
-    title({'Err',Group_labels{nG-1}})
-    end
-    caxis([-1 1]*4)
-    format_fig;
-end
-
-figure;
-cmap3=cbrewer('seq','PuBu',64);
-simpleTopoPlot_ft(topo_FV_int_Err', layout,'on',[],0,1);
-ft_plot_lay_me(layout, 'chanindx', find(topo_pV_int_Err<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-ft_plot_lay_me(layout, 'chanindx', find(topo_pV_int_Err<fdr(topo_pV_int_Err,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-colormap(cmap3);
-colorbar('Ticks',[0:8]);
-title({'Err - Group Int.'})
-% caxis([-1 1]*4)
-format_fig;
-
-%% Predicting NoGo Err with Slow Waves
-clear topo_*
-clear sub_table
-clear temp_mdl_*
-for nCh=1:length(layout.label)-2
-    fprintf('... %g/%g\n',nCh,length(layout.label)-2)
-    temp_mdl_NoGo_Err=fitlme(SW_table_perT(SW_table_perT.Type=='NoGo',:),sprintf('Err~1+Probe+%s+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
+    temp_mdl_NoGo_Err=fitlme(SW_table_perT(SW_table_perT.Type=='NoGo',:),sprintf('Err~1+Block+%s+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
 
     topo_tV_NoGo_Err(nCh,1)=temp_mdl_NoGo_Err.Coefficients.tStat(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
     topo_pV_NoGo_Err(nCh,1)=temp_mdl_NoGo_Err.Coefficients.pValue(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
 
-%     temp_aov_NoGo_Err=anova(temp_mdl_NoGo_Err);
-%     topo_FV_int_NoGo_Err(nCh)=temp_aov_NoGo_Err.FStat(match_str(temp_aov_NoGo_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
-%     topo_pV_int_NoGo_Err(nCh)=temp_aov_NoGo_Err.pValue(match_str(temp_aov_NoGo_Err.Term,sprintf('Group:SW_%s',layout.label{nCh})));
 
-%     for nG=1:2
-%         temp_mdl_NoGo_Err=fitlme(SW_table_perT(SW_table_perT.Type=='NoGo' & SW_table_perT.Group==Group_labels{nG},:),sprintf('Err~1+%s+(1|SubID)',sprintf('SW_%s',layout.label{nCh})));
-%         topo_tV_NoGo_Err(nCh,nG+1)=temp_mdl_NoGo_Err.Coefficients.tStat(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
-%         topo_pV_NoGo_Err(nCh,nG+1)=temp_mdl_NoGo_Err.Coefficients.pValue(match_str(temp_mdl_NoGo_Err.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
-%     end
+    % mediation on misses
+    sub_table=SW_table_perT(SW_table_perT.Type=='Go',:);%
+    temp_mdl1=fitlme(sub_table,'Err~1+Block*Group+(1|SubID)');
+    res_mdl1=residuals(temp_mdl1);
+    temp_mdl2=fitlme(sub_table,sprintf('SW_%s~1+Block*Group+(1|SubID)',layout.label{nCh}));
+    res_mdl2=residuals(temp_mdl2);
+
+    sub_table.res1=res_mdl1;
+    sub_table.res2=res_mdl2;
+    temp_mdl3=fitlme(sub_table,'res1~1+res2+(1|SubID)');
+
+    temp_mdl4=fitlme(sub_table,sprintf('Err~1+Block+SW_%s+(1|SubID)',layout.label{nCh}));
+
+    topo_med_Miss_tV{1}(nCh,1)=temp_mdl3.Coefficients.tStat(end);
+    topo_med_Miss_pV{1}(nCh,1)=temp_mdl3.Coefficients.pValue(end);
+    topo_med_Miss_pV{1}(nCh,2)=temp_mdl2.Coefficients.pValue(match_str(temp_mdl2.Coefficients.Name,'Group_Control'));
+    topo_med_Miss_pV{1}(nCh,3)=temp_mdl2.Coefficients.pValue(match_str(temp_mdl2.Coefficients.Name,'Group_Control:Block'));
+    topo_med_Miss_pV{1}(nCh,4)=max(topo_med_Miss_pV{1}(nCh,1),min([topo_med_Miss_pV{1}(nCh,2) topo_med_Miss_pV{1}(nCh,3)]));
+    topo_med_Miss_pV{1}(nCh,5)=temp_mdl4.Coefficients.pValue(match_str(temp_mdl4.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+
+    % mediation on FA
+    sub_table=SW_table_perT(SW_table_perT.Type=='NoGo',:);%
+    temp_mdl1=fitlme(sub_table,'Err~1+Block*Group+(1|SubID)');
+    res_mdl1=residuals(temp_mdl1);
+    temp_mdl2=fitlme(sub_table,sprintf('SW_%s~1+Block*Group+(1|SubID)',layout.label{nCh}));
+    res_mdl2=residuals(temp_mdl2);
+
+    sub_table.res1=res_mdl1;
+    sub_table.res2=res_mdl2;
+    temp_mdl3=fitlme(sub_table,'res1~1+res2+(1|SubID)');
+
+    temp_mdl4=fitlme(sub_table,sprintf('Err~1+Block+SW_%s+(1|SubID)',layout.label{nCh}));
+
+    topo_med_FA_tV{1}(nCh,1)=temp_mdl3.Coefficients.tStat(end);
+    topo_med_FA_pV{1}(nCh,1)=temp_mdl3.Coefficients.pValue(end);
+    topo_med_FA_pV{1}(nCh,2)=temp_mdl2.Coefficients.pValue(match_str(temp_mdl2.Coefficients.Name,'Group_Control'));
+    topo_med_FA_pV{1}(nCh,3)=temp_mdl2.Coefficients.pValue(match_str(temp_mdl2.Coefficients.Name,'Group_Control:Block'));
+    topo_med_FA_pV{1}(nCh,4)=max(topo_med_FA_pV{1}(nCh,1),min([topo_med_FA_pV{1}(nCh,2) topo_med_FA_pV{1}(nCh,3)]));
+    topo_med_FA_pV{1}(nCh,5)=temp_mdl4.Coefficients.pValue(match_str(temp_mdl4.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+
+    % mediation on RT
+    sub_table=SW_table_perT(SW_table_perT.Type=='Go' & SW_table_perT.Err==0,:);%
+    temp_mdl1=fitlme(sub_table,'RT~1+Block*Group+(1|SubID)');
+    res_mdl1=residuals(temp_mdl1);
+    temp_mdl2=fitlme(sub_table,sprintf('SW_%s~1+Block*Group+(1|SubID)',layout.label{nCh}));
+    res_mdl2=residuals(temp_mdl2);
+
+    sub_table.res1=res_mdl1;
+    sub_table.res2=res_mdl2;
+    temp_mdl3=fitlme(sub_table,'res1~1+res2+(1|SubID)');
+
+    temp_mdl4=fitlme(sub_table,sprintf('RT~1+Block+SW_%s+(1|SubID)',layout.label{nCh}));
+
+    topo_med_RT_tV{1}(nCh,1)=temp_mdl3.Coefficients.tStat(end);
+    topo_med_RT_pV{1}(nCh,1)=temp_mdl3.Coefficients.pValue(end);
+    topo_med_RT_pV{1}(nCh,2)=temp_mdl2.Coefficients.pValue(match_str(temp_mdl2.Coefficients.Name,'Group_Control'));
+    topo_med_RT_pV{1}(nCh,3)=temp_mdl2.Coefficients.pValue(match_str(temp_mdl2.Coefficients.Name,'Group_Control:Block'));
+    topo_med_RT_pV{1}(nCh,4)=max(topo_med_RT_pV{1}(nCh,1),min([topo_med_RT_pV{1}(nCh,2) topo_med_RT_pV{1}(nCh,3)]));
+    topo_med_RT_pV{1}(nCh,5)=temp_mdl4.Coefficients.pValue(match_str(temp_mdl4.Coefficients.Name,sprintf('SW_%s',layout.label{nCh})));
+
+
 end
 
+%%
+all_pval=[];
+for ncol=1:3
+    all_pval=[all_pval ; topo_med_RT_pV{1}(:,ncol) ; topo_med_Miss_pV{1}(:,ncol) ; topo_med_FA_pV{1}(:,ncol)];
+end
+FDR_thr=fdr(all_pval,0.05);
+
+
+f1=figure;
+VOI={'RT','Miss','FA'};
+for nV=1:length(VOI)
+    figure(f1);
+    subplot(1,length(VOI),nV)
+    cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
+    eval(sprintf('temp_tV=topo_med_%s_tV{1};',VOI{nV}));
+    eval(sprintf('temp_pV=topo_med_%s_pV{1};',VOI{nV}));
+    simpleTopoPlot_ft(temp_tV(:,1)', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(temp_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    ft_plot_lay_me(layout, 'chanindx', find(temp_pV(:,1)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
+    %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    colormap(cmap2);
+    title({'SW on behav',VOI{nV}})
+    caxis([-1 1]*5)
+    format_fig;
+    colorbar;
+end
+
+f2=figure;
+for nV=1:length(VOI)
+    figure(f2);
+    subplot(1,length(VOI),nV)
+    cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
+    eval(sprintf('temp_tV=topo_med_%s_tV{1};',VOI{nV}));
+    eval(sprintf('temp_pV=topo_med_%s_pV{1};',VOI{nV}));
+
+    simpleTopoPlot_ft(temp_tV(:,1)', layout,'on',[],0,1);
+    ft_plot_lay_me(layout, 'chanindx', find(temp_pV(:,4)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    ft_plot_lay_me(layout, 'chanindx', find(temp_pV(:,4)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
+    %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+    colormap(cmap2);
+    title({'Mediation',VOI{nV}})
+    caxis([-1 1]*5)
+    format_fig;
+    colorbar;
+end
+
+
+%%
 cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
 figure;
-for nG=1:3
-    subplot(1,3,nG)
-    simpleTopoPlot_ft(topo_tV_NoGo_Err(:,nG)', layout,'on',[],0,1);
-    ft_plot_lay_me(layout, 'chanindx', find(topo_pV_NoGo_Err(:,nG)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-    ft_plot_lay_me(layout, 'chanindx', find(topo_pV_NoGo_Err(:,nG)<fdr(topo_pV_NoGo_Err(:,nG),0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
-    colormap(cmap2);
-    colorbar('Ticks',[-5:5]);
-    if nG==1
-    title({'NoGo_Err','all'})
-    else
-    title({'NoGo_Err',Group_labels{nG-1}})
-    end
-    caxis([-1 1]*4)
-    format_fig;
-end
+simpleTopoPlot_ft(topo_tV_RT(:,1)', layout,'on',[],0,1);
+ft_plot_lay_me(layout, 'chanindx', find(topo_pV_RT(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+ft_plot_lay_me(layout, 'chanindx', find(topo_pV_RT(:,1)<fdr([topo_pV_NoGo_Err(:,1) ; topo_pV_Err(:,1); topo_pV_RT(:,1)],0.05)), 'pointsymbol','o','pointcolor','k','pointsize',72,'box','no','label','no');
+colormap(cmap2);
+colorbar('Ticks',[-5:5]);
+title({'RT','all'})
+caxis([-1 1]*5)
+format_fig;
 
-% figure;
-% cmap3=cbrewer('seq','PuBu',64);
-% simpleTopoPlot_ft(topo_FV_int_NoGo_Err', layout,'on',[],0,1);
-% ft_plot_lay_me(layout, 'chanindx', find(topo_pV_int_NoGo_Err<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-% ft_plot_lay_me(layout, 'chanindx', find(topo_pV_int_NoGo_Err<fdr(topo_pV_int_NoGo_Err,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
-% colormap(cmap3);
-% colorbar('Ticks',[0:8]);
-% title({'NoGo_Err - Group Int.'})
-% % caxis([-1 1]*4)
-% format_fig;
+figure;
+simpleTopoPlot_ft(topo_tV_Err(:,1)', layout,'on',[],0,1);
+ft_plot_lay_me(layout, 'chanindx', find(topo_pV_Err(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+ft_plot_lay_me(layout, 'chanindx', find(topo_pV_Err(:,1)<fdr([topo_pV_NoGo_Err(:,1) ; topo_pV_Err(:,1); topo_pV_RT(:,1)],0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
+colormap(cmap2);
+colorbar('Ticks',[-5:5]);
+title({'Miss','all'})
+caxis([-1 1]*5)
+format_fig;
+
+figure;
+simpleTopoPlot_ft(topo_tV_NoGo_Err(:,1)', layout,'on',[],0,1);
+ft_plot_lay_me(layout, 'chanindx', find(topo_pV_NoGo_Err(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+ft_plot_lay_me(layout, 'chanindx', find(topo_pV_NoGo_Err(:,1)<fdr([topo_pV_NoGo_Err(:,1) ; topo_pV_Err(:,1); topo_pV_RT(:,1)],0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
+colormap(cmap2);
+colorbar('Ticks',[-5:5]);
+title({'FA','all'})
+caxis([-1 1]*5)
+format_fig;
+
