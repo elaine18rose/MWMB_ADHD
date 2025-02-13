@@ -294,9 +294,10 @@ fprintf('... mdl4 Block*Elec*Group+(1|SubID):\n\tgroup effect F=%g, p=%g;\n\tGro
     aov_SW_mdl4.FStat(match_str(aov_SW_mdl4.Term,'Group:Elec')),aov_SW_mdl4.pValue(match_str(aov_SW_mdl4.Term,'Group:Elec')),...
     aov_SW_mdl4.FStat(match_str(aov_SW_mdl4.Term,'Group:Block:Elec')),aov_SW_mdl4.pValue(match_str(aov_SW_mdl4.Term,'Group:Block:Elec')))
 
-VOI={'Behav_stdRT','Behav_FA','Behav_Miss','Behav_RT','Probe_Vig','Probe_MW','Probe_MB'};
+VOI={'Behav_stdRT','Behav_FA','Behav_Miss','Behav_RT','Probe_Vig','Probe_MW','Probe_MB','Probe_ON'};
 SW_table.Probe_MB=double(SW_table.Probe_MB);
 SW_table.Probe_MW=double(SW_table.Probe_MW);
+SW_table.Probe_ON=double(SW_table.Probe_ON);
 for nVOI=1:length(VOI)
     fprintf('... %s:\n',VOI{nVOI})
     mdl_behav0{nVOI}=fitlme(SW_table,sprintf('%s~1+(1|SubID)',VOI{nVOI}));
@@ -368,7 +369,7 @@ SW_table.Group=reordercats(SW_table.Group,["Control" "ADHD"]);
 
 Groups={'ADHD','Control'};
 VOI={'Behav_stdRT','Probe_Vig'}; %Miss: not affect by group | FA, MW not MB: not predicted by SW
-VOI={'Behav_stdRT','Behav_Miss','Behav_RT','Probe_Vig'};
+VOI={'Behav_stdRT','Behav_Miss','Behav_RT','Probe_ON'};
 
 
 for nV=1:length(VOI)
@@ -533,6 +534,7 @@ subjects = [];
     set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
 ylim([0 0.04]*100)
 xlim([0.5 4.5])
+saveas(gcf,[pwd filesep 'Figures' filesep 'FigX_PanelY_MissesPerBlock.svg'])
 
     figure('Position',[2245         400         210         428])
       for j = 1:2 % number of group

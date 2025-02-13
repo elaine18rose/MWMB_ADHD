@@ -43,7 +43,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 all_badCompo=[];
-redo=0;
+redo=1;
 all_pow=[];
 all_frac=[];
 all_osci=[];
@@ -78,7 +78,7 @@ for nF=1:length(files)
         data          = ft_redefinetrial(cfg, data);
 
         cfg                             = [];
-        cfg.foilim                      = [1 40]; %[1 30];
+        cfg.foilim                      = [2 40]; %[1 30];
         cfg.pad                         = 'nextpow2';
         cfg.tapsmofrq                   = 0.5;
         cfg.method                      = 'mtmfft';
@@ -115,7 +115,7 @@ for nF=1:length(files)
     for nE=1:length(fractal.label)
         temp_peaks=fractal.fooofparams(nE).peak_params;
         temp_peaks=temp_peaks(temp_peaks(:,1)>5 & temp_peaks(:,1)<15,:);
-        if size(temp_peaks,1)==1
+        if size(temp_peaks,1)>0
             peaks_params(nE,:)=temp_peaks(temp_peaks(:,2)==max(temp_peaks(:,2)),:);
         else
             peaks_params(nE,:)=nan(1,3);

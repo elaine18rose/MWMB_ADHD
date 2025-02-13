@@ -175,7 +175,7 @@ for nF=1:length(SW_files)
     fprintf('... ... %g %% waves discarded because of frequency\n',mean(all_freq>paramSW.max_Freq)*100)
     fprintf('... ... %g %% waves discarded because of max P2P ampl\n',mean(all_Waves(:,paramSW.AmpCriterionIdx)>paramSW.art_ampl)*100)
     fprintf('... ... %g %% waves discarded because of max pos ampl\n',mean(all_Waves(:,11)>paramSW.max_posampl | all_Waves(:,14)>paramSW.art_ampl| abs(all_Waves(:,15))>paramSW.art_ampl)*100)
-    all_Waves(all_onset<-20 | all_onset>0 | all_freq>paramSW.max_Freq | all_Waves(:,paramSW.AmpCriterionIdx)>paramSW.art_ampl | all_Waves(:,11)>paramSW.max_posampl| all_Waves(:,14)>paramSW.art_ampl| abs(all_Waves(:,15))>paramSW.art_ampl,:)=[];
+    all_Waves(all_onset<-10 | all_onset>0 | all_freq>paramSW.max_Freq | all_Waves(:,paramSW.AmpCriterionIdx)>paramSW.art_ampl | all_Waves(:,11)>paramSW.max_posampl| all_Waves(:,14)>paramSW.art_ampl| abs(all_Waves(:,15))>paramSW.art_ampl,:)=[];
 
     thr_Wave_pc=[];
     thr_Wave_eg=[];
@@ -198,7 +198,7 @@ for nF=1:length(SW_files)
 
     for nBl=unique(slow_Waves(:,2))'
         slow_Waves_perE=[];
-        duration_of_recording=20/60;
+        duration_of_recording=10/60;
         for nE=1:length(labels)
             this_thr=thr_Wave_eg(nE); %av_CTR_threshold_SW.mean_Thr(av_CTR_threshold_SW.Elec==labels{nE});
             slow_Waves_perE=[slow_Waves_perE ; [sum(slow_Waves(:,3)==nE & slow_Waves(:,2)==nBl)/duration_of_recording nanmean(slow_Waves(slow_Waves(:,3)==nE & slow_Waves(:,2)==nBl,4)) nanmean(1./((slow_Waves(slow_Waves(:,3)==nE & slow_Waves(:,2)==nBl,7)-slow_Waves(slow_Waves(:,3)==nE & slow_Waves(:,2)==nBl,5))/fsample)) ...
@@ -242,7 +242,7 @@ for nF=1:length(SW_files)
     end
 
     slow_Waves_perE=[];
-    duration_of_recording=20/60*40;
+    duration_of_recording=10/60*40;
     for nE=1:length(labels)
         this_thr=thr_Wave_eg(nE); %av_CTR_threshold_SW.mean_Thr(av_CTR_threshold_SW.Elec==labels{nE});
         slow_Waves_perE=[slow_Waves_perE ; [sum(slow_Waves(:,3)==nE)/duration_of_recording nanmean(slow_Waves(slow_Waves(:,3)==nE,4)) nanmean(1./((slow_Waves(slow_Waves(:,3)==nE,7)-slow_Waves(slow_Waves(:,3)==nE,5))/fsample)) ...
@@ -534,7 +534,6 @@ subjects = [];
     set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
 ylim([0 0.04]*100)
 xlim([0.5 4.5])
-saveas(gcf,[pwd filesep 'Figures' filesep 'FigX_Panel.svg'])
 
     figure('Position',[2245         400         210         428])
       for j = 1:2 % number of group
