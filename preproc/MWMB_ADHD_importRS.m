@@ -21,7 +21,7 @@ addpath(genpath(path_LSCPtools))
 files=dir([path_data filesep 'EEG' filesep '*_R*.eeg']);
 
 %% loop on subjects
-redo=0; % 1 to force re-import, 0 otherwise
+redo=1; % 1 to force re-import, 0 otherwise
 for nF=1:length(files)
     if startsWith(files(nF).name, '._') % EP - Skip this file if it starts with dot underline.
         continue; %  EP - Jump to the bottom of the loop.
