@@ -218,8 +218,8 @@ xlim([-0.2 1.6])
 format_fig;
 
 
-%% ERP and split by group
-figure;
+%% ERP and split by group - manuscript figure
+f1=figure('Position', [100, 100, 1000, 1000]); 
 thisCh=match_str(chLabels,'Fz');
 subplot(2,2,1);
 hp=[];
@@ -227,15 +227,19 @@ hp=[];
 hold on;
 [~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+[~,hp(3)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
+[~,hp(4)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
 hold on;
-legend(hp,{'No Go','Go'})
-title('ERP NoGo vs Go: Fz');
-subtitle('Solid line: Control     Dashed line: ADHD');
+%legend(hp,{'No Go','Go'})
+title('Fz');
+xlabel('Time (s)')
+ylabel('Voltage (µV)')
+ylim([-4 8])
 xlim([-0.2 1.6])
 format_fig;
+disp(['Min ERP value: ', num2str(min(all_ERP_NG(:)))]);
+disp(['Max ERP value: ', num2str(max(all_ERP_NG(:)))]);
 
 thisCh=match_str(chLabels,'Cz');
 subplot(2,2,2);
@@ -244,12 +248,16 @@ hp=[];
 hold on;
 [~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+[~,hp(3)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
+[~,hp(4)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
 hold on;
-legend(hp,{'No Go','Go'})
-title('ERP NoGo vs Go: Cz');
+lgd = legend(hp,{'NoGo Control','Go Control','NoGo ADHD','Go ADHD'},'Location','northeast', 'Box', 'off');
+lgd.Position = [0.85, 0.8, 0.1, 0.1];
+title('Cz');
+xlabel('Time (s)')
+ylabel('Voltage (µV)')
+ylim([-4 15])
 xlim([-0.2 1.6])
 format_fig;
 
@@ -260,12 +268,15 @@ hp=[];
 hold on;
 [~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+[~,hp(3)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
+[~,hp(4)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
 hold on;
-legend(hp,{'No Go','Go'})
-title('ERP NoGo vs Go: Pz');
+% legend(hp,{'No Go','Go'})
+xlabel('Time (s)')
+ylabel('Voltage (µV)')
+ylim([-4 15])
+title('Pz');
 xlim([-0.2 1.6])
 format_fig;
 
@@ -276,15 +287,21 @@ hp=[];
 hold on;
 [~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+[~,hp(3)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
+[~,hp(4)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
 hold on;
-legend(hp,{'No Go','Go'})
-title('ERP NoGo vs Go: Oz');
+% legend(hp,{'No Go','Go'})
+xlabel('Time (s)')
+ylabel('Voltage (µV)')
+ylim([-4 8])
+title('Oz');
 xlim([-0.2 1.6])
 format_fig;
 
+sgtitle('ERP NoGo vs Go', 'FontWeight', 'bold', 'FontSize', 25);
+% Save figure
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig2_PanelA_ERP.svg']); %!! When you get a chance, reimport in inkscape because this should be Fig3 not fig2
 
 %% ERP differences
 figure;
@@ -337,7 +354,7 @@ xlim([-0.2 1.5])
 format_fig;
 
 
-%%
+%% Stats for Manuscript part 1:
 thisCh=match_str(chLabels,'Pz'); %Pz, Fz
 Group_A=squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:))-squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:));
 Group_B=squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:))-squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:));
@@ -346,14 +363,13 @@ totPerm=500;
 [realpos]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.05,0.05,totPerm,xTime,[],[]); % Runs an ANOVA - Main effect of group on the diff
 
 
-
-%%
+%% Stats for Manuscript part 2:
 both_Groups=[Group_A ; Group_B];
 for k=1:size(both_Groups,2)
     [p_aov(k),anovatab,stats] =anova1(both_Groups(:,k),Groups,'off');
     [p_ttest2(k)] =ranksum(Group_A(:,k),Group_B(:,k));
 end
-%%
+%% Stats for Manuscript part 3:
 TimeWin=[0.15 0.25];
 thisCh=match_str(chLabels,'POz');
 diffG_NG=squeeze(mean(all_ERP_G(:,thisCh,xTime>TimeWin(1) & xTime<TimeWin(2))-all_ERP_NG(:,thisCh,xTime>TimeWin(1) & xTime<TimeWin(2)),3));

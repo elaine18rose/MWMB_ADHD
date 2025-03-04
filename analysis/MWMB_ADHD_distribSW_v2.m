@@ -189,11 +189,13 @@ for nG=1:length(uniqueGroupIDs)
     temp_plot=all_distrib_SW(all_GroupID==uniqueGroupIDs(nG),:);
     [pV hplot(nG)]=simpleTplot(bins,temp_plot,0,Colors(nG,:),[0],'-',0.5,1,0,1,4);
 end
-legend(hplot,uniqueGroupIDs)
+legend(hplot,uniqueGroupIDs, 'Box', 'off')
 format_fig;
-xlabel('Amplitude all waves')
-ylabel('SW density')
+xlabel('Amplitude all Waves')
+ylabel('Slow Wave Density')
 xlim([0 75])
+% Save figure
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelAi_Dist.svg']);
 
 figure('Position',[347   308   441   306]);
 uniqueGroupIDs={'Control','ADHD'};
@@ -205,11 +207,14 @@ hplot=[];
    simpleTplot(bins,temp_plotA,0,Colors(2,:),[0 0.05 0.05 1000],'-',0.5,1,0,1,4);
 % end
 % legend(hplot,uniqueGroupIDs)
+yline(0, 'k', 'LineWidth', 2);
 format_fig;
-xlabel('Amplitude all waves')
-ylabel('Diff. SW density')
+xlabel('Amplitude All Waves')
+ylabel('Diff. Slow Wave Density')
 xlim([0 75])
 ylim([-1 1]*3)
+% Save figure
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelAii_Dist.svg']);
 
 %% Per electrode
 figure('Position',[347   308   441   306]);

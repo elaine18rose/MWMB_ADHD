@@ -78,32 +78,33 @@ mdlFA0  = fitlme(all_behav_table,'FA~1+BlockN+Group+(1|SubID)');
 mdlFA1  = fitlme(all_behav_table,'FA~1+BlockN*Group+(1|SubID)'); 
 %mdlFA2  = fitlme(all_behav_table,'FA~1+BlockN*Group+(BlockN|SubID)'); % Winning AIC and BIC model - Group: p = .02, BlockN p <.001
  %%% Extract fit statistics for each model
-AIC_values = [mdlFA0.ModelCriterion.AIC, mdlFA1.ModelCriterion.AIC];%, mdlFA2.ModelCriterion.AIC];
-BIC_values = [mdlFA0.ModelCriterion.BIC, mdlFA1.ModelCriterion.BIC];%, mdlFA2.ModelCriterion.BIC];
-% Display results in a table
-ModelNames = {'Model 0', 'Model 1'};%, 'Model 2'};
-fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
-disp(fit_table);
+% AIC_values = [mdlFA0.ModelCriterion.AIC, mdlFA1.ModelCriterion.AIC];%, mdlFA2.ModelCriterion.AIC];
+% BIC_values = [mdlFA0.ModelCriterion.BIC, mdlFA1.ModelCriterion.BIC];%, mdlFA2.ModelCriterion.BIC];
+% % Display results in a table
+% ModelNames = {'Model 0', 'Model 1'};%, 'Model 2'};
+% fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
+% disp(fit_table);
+compare(mdlFA0, mdlFA1)
 
-anova(mdlFA2)
+anova(mdlFA0)
 
 
 % Misses/Omission Errors
 mdlMiss0  = fitlme(all_behav_table,'Misses~1+BlockN+Group+(1|SubID)'); 
 mdlMiss1  = fitlme(all_behav_table,'Misses~1+BlockN*Group+(1|SubID)'); 
-mdlMiss2  = fitlme(all_behav_table,'Misses~1+BlockN*Group+(BlockN|SubID)'); % Better fitting model - p = .3, BlockN = .0028
+% mdlMiss2  = fitlme(all_behav_table,'Misses~1+BlockN*Group+(BlockN|SubID)'); % Better fitting model - p = .3, BlockN = .0028
 % Another way to compare models: 
-% compare(mdlMiss0, mdlMiss1)
+compare(mdlMiss0, mdlMiss1)
 % compare(mdlMiss1,mdlMiss2)
 % compare(mdlMiss0,mdlMiss2)
 
-anova(mdlMiss2)
+anova(mdlMiss1)
 
 
 %RT
 mdlRT0  = fitlme(all_behav_table,'RT~1+BlockN+Group+(1|SubID)'); 
 mdlRT1  = fitlme(all_behav_table,'RT~1+BlockN*Group+(1|SubID)'); 
-mdlRT2  = fitlme(all_behav_table,'RT~1+BlockN*Group+(BlockN|SubID)'); % Winning model; 
+% mdlRT2  = fitlme(all_behav_table,'RT~1+BlockN*Group+(BlockN|SubID)'); % Winning model; 
  %%% Extract fit statistics for each model
 % AIC_values = [mdlRT0.ModelCriterion.AIC, mdlRT1.ModelCriterion.AIC, mdlRT2.ModelCriterion.AIC];
 % BIC_values = [mdlRT0.ModelCriterion.BIC, mdlRT1.ModelCriterion.BIC, mdlRT2.ModelCriterion.BIC];
@@ -111,14 +112,15 @@ mdlRT2  = fitlme(all_behav_table,'RT~1+BlockN*Group+(BlockN|SubID)'); % Winning 
 % ModelNames = {'Model 0', 'Model 1', 'Model 2'};
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
+compare(mdlRT0, mdlRT1)
 
-anova(mdlRT2)
+anova(mdlRT0)
 
 
 % Standard Deviation of Reaction Times; NOTE: Changed to byBlock data 
-% mdlstdRT0  = fitlme(all_block_table,'stdRT~1+BlockN+Group+(1|SubID)'); 
-% mdlstdRT1  = fitlme(all_block_table,'stdRT~1+BlockN*Group+(1|SubID)'); 
-mdlstdRT2  = fitlme(all_block_table,'stdRT~1+BlockN*Group+(BlockN|SubID)'); % Winning model - Group = .02, Block = .0058
+mdlstdRT0  = fitlme(all_block_table,'stdRT~1+BlockN+Group+(1|SubID)'); 
+mdlstdRT1  = fitlme(all_block_table,'stdRT~1+BlockN*Group+(1|SubID)'); 
+% mdlstdRT2  = fitlme(all_block_table,'stdRT~1+BlockN*Group+(BlockN|SubID)'); % Winning model - Group = .02, Block = .0058
 %%% Extract fit statistics for each model
 % AIC_values = [mdlstdRT0.ModelCriterion.AIC, mdlstdRT1.ModelCriterion.AIC, mdlstdRT2.ModelCriterion.AIC];
 % BIC_values = [mdlstdRT0.ModelCriterion.BIC, mdlstdRT1.ModelCriterion.BIC, mdlstdRT2.ModelCriterion.BIC];
@@ -126,8 +128,9 @@ mdlstdRT2  = fitlme(all_block_table,'stdRT~1+BlockN*Group+(BlockN|SubID)'); % Wi
 % ModelNames = {'Model 0', 'Model 1', 'Model 2'};
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
+compare(mdlstdRT0, mdlstdRT1)
 
-anova(mdlstdRT2)
+anova(mdlstdRT0)
 
 
 % D prime
@@ -271,8 +274,9 @@ mdlON2 = fitlme(all_block_table,'ON~1+BlockN*Group+(BlockN|SubID)'); % Winning A
 % ModelNames = {'Model 0', 'Model 1', 'Model 2'};
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
+compare(mdlON0, mdlON1)
 
-anova(mdlON2)
+anova(mdlON0)
 
 
 % Mind Wandering
@@ -286,8 +290,9 @@ mdlMW2 = fitlme(all_block_table,'MW~1+BlockN*Group+(BlockN|SubID)'); % AIC winni
 % ModelNames = {'Model 0', 'Model 1', 'Model 2'};
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
+compare(mdlMW0, mdlMW1)
 
-anova(mdlMW2)
+anova(mdlMW0)
 
 
 % Mind Blanking
@@ -301,13 +306,14 @@ mdlMB2 = fitlme(all_block_table,'MB~1+BlockN*Group+(BlockN|SubID)'); % Winning m
 % ModelNames = {'Model 0', 'Model 1', 'Model 2'};
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
+compare(mdlMB0, mdlMB1)
 
 anova(mdlMB2)
 
 
 % Don't Remember
-% mdlDK0 = fitlme(all_block_table,'DK~1+BlockN+Group+(1|SubID)');
-% mdlDK1 = fitlme(all_block_table,'DK~1+BlockN*Group+(1|SubID)');
+mdlDK0 = fitlme(all_block_table,'DK~1+BlockN+Group+(1|SubID)');
+mdlDK1 = fitlme(all_block_table,'DK~1+BlockN*Group+(1|SubID)');
 mdlDK2 = fitlme(all_block_table,'DK~1+BlockN*Group+(BlockN|SubID)'); % Winning model; Group: p = 0.85, BlockN: p = .0015
 % %%% Extract fit statistics for each model
 % AIC_values = [mdlDK0.ModelCriterion.AIC, mdlDK1.ModelCriterion.AIC, mdlDK2.ModelCriterion.AIC];
@@ -316,8 +322,9 @@ mdlDK2 = fitlme(all_block_table,'DK~1+BlockN*Group+(BlockN|SubID)'); % Winning m
 % ModelNames = {'Model 0', 'Model 1', 'Model 2'};
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
+compare(mdlDK0, mdlDK1) %NOTE: mdlDK1 was better fitting but the interaction, although sig (p=.02), doesn't withhold sig after bonferroni correction (new alpha = .0125)
 
-anova(mdlDK2)
+anova(mdlDK1)
 
 %% probe-level stats
 all_probe_table.Group=categorical(all_probe_table.Group);
@@ -521,7 +528,7 @@ Int_Paired_test_table = array2table(Int_Paired_test, ...
 disp(Int_Paired_test_table);
 
 
-% correcting for multiple comparisons - Bonferrnni 
+% correcting for multiple comparisons - Bonferroni 
 alpha = 0.05; % Set your original significance level
 num_tests = length(numbers_of_interest); % Number of comparisons
 adjusted_alpha = alpha / num_tests; % Adjusted significance level
@@ -623,8 +630,9 @@ mdlvig2 = fitlme(all_probe_table,'Vigilance~1+Block*Group+(Block|SubID)'); % Win
 % ModelNames = {'Model 0', 'Model 1', 'Model 2'};
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
+compare(mdlvig0, mdlvig1)
 
-anova(mdlvig2)
+anova(mdlvig0)
 
 
 vigilance_levels = 1:4;

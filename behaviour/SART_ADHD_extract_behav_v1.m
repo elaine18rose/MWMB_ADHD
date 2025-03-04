@@ -870,6 +870,398 @@ if flag_figures == 1
     format_fig
     xlim([0.5 3.5])
     ylim([0 80])
+
+    %% Dot plots - Miss/omission errors
+     Colors=[253,174,97;
+    171,217,233;
+    44,123,182]/256;
+
+     figure; hold on;
+     subjects = [];
+     data_to_plot=[];
+     meandata_to_plot=[];
+     group_labels={'C','A'};
+     %all_block_table.Group=categorical(all_block_table.Group);
+     for i = 1:4 % number of repetitions
+         for j = 1:2 % number of group
+             data_to_plot{i, j} = all_block_table.Misses(all_block_table.BlockN==i & all_block_table.Group==group_labels{j});
+         end
+     end
+
+
+     for j = 1:2
+         for i = 1:4
+             simpleDotPlot(i + (2*j - 3) * 0.1, 100 * data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+         end
+         plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) 100 * nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
+     end
+     set(gca, 'xtick',1:4); %to change y-axis to percentage
+     title(['Omission Errors per Block']);
+     ylabel('% of Omission Errors'); xlabel('Block Number');
+     format_fig;
+     set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+     ylim([0 0.04]*100)
+     xlim([0.5 4.5])
+     saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelB_MissesPerBlock.svg'])
+
+
+     for j = 1:2 % number of group
+         subjects = unique(all_block_table.SubID(all_block_table.Group == group_labels{j})); % Getting all subjects in this group
+         subject_means = [];
+
+         for s = 1:length(subjects)
+             subject_mean = mean(all_block_table.Misses(all_block_table.Group == group_labels{j} & ismember(all_block_table.SubID, subjects(s))));
+             subject_means = [subject_means; subject_mean];
+         end
+         data_to_plot_perS{j} = subject_means;
+     end
+     figure('Position',[2245         400         260         428])
+     for j = 1:2 % number of group
+         simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+     end
+hold on;
+
+
+% Create invisible plot objects for the legend (to represent the colored markers)
+h1 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(1,:), 'MarkerEdgeColor', Colors(1,:), 'MarkerSize', 10); % Control
+h2 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(2,:), 'MarkerEdgeColor', Colors(2,:), 'MarkerSize', 10); % ADHD
+% Add the legend with the manually created plot handles
+legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 15, 'Position', [0.75, 0.7, 0.1, 0.1]);
+
+     ylim([0 0.04]*100)
+     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
+     title(['Omission']);
+     %     ylabel('% of Omission Errors'); xlabel('Block Number');
+     format_fig;
+     set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+     xlabel('ADHD');
+     saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelB_MissesAvg.svg'])
+
+     %% FA/Comission 
+     figure; hold on;
+     subjects = [];
+     data_to_plot=[];
+     meandata_to_plot=[];
+     group_labels={'C','A'};
+     %all_block_table.Group=categorical(all_block_table.Group);
+     for i = 1:4 % number of repetitions
+         for j = 1:2 % number of group
+             data_to_plot{i, j} = all_block_table.FA(all_block_table.BlockN==i & all_block_table.Group==group_labels{j});
+         end
+     end
+
+
+     for j = 1:2
+         for i = 1:4
+             simpleDotPlot(i + (2*j - 3) * 0.1, 100 * data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+         end
+         plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) 100 * nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
+     end
+     set(gca, 'xtick',1:4); %to change y-axis to percentage
+     title(['Commission Errors per Block']);
+     ylabel('% of Commission Errors'); xlabel('Block Number');
+     format_fig;
+     set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+     ylim([0 0.6]*100)
+     xlim([0.5 4.5])
+     saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelC_FAPerBlock.svg'])
+
+
+     for j = 1:2 % number of group
+         subjects = unique(all_block_table.SubID(all_block_table.Group == group_labels{j})); % Getting all subjects in this group
+         subject_means = [];
+
+         for s = 1:length(subjects)
+             subject_mean = mean(all_block_table.FA(all_block_table.Group == group_labels{j} & ismember(all_block_table.SubID, subjects(s))));
+             subject_means = [subject_means; subject_mean];
+         end
+         data_to_plot_perS{j} = subject_means;
+     end
+     figure('Position',[2245         400         260         428])
+     for j = 1:2 % number of group
+         simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+     end
+     ylim([0 0.6]*100)
+     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
+     title(['Commission']);
+     %     ylabel('% of Omission Errors'); xlabel('Block Number');
+     format_fig;
+     set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+     xlabel('ADHD');
+     saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelC_FAAvg.svg'])
+
+     %% RT
+     figure; hold on;
+     subjects = [];
+     data_to_plot=[];
+     meandata_to_plot=[];
+     group_labels={'C','A'};
+     %all_block_table.Group=categorical(all_block_table.Group);
+     for i = 1:4 % number of repetitions
+         for j = 1:2 % number of group
+             data_to_plot{i, j} = all_block_table.RT(all_block_table.BlockN==i & all_block_table.Group==group_labels{j});
+         end
+     end
+
+
+     for j = 1:2
+         for i = 1:4
+             simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+         end
+         plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
+     end
+     set(gca, 'xtick',1:4); %to change y-axis to percentage
+     title(['Reaction Time across Block']);
+     ylabel('Reaction Time (s)'); xlabel('Block Number');
+     format_fig;
+     set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+     ylim([0.35 0.45])
+     xlim([0.5 4.5])
+     saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelD_RTPerBlock.svg'])
+
+
+     for j = 1:2 % number of group
+         subjects = unique(all_block_table.SubID(all_block_table.Group == group_labels{j})); % Getting all subjects in this group
+         subject_means = [];
+
+         for s = 1:length(subjects)
+             subject_mean = mean(all_block_table.RT(all_block_table.Group == group_labels{j} & ismember(all_block_table.SubID, subjects(s))));
+             subject_means = [subject_means; subject_mean];
+         end
+         data_to_plot_perS{j} = subject_means;
+     end
+     figure('Position',[2245         400         260         428])
+     for j = 1:2 % number of group
+         simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+     end
+     ylim([0.35 0.45])
+     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
+     title(['Reaction Time (s)']);
+     %     ylabel('% of Omission Errors'); xlabel('Block Number');
+     format_fig;
+     set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+     xlabel('ADHD');
+     saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelD_RTAvg.svg'])
+
+          %% stdRT
+     figure; hold on;
+     subjects = [];
+     data_to_plot=[];
+     meandata_to_plot=[];
+     group_labels={'C','A'};
+     %all_block_table.Group=categorical(all_block_table.Group);
+     for i = 1:4 % number of repetitions
+         for j = 1:2 % number of group
+             data_to_plot{i, j} = all_block_table.stdRT(all_block_table.BlockN==i & all_block_table.Group==group_labels{j});
+         end
+     end
+
+
+     for j = 1:2
+         for i = 1:4
+             simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+         end
+         plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
+     end
+     set(gca, 'xtick',1:4); %to change y-axis to percentage
+     title(['Std Deviation of RT across Block']);
+     ylabel('Std Dev RT (s)'); xlabel('Block Number');
+     format_fig;
+     set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+     ylim([0.05 0.2])
+     xlim([0.5 4.5])
+     saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelD_stdRTPerBlock.svg'])
+
+
+     for j = 1:2 % number of group
+         subjects = unique(all_block_table.SubID(all_block_table.Group == group_labels{j})); % Getting all subjects in this group
+         subject_means = [];
+
+         for s = 1:length(subjects)
+             subject_mean = mean(all_block_table.stdRT(all_block_table.Group == group_labels{j} & ismember(all_block_table.SubID, subjects(s))));
+             subject_means = [subject_means; subject_mean];
+         end
+         data_to_plot_perS{j} = subject_means;
+     end
+     figure('Position',[2245         400         260         428])
+     for j = 1:2 % number of group
+         simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+     end
+     ylim([0.05 0.2])
+     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
+     title(['Std Deviation', newline,' of RT (s)']);
+     %     ylabel('% of Omission Errors'); xlabel('Block Number');
+     format_fig;
+     set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+     xlabel('ADHD');
+     saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelD_stdRTAvg.svg'])
+
+     %% Mind states
+     numbers_of_interest = [1, 2, 3, 4];
+     figure; hold on;
+     group_labels = {'Control', 'ADHD'};
+     num_states = length(numbers_of_interest); % 4 states
+     data_to_plot = cell(num_states, 2);
+
+     % Prepare data for dot plot
+     for i = 1:num_states
+         data_to_plot{i, 1} = Control_state(:, i) ./ sum(Control_state, 2) * 100; % Convert to percentage
+         data_to_plot{i, 2} = ADHD_state(:, i) ./ sum(ADHD_state, 2) * 100; % Convert to percentage
+     end
+
+     % Plot dot plots
+     for j = 1:2 % Control (1) and ADHD (2)
+         for i = 1:num_states
+             simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+         end
+         % Plot mean lines
+         plot((1:num_states) + (2*j - 3) * 0.1, cellfun(@nanmean, data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
+     end
+
+     % Formatting
+     labels = {'On','MW','MB ', 'DR'};
+     set(gca, 'XTick', 1:num_states, 'XTickLabel', labels);
+     xtickangle(45);
+     ylabel('% of Mind State');
+     title(['Mind State Distribution' newline 'per Group']);
+     format_fig;
+     set(gca, 'FontSize', 22, 'FontWeight', 'bold', 'LineWidth', 1.5);
+     xlim([0.5 num_states + 0.5]);
+     ylim([0 60])
+     
+     h1 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(1,:), 'MarkerEdgeColor', Colors(1,:), 'MarkerSize', 10); % Control
+     h2 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(2,:), 'MarkerEdgeColor', Colors(2,:), 'MarkerSize', 10); % ADHD
+     % Add the legend with the manually created plot handles
+     legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 15, 'Position', [0.75, 0.7, 0.1, 0.1]);
+
+
+     % Save figure
+     saveas(gcf, [pwd filesep 'Figures' filesep 'Fig2_PanelA_MindStates.svg']);
+     %% Intention x MW
+     all_probe_table.Group=categorical(all_probe_table.Group);
+     all_probe_table.StateC=categorical(nan(size(all_probe_table,1),1));
+     all_probe_table.StateC(all_probe_table.State==1)='ON';
+     all_probe_table.StateC(all_probe_table.State==2)='MW';
+     all_probe_table.StateC(all_probe_table.State==3)='MB';
+     all_probe_table.StateC(all_probe_table.State==4)='DK';
+
+     ctrs=unique(all_behav_table.SubID(all_behav_table.Group=='C' ));
+     adhds=unique(all_behav_table.SubID(all_behav_table.Group=='A' ));
+
+     numbers_of_interest = [1, 2, 3, 4];
+     ADHD_int = [];
+     Control_int =[];
+     Control_int = zeros(length(ctrs), length(numbers_of_interest));
+     ADHD_int = zeros(length(adhds), length(numbers_of_interest));
+
+     clear int_values
+     index = 1; % Initialize a separate index for Control_vig
+     for nc = 1:length(ctrs)
+         if ctrs(nc) == 'C015'
+             disp('Skipping C015')
+             continue; % Skipping C015 'cause ppt didn't understand instructions
+         end
+         % Extract the State column for the current participant
+         int_values = all_probe_table.Intention(all_probe_table.SubID == ctrs(nc) & all_probe_table.StateC == 'MW'); %EP - changed this so that it only counts intention values when they report MW
+         % Count occurrences of each number (1, 2, 3, 4) for the current participant
+         Control_int(index, :) = histcounts(int_values, [numbers_of_interest, Inf]);
+         index = index + 1; % Increment the Control_int index only when valid data is added
+     end
+
+     %     % Calculate the total occurrences of each number across all participants
+     %     Ctr_int_total_occurrences = sum(Control_int);
+     %     % Calculate the percentage distribution
+     %     Ctr_int_percentage_distribution = Ctr_int_total_occurrences / sum(Ctr_int_total_occurrences) * 100;
+
+     clear int_values
+     for nc = 1:length(adhds)
+         % Extract the State column for the current participant
+         int_values = all_probe_table.Intention(all_probe_table.SubID == adhds(nc) & all_probe_table.StateC == 'MW'); %EP - changed this so that it only counts intention values when they report MW
+         % Count occurrences of each number (1, 2, 3, 4) for the current participant
+         ADHD_int(nc, :) = histcounts(int_values, [numbers_of_interest, Inf]);
+     end
+
+     %     ADHD_int_total_occurrences = sum(ADHD_int);
+     %     ADHD_int_percentage_distribution = ADHD_int_total_occurrences / sum(ADHD_int_total_occurrences) * 100;
+
+
+
+     % Plot the distribution - dot plots
+     numbers_of_interest = [1, 2, 3, 4]; % Intentionality response categories
+     figure; hold on;
+     group_labels = {'Control', 'ADHD'};
+     num_states = length(numbers_of_interest); % 4 intentionality responses
+
+     % Convert raw counts to percentages per participant
+     Control_int_percent = Control_int ./ sum(Control_int, 2) * 100;
+     ADHD_int_percent = ADHD_int ./ sum(ADHD_int, 2) * 100;
+
+     % Prepare data for dot plot
+     data_to_plot = cell(num_states, 2);
+     for i = 1:num_states
+         data_to_plot{i, 1} = Control_int_percent(:, i);
+         data_to_plot{i, 2} = ADHD_int_percent(:, i);
+     end
+
+     % Plot dot plots
+     for j = 1:2 % Control (1) and ADHD (2)
+         for i = 1:num_states
+             simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+         end
+         % Plot mean lines
+         plot((1:num_states) + (2*j - 3) * 0.1, cellfun(@nanmean, data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
+     end
+
+     % Formatting
+     labels = {'Ent int', 'Some int', 'Some Unint', 'Ent Unint'};
+     set(gca, 'XTick', 1:num_states, 'XTickLabel', labels);
+     xtickangle(0);
+     ylabel(['% of Intention for MW']);
+     title(['Intentionality of' newline 'Mind Wandering per Group']);
+     format_fig;
+     set(gca, 'FontSize', 22, 'FontWeight', 'bold', 'LineWidth', 1.5);
+     xlim([0.5 num_states + 0.5]);
+     ylim([0 60]); yticks(0:10:60);
+
+    saveas(gcf, [pwd filesep 'Figures' filesep 'Fig2_PanelB_MWxInt.svg']);
+
+     %% Vigilance
+     numbers_of_interest = [1, 2, 3, 4];
+     figure; hold on;
+     group_labels = {'Control', 'ADHD'};
+     num_states = length(numbers_of_interest); % 4 states
+     data_to_plot = cell(num_states, 2);
+
+     % Prepare data for dot plot
+     for i = 1:num_states
+         data_to_plot{i, 1} = Control_vig(:, i) ./ sum(Control_vig, 2) * 100; % Convert to percentage
+         data_to_plot{i, 2} = ADHD_vig(:, i) ./ sum(ADHD_vig, 2) * 100; % Convert to percentage
+     end
+
+     % Plot dot plots
+     for j = 1:2 % Control (1) and ADHD (2)
+         for i = 1:num_states
+             simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+         end
+         % Plot mean lines
+         plot((1:num_states) + (2*j - 3) * 0.1, cellfun(@nanmean, data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
+     end
+
+     % Formatting
+     labels = {'Alert++', 'Alert+','Sleepy+', 'Sleepy++'};
+     set(gca, 'XTick', 1:num_states, 'XTickLabel', labels);
+     xtickangle(45);
+     ylabel('% of Vigilance Ratings');
+     title('Vigilance Ratings per Group');
+     format_fig;
+     set(gca, 'FontSize', 22, 'FontWeight', 'bold', 'LineWidth', 1.5);
+     ax = gca; ax.XAxis.FontSize = 18; set(gca, 'FontWeight', 'bold');
+     xlim([0.5 num_states + 0.5]);
+     yticks(0:10:60);
+
+     % Save figure
+     saveas(gcf, [pwd filesep 'Figures' filesep 'Fig2_PanelC_Vig.svg']);
+
 end
 
 
@@ -882,8 +1274,8 @@ all_behav_table.Group=categorical(all_behav_table.Group);
 all_behav_table.SubID=categorical(all_behav_table.SubID);
 
 mdlFA=fitlme(all_behav_table,'FA~1+BlockN*Group+(1|SubID)'); % you can do this for miss and RT
-mdlMiss=fitlme(all_behav_table,'Misses~1+BlockN*Group+(1|SubID)'); 
-mdlstdRT=fitlme(all_behav_table,'stdRT~1+BlockN*Group+(1|SubID)'); 
+mdlMiss=fitlme(all_behav_table,'Misses~1+BlockN*Group+(1|SubID)');
+mdlstdRT=fitlme(all_behav_table,'stdRT~1+BlockN*Group+(1|SubID)');
 
 % block-level stats
 all_block_table.Group=categorical(all_block_table.Group);
