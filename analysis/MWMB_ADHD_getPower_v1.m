@@ -496,10 +496,21 @@ else
     sig_freqs = [];
 end
 
-figure;
+%% Figure for Paper: Power spectrum w/ sig freq band highlighted
+Colors=[253,174,97;
+    171,217,233;
+    44,123,182]/256;
+f1=figure('Position', [100, 100, 1250, 750]); %left, bottom, width, height
+
+% Plot for Controls
+[~, hp(1)] = simpleTplot(newfaxis, Group_A, 0, Colors(1,:), 0, '-', 0.5, 1, 0, 1, 2);
 hold on;
-plot(newfaxis, mean(Group_A, 1), 'b', 'DisplayName', 'Control');
-plot(newfaxis, mean(Group_B, 1), 'r', 'DisplayName', 'ADHD');
+% Plot for ADHD
+[~, hp(2)] = simpleTplot(newfaxis, Group_B, 0, Colors(2,:), 0, '-', 0.5, 1, 0, 1, 2);
+
+%plot(newfaxis, mean(Group_A, 1), 'Color', Colors(1,:), 'DisplayName', 'Control');
+%plot(newfaxis, mean(Group_B, 1), 'Color', Colors(2,:), 'DisplayName', 'ADHD');
+
 
 % Highlight significant regions
 ylimits = ylim;
@@ -507,17 +518,23 @@ if ~isempty(sig_freqs)
     sig_freq_values = newfaxis(sig_freqs); % Map indices to frequency values
     fill([sig_freq_values, fliplr(sig_freq_values)], ...
          [ylimits(1)*ones(1, length(sig_freq_values)), ylimits(2)*ones(1, length(sig_freq_values))], ...
-         'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', 'Significant');
+         'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', 'Significant Diff');
 end
 
 legend;
-xlabel('Frequency (Hz)');
-ylabel('Power');
-title('Group Differences in Power - Fz');
+xlabel('Frequency (Hz)'); xlim([2 15]);
+ylabel('Power'); ylim([-2 -0.75])
+lgd = legend([hp(1), hp(2), patch([-1 -1], [-1 -1], 'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none')], ...
+       {'Control', 'ADHD', 'Significant Diff'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 20);
+lgd.Position = [0.8, 0.8, 0.1, 0.1];
 format_fig
+title('Group Differences in Power - Fz', 'FontSize',30);
 hold off;
 
-%% Topo of Sig PS cluster found for Fz
+% Save figure
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig2_PanelB_PS.svg']);
+
+%% Figure for Paper: Topo of Sig PS cluster found for Fz
 sig_freq_range = newfaxis(sig_freqs);
 freq_band = [min(sig_freq_range) max(sig_freq_range)];
 freq_idx = pow.freq >= freq_band(1) & pow.freq <= freq_band(2);
@@ -534,12 +551,21 @@ for nCh = 1:length(layout.label)-2
     temp_topo_adhd(nCh) = squeeze(nanmean(mean(all_pow(adhd_idx, ch_idx, freq_idx),3), 1));
     topo_adhd(nCh,:) = squeeze(mean(all_pow(adhd_idx, ch_idx,freq_idx), 3));
 end
-figure;
+f2=figure('Position', [100, 100, 1250, 500]); %left, bottom, width, height
 subplot(1,3,1)
+ax = gca;        % Get the current axis
+ax.Position(1) = ax.Position(1) - 0.1;
 simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
-colormap(cmap); colorbar;
-title('Sig Cluster found for Fz - ADHD');
-caxis([-1.8 -1]) 
+colormap(cmap); 
+cb = colorbar;
+ylabel(cb, 'Power (dB)', 'FontSize',18, 'FontWeight', 'bold');
+cb.Ticks = -2:0.5:-1;
+cb.Position(4) = cb.Position(4) * 0.8; %shorter
+cb.Position(1) = cb.Position(1) + 0.045; % Move it slightly to the right
+cb.Position(2) = cb.Position(2) + 0.05; % Move up
+t = title(['ADHD']);t.Position(2) = t.Position(2) -.2 ;
+set(gca, 'TitleFontSizeMultiplier', 1.1);
+caxis([-2 -1]) 
 format_fig;
 
 %Control Topo
@@ -550,11 +576,21 @@ for nCh = 1:length(layout.label)-2
     temp_topo_control(nCh) = squeeze(nanmean(mean(all_pow(control_idx, ch_idx, freq_idx),3), 1));
     topo_control(nCh,:) = squeeze(mean(all_pow(control_idx, ch_idx,freq_idx), 3));
 end
+
 subplot(1,3,2)
+ax = gca;        % Get the current axis
+ax.Position(1) = ax.Position(1) - 0.05;
 simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
-colormap(cmap); colorbar;
-title('Sig Cluster found for Fz - Control');
-caxis([-1.8 -1]) 
+colormap(cmap);
+cb = colorbar;
+cb.Ticks = -2:0.5:-1;
+cb.Position(4) = cb.Position(4) * 0.8; %shorter
+cb.Position(1) = cb.Position(1) + 0.045; % Move it slightly to the right
+cb.Position(2) = cb.Position(2) + 0.05; % Move up
+t = title(['Control']);t.Position(2) = t.Position(2) -.2;
+ylabel(cb, 'Power (dB)', 'FontSize',18, 'FontWeight', 'bold');
+set(gca, 'TitleFontSizeMultiplier', 1.1);
+caxis([-2 -1]) 
 format_fig;
 
 
@@ -567,8 +603,15 @@ fdr_sig = fdr(topo_pval, 0.05);
 subplot(1,3,3)
 simpleTopoPlot_ft(topo_tval, layout,'on',[],0,1);
 colormap(cmap_ttest);
-colorbar;
-title('Diff btw Group (ADHD-CTR)(tvalue)')
+cb = colorbar;
+cb.Ticks = -2:2:2;
+cb.Position(4) = cb.Position(4) * 0.8; %shorter
+cb.Position(1) = cb.Position(1) + 0.045; % Move it slightly to the right
+cb.Position(2) = cb.Position(2) + 0.05; % Move up
+ylabel(cb, 't-value', 'FontSize',18, 'FontWeight', 'bold');
+t = title(['Group Difference' newline '(ADHD-Control)']); 
+set(gca, 'TitleFontSizeMultiplier', 1.1);
+t.Position(2) = t.Position(2) -.25;
 
 sig_elec =[];
 sig_elec = find(topo_pval < 0.05);
@@ -580,8 +623,13 @@ end
 
 %Plotting FDR-corrected sig electrodes 
 ft_plot_lay_me(layout, 'chanindx', find(topo_pval < fdr_sig),'pointsymbol', 'o', 'pointcolor', [0 0 0], 'pointsize', 64, 'box', 'no', 'label', 'no');
-caxis([-1 1]*2.5)
+caxis([-1 1]*2)
 format_fig;
+
+sgtitle('Power Distribution (3-8.7 Hz)', 'FontWeight', 'bold', 'FontSize', 30);
+
+% Save figure
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig2_PanelC_TopoPS.svg']);
 
 %% APERIODIC: Cluster perm to see if there are sig group diff between pow and freq 
 thisCh=match_str(chLabels,'Fz'); %Pz, Fz, Cz, Oz

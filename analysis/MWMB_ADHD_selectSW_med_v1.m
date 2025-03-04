@@ -22,6 +22,7 @@ else
     path_ICAlabel='/Users/elaine/desktop/MATLAB_Functions/ICLabel/';
     path_ExGauss='/Users/elaine/desktop/MATLAB_Functions/exgauss';
     path_FMINSEARCHBND='/Users/elaine/desktop/MATLAB_Functions/FMINSEARCHBND';
+    path_RainClould = '/Users/elaine/desktop/MATLAB_Functions/RainCloudPlots';
 
     %     mkdir(path_detectSW)
 end
@@ -280,6 +281,54 @@ end
 % writetable(SW_table,[preproc_path filesep 'all_SW_perProbe_exGaussCTR_v2.csv'])
 SW_table.Block = categorical(SW_table.Block, 1:4, 'Ordinal', true);
 
+%% Ctr vs ADHD SW figure (EP - copied from selectSW_v4.m)
+f0=figure;
+clear temp*
+
+Groups={'ADHD','Control'};
+VOI={'SW_density'};%,'SW_amplitude','SW_frequency','SW_downslope','SW_upslope'};
+cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
+
+for nP=1:length(VOI)
+    minmax_val=[];
+    for nGroup=1:2
+        figure(f0);
+        subplot(1,2, nGroup); %subplot(2,length(VOI),nP+(nGroup-1)*length(VOI))
+        
+        temp_topo=[];
+        for nE=1:length(layout.label)-2
+            temp=SW_table.(VOI{nP})(SW_table.Elec==layout.label{nE} & SW_table.Group==Groups{nGroup}); %Getting the values per electrode by group
+            temp_topo(nE)=nanmean(temp); % Getting the means per electrode by group
+        end
+        
+        simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+        %colorbar;
+        cmap=colormap('hot'); cmap=flipud(cmap);
+        colormap(cmap);
+        t = title(Groups{nGroup}); %title({VOI{nP}(4:end),Groups{nGroup}})
+        t.Position(2) = t.Position(2) -.4;
+        minmax_val=[minmax_val ; min(temp_topo) max(temp_topo)];
+        caxis([5 18])
+        format_fig;
+    end
+    
+     % Add one shared colorbar (outside the subplots)
+    cb = colorbar;
+    cb.Position = [0.85, 0.2, 0.03, 0.6]; % Adjust colorbar position
+    cb.Label.String = 'SWDensity/min';
+    cb.Label.FontSize = 18; % Colorbar label font size
+
+    % Move subplots closer to each other
+    ax1 = subplot(1,2,1); ax2 = subplot(1,2,2);
+    set(ax1, 'Position', get(ax1, 'Position') - [0.05 0 0 0]);  % Shift left
+    set(ax2, 'Position', get(ax2, 'Position') - [0.1 0 0 0]);%ax2.Position(1) = ax2.Position(1) - 0.05;
+
+    sgtitle('Slow Wave Density', 'FontWeight', 'bold', 'FontSize', 25);
+end
+
+% Save figure
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelC_SWD.svg']);
+
 %%
 mdl0=fitlme(SW_table,'SW_density~1+(1|SubID)');
 mdl1=fitlme(SW_table,'SW_density~1+Block+(1|SubID)');
@@ -368,8 +417,8 @@ SW_table.Group=categorical(SW_table.Group);
 SW_table.Group=reordercats(SW_table.Group,["Control" "ADHD"]);
 
 Groups={'ADHD','Control'};
-VOI={'Behav_stdRT','Probe_Vig'}; %Miss: not affect by group | FA, MW not MB: not predicted by SW
-VOI={'Behav_stdRT','Behav_Miss','Behav_RT','Probe_ON'};
+%VOI={'Behav_stdRT','Probe_Vig'}; %Miss: not affect by group | FA, MW not MB: not predicted by SW
+VOI={'Behav_Miss','Behav_RT','Behav_stdRT','Probe_ON', 'Probe_Vig'};
 
 
 for nV=1:length(VOI)
@@ -430,7 +479,7 @@ end
 all_pval=[topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,2) ; all_pval_SWonBehav ; all_pval_med];
 FDR_thr=fdr(all_pval,0.05);
 
-f0=figure;
+f1=figure;
 cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
 subplot(1,2,1)
 simpleTopoPlot_ft(topo_GroupOnSW_tV(:,1), layout,'on',[],0,1);
@@ -438,41 +487,66 @@ ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<0.05), 'pointsymb
 % ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<fdr([topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,2)],0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
 ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
 colormap(cmap2);
-title('Group on SW')
+t = title(['Group (A vs C)' newline 'on Slow Waves']); t.Position(2) = t.Position(2) -.3;
 caxis([-1 1]*5)
 format_fig;
-colorbar;
+t.FontSize = 25;
+colorbar('off');
+
 subplot(1,2,2)
 simpleTopoPlot_ft(topo_GroupOnSW_tV(:,2), layout,'on',[],0,1);
 ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
 ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
 colormap(cmap2);
-title('Block*SW')
+t = title(['Group * Block' newline 'on Slow Waves']);t.Position(2) = t.Position(2) -.3;
 caxis([-1 1]*5)
 format_fig;
-colorbar;
+t.FontSize = 25;
+cb = colorbar;
+cb.Position = [0.85, 0.2, 0.03, 0.6]; 
+cb.Label.String = 't-values'; cb.Label.FontSize = 20; 
 
+% Move subplots closer to each other
+ax1 = subplot(1,2,1); ax2 = subplot(1,2,2); 
+set(ax1, 'Position', get(ax1, 'Position') - [0.05 0 0 0]);  % Shift left
+ax2.Position(1) = ax2.Position(1) - 0.1;
+% Save figure
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelD_SWxGroup.svg']);
 
-f1=figure;
+%%
+f2=figure('Position', [100, 100, 1650, 400]); 
+VOIlabels = {'Omission Errors', 'Reaction Time (s)', 'Std Deviation of RT', '"On Task" Reports', 'Sleepiness Ratings'};
 for nV=1:length(VOI)
-    figure(f1);
-    subplot(2,length(VOI)/2,nV)
+    figure(f2);
+    ax = subplot(1, length(VOI), nV); %subplot(2,length(VOI)/2,nV)
+    ax.Position = ax.Position - [0.1 0 0 0]; 
+
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
     simpleTopoPlot_ft(topo_SWonBehav_tV{nV}(:,1)', layout,'on',[],0,1);
     ft_plot_lay_me(layout, 'chanindx', find(topo_SWonBehav_pV{nV}(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     ft_plot_lay_me(layout, 'chanindx', find(topo_SWonBehav_pV{nV}(:,1)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
     %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     colormap(cmap2);
-    title({'SW on behav',VOI{nV}})
+    t = title({'SW Density on',VOIlabels{nV}});
+    t.Position(2) = t.Position(2) -.2;
     caxis([-1 1]*5)
     format_fig;
-    colorbar;
+    %colorbar;
 end
+cb = colorbar;
+cb.Label.String = 't-values'; 
+cb.Label.FontSize = 18;
+cb.Position = [0.85, 0.2, 0.01, 0.6]; 
 
-f2=figure;
+% Save figure
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig5_PanelA_SWxBehav.svg']);
+
+%%
+f3=figure('Position', [100, 100, 1650, 400]); 
 for nV=1:length(VOI)
-    figure(f2);
-    subplot(2,length(VOI)/2,nV)
+    figure(f3);
+    ax = subplot(1, length(VOI), nV); %subplot(2,length(VOI)/2,nV)
+    ax.Position = ax.Position - [0.1 0 0 0]; 
     cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
     simpleTopoPlot_ft(topo_med_tV{nV}(:,1)', layout,'on',[],0,1);
      ft_plot_lay_me(layout, 'chanindx', find(topo_med_pV{nV}(:,1)<FDR_thr), 'pointsymbol','*','pointcolor',[1 1 1]*0.7,'pointsize',36,'box','no','label','no');
@@ -480,12 +554,19 @@ for nV=1:length(VOI)
     ft_plot_lay_me(layout, 'chanindx', find(topo_med_pV{nV}(:,4)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
     %ft_plot_lay_me(layout, 'chanindx', find(topo_pV_byGroup<fdr(topo_pV_byGroup,0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
     colormap(cmap2);
-    title({'Mediation',VOI{nV}})
+    t = title({'Mediation',VOIlabels{nV}});
+    t.Position(2) = t.Position(2) -.2;
     caxis([-1 1]*5)
     format_fig;
-    colorbar;
+%     colorbar;
 end
+cb = colorbar;
+cb.Label.String = 't-values';  
+cb.Label.FontSize = 18;
+cb.Position = [0.85, 0.2, 0.01, 0.6]; 
 
+% Save figure
+ saveas(gcf, [pwd filesep 'Figures' filesep 'Fig5_PanelC_MedSWxBehav.svg']);
  %% Behaviour - Repeated Measures plot
  Colors=[253,174,97;
     171,217,233;
