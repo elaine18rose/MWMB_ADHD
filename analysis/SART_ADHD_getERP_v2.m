@@ -4,7 +4,7 @@ clear all;
 close all;
 
 if isempty(findstr(pwd,'thandrillon'))==0
-    path_LSCPtools='/Users/tand0009/WorkGit/LSCPtools/';
+    path_LSCPtools='/Users/thandrillon/WorkGit/LSCPtools/';
     path_fieldtrip='/Users/thandrillon/WorkGit/projects/ext/fieldtrip/';
     data_path='/Users/thandrillon/Data/ADHD_MW/EEG/';
     behav_path = '/Users/thandrillon/Data/ADHD_MW/Behaviour/';

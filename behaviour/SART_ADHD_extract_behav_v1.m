@@ -1205,11 +1205,13 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
 
      % Plot dot plots
      for j = 1:2 % Control (1) and ADHD (2)
+         % Plot mean lines
+         plot((1:num_states) + (2*j - 3) * 0.1, cellfun(@nanmean, data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
+     end
+     for j = 1:2 % Control (1) and ADHD (2)
          for i = 1:num_states
              simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
          end
-         % Plot mean lines
-         plot((1:num_states) + (2*j - 3) * 0.1, cellfun(@nanmean, data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
      end
 
      % Formatting
@@ -1240,11 +1242,12 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
 
      % Plot dot plots
      for j = 1:2 % Control (1) and ADHD (2)
+         % Plot mean lines
+         plot((1:num_states) + (2*j - 3) * 0.1, cellfun(@nanmean, data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
+
          for i = 1:num_states
              simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
          end
-         % Plot mean lines
-         plot((1:num_states) + (2*j - 3) * 0.1, cellfun(@nanmean, data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
      end
 
      % Formatting
