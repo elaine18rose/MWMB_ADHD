@@ -1,0 +1,249 @@
+%%
+clear all;
+close all;
+
+%%
+if isempty(findstr(pwd,'thandrillon'))==0
+    path_fieldtrip='/Users/thandrillon/WorkGit/projects/ext/fieldtrip/';
+    path_LSCPtools='/Users/thandrillon/WorkGit/LSCPtools/';
+    path_data='/Users/thandrillon/Data/ADHD_MW/';
+    preproc_path='/Users/thandrillon/Data/Nir_NeuroMod/preproc/';
+else
+    path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
+    path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
+    path_data = '/Volumes/Seagate/MWMB_ADHD_SART/';
+    preproc_path='/Volumes/Seagate/MWMB_ADHD_SART/preproc/';
+end
+addpath('/Users/elaine/desktop/MATLAB_Functions/fieldtrip/');
+addpath((path_fieldtrip));
+ft_defaults;
+addpath(genpath(path_LSCPtools))
+
+files=dir([path_data filesep 'EEG' filesep '*.eeg']);
+
+load([preproc_path filesep 'all_badChannels_badProbes.mat']); %file saved from runICA script
+
+%% loop on subjects
+redo_block=1; % 1 to force re-import, 0 otherwise
+redo_probe=1; % 1 to force re-import, 0 otherwise
+redo_trial=1; % 1 to force re-import, 0 otherwise
+for nF=1:length(files)
+    file_name = files(nF).name;
+    folder_name = files(nF).folder;
+    if isempty(findstr(file_name,'_'))==0
+        continue;
+    end
+    SubID=file_name(1:end-4);
+    if isempty(findstr(SubID,'ID-'))==0
+        SubID(1:findstr(SubID,'ID-')+2)=[];
+    end
+          if ~strcmp(SubID,{'A007'}) % Seeing if A007 will run
+        end  
+    tic;
+%         if ~strcmp(SubID,'A039') %%re-add this if you need to clip the data
+%             continue;
+%         end
+    fprintf('... working on %s (%g/%g)\n',file_name,nF,length(files))
+    
+%     if redo_block==1 || exist([path_data filesep 'Preproc' filesep 'feblock_ft_' SubID '.mat'])==0
+%         
+%         hdr=ft_read_header([folder_name filesep file_name]);
+%         evt=ft_read_event([folder_name filesep file_name]);
+%         %             trig_start          =1;  %S
+%         %             trig_end            =4;  %E
+%         %             trig_startBlock     =5;  %B
+%         %             trig_endBlock       =8;  %K
+%         %             trig_startGO        =9;  %T
+%         %             trig_startNOGO      =10; %T
+%         %             trig_startQuestion  =12; %Q
+%         %             trig_probestart     =13; %P
+%         %             trig_probeend       =16; %C
+%         
+%         %%% Define RS1
+%         evt(find(cellfun(@isempty,{evt.value})==1)) = []; %% Elaine - added to remove empty cells in evt.value
+%         evt(find_trials({evt.type},'New Segment')) = []; %% Elaine - added to remove empty cells in evt.value
+%         
+%         %%% Define epochs
+%         cfg=[];
+%         cfg.trialfun            = 'MWMB_ADHD_blockfun';
+%         cfg.table               = table;
+%         cfg.SubID               = SubID;
+%         cfg.dataset             = [folder_name filesep file_name];
+%         cfg.trialdef.prestim    = 1;
+%         cfg.trialdef.poststim   = 1;
+%         cfg = ft_definetrial(cfg);
+%         
+%         cfg.channel        = hdr.label(match_str(hdr.chantype,'eeg'));
+%         cfg.demean         = 'yes';
+%         cfg.lpfilter       = 'yes';        % enable high-pass filtering
+%         cfg.lpfilttype     = 'but';
+%         cfg.lpfiltord      = 4;
+%         cfg.lpfreq         = 40;
+%         cfg.hpfilter       = 'yes';        % enable high-pass filtering
+%         cfg.hpfilttype     = 'but';
+%         cfg.hpfiltord      = 4;
+%         cfg.hpfreq         = 0.1;
+%         cfg.dftfilter      = 'yes';        % enable notch filtering to eliminate power line noise
+%         cfg.dftfreq        = [50 100 150]; % set up the frequencies for notch filtering
+%         
+%         cfg.reref      = 'yes';
+%         cfg.refchannel = 'all';
+%         
+%         dat                = ft_preprocessing(cfg); % read raw data
+%         
+%         cfgbs=[];
+%         cfgbs.resamplefs      = 250;
+%         cfgbs.detrend         = 'yes';
+%         data                  = ft_resampledata(cfgbs,dat); % read raw data
+%         save([path_data filesep 'Preproc' filesep 'feblock_ft_' SubID],'data');
+%         
+%     end
+    
+    %%%%% probe
+    if redo_probe==1 || exist([path_data filesep 'Preproc' filesep 'feprobe_ft_' SubID '.mat'])==0
+        if ~strcmp(SubID,{'A007'}) 
+            continue;
+        end
+
+        hdr=ft_read_header([folder_name filesep file_name]);
+        evt=ft_read_event([folder_name filesep file_name]);
+%             trig_start          =1;  %S
+%             trig_end            =4;  %E
+%             trig_startBlock     =5;  %B
+%             trig_endBlock       =8;  %K
+%             trig_startGO        =9;  %T
+%             trig_startNOGO      =10; %T
+%             trig_startQuestion  =12; %Q
+%             trig_probestart     =13; %P
+%             trig_probeend       =16; %C
+            
+        %%% Define task duration for probes
+        evt(find(cellfun(@isempty,{evt.value})==1)) = []; %% Elaine - added to remove empty cells in evt.value
+        evt(find_trials({evt.type},'New Segment')) = []; %% Elaine - added to remove empty cells in evt.value
+        
+         %%% Define epochs
+        cfg=[];
+        cfg.trialfun            = 'MWMB_ADHD_probefun';
+%         cfg.table               = table;
+        cfg.SubID               = SubID;
+        cfg.dataset             = [folder_name filesep file_name];
+        cfg.trialdef.prestim    = 25;
+        cfg.trialdef.poststim   = 2;
+        cfg = ft_definetrial(cfg);
+        
+        cfg.channel        = hdr.label(match_str(hdr.chantype,'eeg'));
+        cfg.demean         = 'yes';
+        cfg.lpfilter       = 'yes';        % enable high-pass filtering
+        cfg.lpfilttype     = 'but';
+        cfg.lpfiltord      = 4;
+        cfg.lpfreq         = 40;
+        cfg.hpfilter       = 'yes';        % enable high-pass filtering
+        cfg.hpfilttype     = 'but';
+        cfg.hpfiltord      = 4;
+        cfg.hpfreq         = 0.1;
+       cfg.dftfilter      = 'yes';        % enable notch filtering to eliminate power line noise
+        cfg.dftfreq        = [50 100 150]; % set up the frequencies for notch filtering
+        
+        cfg.reref      = 'yes';
+        cfg.refchannel = 'all';
+        
+        data                = ft_preprocessing(cfg); % read raw data
+        
+%         cfgbs=[];
+%         cfgbs.detrend         = 'yes';
+%         data                  = ft_resampledata(cfgbs,dat); % read raw data
+
+
+      % EP - removing bad probes that were detected from the automated process from the runICA script
+      subID_idx=strcmp(badChannels_badTrials_info(:, 1), SubID);
+      badTrials = badChannels_badTrials_info{subID_idx, 7};
+      if ~isempty(badTrials)
+          cfg=[];
+          cfg.trials    = setdiff(1:length(data.trial),badTrials);
+          data = ft_redefinetrial(cfg,data);
+      end
+
+        save([path_data filesep 'Preproc' filesep 'feprobe_ft_' SubID],'data');
+        
+    end
+    
+    
+    %%%% trial
+    if redo_trial==1 || exist([path_data filesep 'Preproc' filesep 'fetrial_ft_' SubID '.mat'])==0
+        if ~strcmp(SubID,{'A007'}) %C012 & C024 & C038 re-importing 'cause crashing in ERP script
+            continue;
+        end
+
+        hdr=ft_read_header([folder_name filesep file_name]);
+        evt=ft_read_event([folder_name filesep file_name]);
+%             trig_start          =1;  %S
+%             trig_end            =4;  %E
+%             trig_startBlock     =5;  %B
+%             trig_endBlock       =8;  %K
+%             trig_startGO        =9;  %T
+%             trig_startNOGO      =10; %T
+%             trig_startQuestion  =12; %Q
+%             trig_probestart     =13; %P
+%             trig_probeend       =16; %C
+            
+        %%% Define task duration for trials
+        evt(find(cellfun(@isempty,{evt.value})==1)) = []; %% Elaine - added to remove empty cells in evt.value
+        evt(find_trials({evt.type},'New Segment')) = []; %% Elaine - added to remove empty cells in evt.value
+        
+         %%% Define epochs
+        cfg=[];
+        cfg.trialfun            = 'MWMB_ADHD_trialfun';
+        cfg.table               = table;
+        cfg.SubID               = SubID;
+        cfg.dataset             = [folder_name filesep file_name];
+        cfg.trialdef.prestim    = 0.2;
+        cfg.trialdef.poststim   = 1.5;
+        cfg = ft_definetrial(cfg);
+        
+        cfg.channel        = hdr.label(match_str(hdr.chantype,'eeg'));
+        cfg.demean         = 'yes';
+        cfg.lpfilter       = 'yes';        % enable high-pass filtering
+        cfg.lpfilttype     = 'but';
+        cfg.lpfiltord      = 4;
+        cfg.lpfreq         = 40;
+        cfg.hpfilter       = 'yes';        % enable high-pass filtering
+        cfg.hpfilttype     = 'but';
+        cfg.hpfiltord      = 4;
+        cfg.hpfreq         = 0.1;
+       cfg.dftfilter      = 'yes';        % enable notch filtering to eliminate power line noise
+        cfg.dftfreq        = [50 100 150]; % set up the frequencies for notch filtering
+        
+        cfg.reref      = 'yes';
+        cfg.refchannel = 'all';
+        
+        dat                = ft_preprocessing(cfg); % read raw data
+        events=cfg.event;
+        cfgbs=[];
+        cfgbs.demean         = 'yes';
+        cfgbs.baseline         = [-0.2 0];
+        data                  = ft_preprocessing(cfgbs,dat); % read raw data
+        save([path_data filesep 'Preproc' filesep 'fetrial_ft_' SubID],'data','events');
+        
+%         
+%         cfg = [];
+%         cfg.trials = find_trials({events.value},'S  9');
+%         godata = ft_timelockanalysis(cfg, data);
+%         cfg = [];
+%         cfg.demean         = 'yes';
+%         cfg.baselinewindow         = [-0.2 0];
+%         godata                = ft_preprocessing(cfg,godata); % read raw data
+% 
+%                 
+%         cfg = [];
+%         cfg.trials = find_trials({events.value},'S 10');
+%         nogodata = ft_timelockanalysis(cfg, data);
+% cfg = [];
+%         cfg.demean         = 'yes';
+%         cfg.baselinewindow         = [-0.2 0];
+%         nogodata                = ft_preprocessing(cfg,nogodata); % read raw data
+
+    end
+    
+end
+
+
