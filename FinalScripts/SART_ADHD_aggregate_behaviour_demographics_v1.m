@@ -1,0 +1,137 @@
+%% Aggregate demographics table with behaviour extraction 
+clear all;
+close all;
+%%
+if isempty(findstr(pwd,'thandrillon'))==0
+    path_LSCPtools='/Users/tand0009/WorkGit/LSCPtools/';
+    path_fieldtrip='/Users/thandrillon/WorkGit/projects/ext/fieldtrip/';
+    data_path='/Users/thandrillon/Data/ADHD_MW/EEG/';
+    preproc_path='/Users/thandrillon/Data/ADHD_MW/Preproc/';
+    path_eeglab='/Users/thandrillon/WorkGit/projects/ext/eeglab/';
+    path_ICAlabel='/Users/thandrillon/WorkGit/projects/ext/ICLabel/';
+    path_FMINSEARCHBND='/Users/thandrillon/Work/local/FMINSEARCHBND';
+    path_ExGauss='/Users/thandrillon/WorkGit/projects/ext/exgauss/';
+    save_path = '/Users/thandrillon/WorkGit/projects/inprogress/MWMB_ADHD/tables';
+
+else
+    path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
+    path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
+    data_path = '/Volumes/Seagate/MWMB_ADHD_SART/EEG/';
+    preproc_path='/Volumes/Seagate/MWMB_ADHD_SART/preproc/';
+    path_detectSW = '/Volumes/Seagate/MWMB_ADHD_SART/SW_detection/';
+    path_eeglab='/Users/elaine/desktop/MATLAB_Functions/eeglab/';
+    path_ICAlabel='/Users/elaine/desktop/MATLAB_Functions/ICLabel/';
+    path_ExGauss='/Users/elaine/desktop/MATLAB_Functions/exgauss';
+    path_FMINSEARCHBND='/Users/elaine/desktop/MATLAB_Functions/FMINSEARCHBND';
+    save_path = '/Users/elaine/desktop/Git_Studies/MWMB_ADHD/tables';
+    %     mkdir(path_detectSW)
+end
+% adding relevant toolboxes to the path
+% spm12 and LSCPtools
+addpath(genpath(path_LSCPtools))
+addpath(path_fieldtrip)
+ft_defaults;
+addpath(genpath(path_ExGauss))
+addpath(genpath(path_FMINSEARCHBND))
+
+
+% readtable([save_path filesep 'MWMB_ADHD_all_block.txt']);
+% readtable([save_path filesep 'MWMB_ADHD_all_probe_behav.txt'])
+
+
+%%
+table_behav=readtable([save_path filesep 'MWMB_ADHD_all_behav_byTrial.txt']);;
+
+table_ques=readtable([save_path filesep  'SART-Ppt-Demo-Questionnaire-Scores.xlsx']);
+table_ques.SubID=categorical(table_ques.SubID);
+
+
+%% Writing a table for all data
+table_behav_demo=table_behav;
+table_behav_demo.SubID=categorical(table_behav_demo.SubID);
+
+
+table_behav_demo.Age=nan(size(table_behav_demo,1),1);
+table_behav_demo.Sex=nan(size(table_behav_demo,1),1);
+table_behav_demo.Education_Years=nan(size(table_behav_demo,1),1);
+table_behav_demo.Depression=nan(size(table_behav_demo,1),1);
+table_behav_demo.Anxiety=nan(size(table_behav_demo,1),1);
+table_behav_demo.ReportedSubtype=nan(size(table_behav_demo,1),1);
+table_behav_demo.DIVASubtype=nan(size(table_behav_demo,1),1);
+
+table_behav_demo.ASRS_Inattentiveness=nan(size(table_behav_demo,1),1);
+table_behav_demo.ASRS_Hyperactivity=nan(size(table_behav_demo,1),1);
+table_behav_demo.ASRS_5=nan(size(table_behav_demo,1),1);
+table_behav_demo.CAARS_Inattentiveness=nan(size(table_behav_demo,1),1);
+table_behav_demo.CAARS_Hyperactivity=nan(size(table_behav_demo,1),1);
+table_behav_demo.CAARS_TotalADHDSymptoms=nan(size(table_behav_demo,1),1);
+table_behav_demo.CAARS_ADHDIndex=nan(size(table_behav_demo,1),1);
+table_behav_demo.CAARS_InconsistencyIndex=nan(size(table_behav_demo,1),1);
+table_behav_demo.Epworth=nan(size(table_behav_demo,1),1);
+table_behav_demo.Epworth_Rating=nan(size(table_behav_demo,1),1);
+
+table_behav_demo.ReportedSubtype=string(table_behav_demo.ReportedSubtype);
+table_behav_demo.DIVASubtype=string(table_behav_demo.DIVASubtype);
+table_behav_demo.Sex=string(table_behav_demo.Sex);
+table_behav_demo.CAARS_InconsistencyIndex=string(table_behav_demo.CAARS_InconsistencyIndex);
+table_behav_demo.Epworth_Rating=string(table_behav_demo.Epworth_Rating);
+
+unique_IDs=unique(table_behav_demo.SubID);
+for k=1:length(unique_IDs)
+    table_behav_demo.Age(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.Age(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.Sex(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.Sex(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.Education_Years(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.YearsOfEducation(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.Depression(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.Depression(table_ques.SubID==unique_IDs(k));
+    table_behav_demo.Anxiety(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.Anxiety(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.ReportedSubtype(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.ReportedSubtype(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.DIVASubtype(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.DIVASubtype(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.ASRS_Inattentiveness(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.ASRS_Inattentiveness(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.ASRS_Hyperactivity(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.ASRS_Hyperactivity(table_ques.SubID==unique_IDs(k));
+    
+    table_behav_demo.ASRS_5(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.ASRS_5(table_ques.SubID==unique_IDs(k));
+    
+    table_behav_demo.CAARS_Inattentiveness(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_Inattentiveness(table_ques.SubID==unique_IDs(k));
+    
+    table_behav_demo.CAARS_Hyperactivity(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_Hyperactivity(table_ques.SubID==unique_IDs(k));
+    
+    table_behav_demo.CAARS_TotalADHDSymptoms(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_TotalADHDSymptoms(table_ques.SubID==unique_IDs(k));
+    
+    table_behav_demo.CAARS_ADHDIndex(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_ADHDIndex(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.CAARS_InconsistencyIndex(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_InconsistencyIndex(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.Epworth(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.Epworth(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.Epworth_Rating(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.Epworth_Rating(table_ques.SubID==unique_IDs(k));
+end
+
+writetable(table_behav_demo,[save_path filesep 'SART_ADHD_behav_demo_v1.txt']);
+
+
+
+
+

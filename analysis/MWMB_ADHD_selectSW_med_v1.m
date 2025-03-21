@@ -327,7 +327,7 @@ for nP=1:length(VOI)
 end
 
 % Save figure
-saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelC_SWD.svg']);
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelB_SWD.svg']);
 
 %%
 mdl0=fitlme(SW_table,'SW_density~1+(1|SubID)');
@@ -511,7 +511,7 @@ ax1 = subplot(1,2,1); ax2 = subplot(1,2,2);
 set(ax1, 'Position', get(ax1, 'Position') - [0.05 0 0 0]);  % Shift left
 ax2.Position(1) = ax2.Position(1) - 0.1;
 % Save figure
-saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelD_SWxGroup.svg']);
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelC_SWxGroup.svg']);
 
 %%
 f2=figure('Position', [100, 100, 1650, 400]); 

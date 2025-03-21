@@ -1,0 +1,133 @@
+%% Removing flagged components from filtered and epoched by-probe & by-trial EEG data 
+clear all;
+close all;
+%%
+if isempty(findstr(pwd,'thandrillon'))==0
+    path_LSCPtools='/Users/tand0009/WorkGit/LSCPtools/';
+    path_fieldtrip='/Users/thandrillon/WorkGit/projects/ext/fieldtrip/';
+    data_path='/Users/thandrillon/Data/ADHD_MW/EEG/';
+    preproc_path='/Users/thandrillon/Data/ADHD_MW/Preproc/';
+    path_eeglab='/Users/thandrillon/WorkGit/projects/ext/eeglab/';
+    path_ICAlabel='/Users/thandrillon/WorkGit/projects/ext/ICLabel/';
+else
+    path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
+    path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
+    data_path = '/Volumes/Seagate/MWMB_ADHD_SART/EEG/';
+    preproc_path='/Volumes/Seagate/MWMB_ADHD_SART/preproc/';
+    path_detectSW = '/Volumes/Seagate/MWMB_ADHD_SART/SW_detection/';
+    path_eeglab='/Users/elaine/desktop/MATLAB_Functions/eeglab/';
+    path_ICAlabel='/Users/elaine/desktop/MATLAB_Functions/ICLabel/';
+
+    %     mkdir(path_detectSW)
+end
+% adding relevant toolboxes to the path
+% spm12 and LSCPtools
+addpath(genpath(path_LSCPtools))
+addpath(path_fieldtrip)
+ft_defaults;
+addpath(path_eeglab);
+eeglab;
+
+% select relevant files
+eeg_byProbe_files=dir([preproc_path 'feprobe_ft_' '*.mat']);
+eeg_byTrial_files=dir([preproc_path 'fetrial_ft_' '*.mat']);
+
+%EEG Layout info
+run ../MWMB_ADHD_elec_layout.m
+
+
+%% Loop across files: by-Probe EEG
+RS = ["R1", "R2"];
+all_badCompo=[];
+redo=0;
+all_ICA_classification=[];
+for nF=1:length(eeg_byProbe_files)
+
+    %%% load the data
+    SubInfo=split(eeg_byProbe_files(nF).name,'_');
+    SubID=SubInfo{3}(1:end-4);
+
+    if redo==1 || exist([preproc_path filesep 'clean_i_probe_' SubID '.mat'])==0 % To skip already preprocessed files
+%         if ~strcmp(SubID,{'A007'}) % redoing this ppt who had incomplete EEG recording
+%             continue;
+%         end
+        if exist([preproc_path filesep 'comp_i_probe_' SubID '.mat'])==0
+            warning(sprintf('... missing ICA file for %s\n',[eeg_byProbe_files(nF).name]))
+            continue;
+        else
+            fprintf('... working on %s\n',[eeg_byProbe_files(nF).name])
+        end
+
+        load([preproc_path filesep 'comp_i_probe_' SubID]) % loading ICA components
+        load([preproc_path filesep 'feprobe_ft_' SubID '.mat']) %EP - loading by Probe epoched data
+        data.hdr.Fs=data.fsample;
+        data.hdr.nChans=length(data.label);
+        data.hdr.label=data.label;
+        data.hdr.nSamplesPre=data.time{1}(1)*data.fsample;
+        data.hdr.nSamples=length(data.time{1})*length(data.time);
+        data.hdr.nTrials=length(data.time);
+        probe_data = fieldtrip2eeglab(data);
+
+        rejected_comps = ICA_classification.Comp(ICA_classification.Eye>0.9 | ICA_classification.Heart>0.8); % reject eye component with proba over 0.95 and heart over 0.8
+        fprintf('... ... %g bad components rejected\n',length(rejected_comps))
+        EEG_ica.data = probe_data.data;
+        EEG_clean = pop_subcomp(EEG_ica, rejected_comps);
+        EEG_clean = eeg_checkset(EEG_clean);
+        badCompo=ICA_classification(rejected_comps,:);
+%                     figure;
+%                     plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'Fp1'),:,1))','r');
+%                     hold on
+%                     plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'Fp2'),:,1))','b');
+%                     plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fp1'),:,1))','r--');
+%                     plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fp2'),:,1))','b--');
+%         
+%                         figure;
+%                     plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'O1'),:,1))','r');
+%                     hold on
+%                     plot(squeeze(EEG_ica.data(match_str({EEG_ica.chanlocs.labels},'O2'),:,1))','b');
+%                     plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'O1'),:,1))','r--');
+%                     plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'O2'),:,1))','b--');
+        ori_data=data;
+        data = eeglab2fieldtrip(EEG_clean, 'raw');
+        %  figure;
+        %             plot(squeeze(data.trial{1}(match_str(data.label,'Fz'),:)),'r');
+        %             hold on
+        %             plot(squeeze(data.trial{1}(match_str(data.label,'Cz'),:)),'b');
+        %             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Fz'),:,1)),'m--');
+        %             plot(squeeze(EEG_clean.data(match_str({EEG_ica.chanlocs.labels},'Cz'),:,1)),'c--');
+        %
+        save([preproc_path filesep 'clean_i_probe_' SubID '.mat'],'data','badCompo');
+        all_badCompo=[all_badCompo ; badCompo];
+
+
+        %%%%% for trials
+        load([preproc_path filesep 'fetrial_ft_' SubID '.mat']) %EP - loading by trial epoched data
+        data.hdr.Fs=data.fsample;
+        data.hdr.nChans=length(data.label);
+        data.hdr.label=data.label;
+        data.hdr.nSamplesPre=data.time{1}(1)*data.fsample;
+        data.hdr.nSamples=length(data.time{1})*length(data.time);
+        data.hdr.nTrials=length(data.time);
+        trial_data = fieldtrip2eeglab(data);
+
+        EEG_ica.data = trial_data.data;
+        EEG_ica.trials=data.hdr.nTrials;
+        EEG_ica.pnts=length(data.time{1});
+        EEG_ica.srate=data.fsample;
+        EEG_ica.xmin=data.time{1}(1);
+        EEG_ica.xmax=data.time{1}(end);
+        EEG_ica.times=data.time{1}*1000;
+
+        EEG_clean = pop_subcomp(EEG_ica, rejected_comps);
+        EEG_clean = eeg_checkset(EEG_clean);
+        ori_data=data;
+        data = eeglab2fieldtrip(EEG_clean, 'raw');
+        save([preproc_path filesep 'clean_i_trial_' SubID '.mat'],'data','badCompo','events'); % EP - added events
+
+    else %EP
+        load([preproc_path filesep 'clean_i_probe_' SubID '.mat']) %EP
+        load([preproc_path filesep 'clean_i_trial_' SubID '.mat']) %EP 
+        all_badCompo=[all_badCompo ; badCompo]; %EP
+    end
+end
+writetable(all_badCompo,[preproc_path filesep 'ICA_classification_allSubs_badComponents.csv'])% EP - note we need to change this because now we always have to redo the whole detection or it won't save in all_threshold_SW.csv

@@ -890,16 +890,24 @@ if flag_figures == 1
 
 
      for j = 1:2
+                  plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) 100 * nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
          for i = 1:4
              simpleDotPlot(i + (2*j - 3) * 0.1, 100 * data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
          end
-         plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) 100 * nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
      end
      set(gca, 'xtick',1:4); %to change y-axis to percentage
-     title(['Omission Errors per Block']);
-     ylabel('% of Omission Errors'); xlabel('Block Number');
+     %title(['Omission Errors per Block']);
+     ylabel('% of Trials'); xlabel('Block');
      format_fig;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+     hold on;
+
+     % Create invisible plot objects for the legend (to represent the colored markers)
+     h1 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(1,:), 'MarkerEdgeColor', Colors(1,:), 'MarkerSize', 10); % Control
+     h2 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(2,:), 'MarkerEdgeColor', Colors(2,:), 'MarkerSize', 10); % ADHD
+     % Add the legend with the manually created plot handles
+     legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 16, 'Position', [0.2, 0.8, 0, 0]);
+
      ylim([0 0.04]*100)
      xlim([0.5 4.5])
      saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelB_MissesPerBlock.svg'])
@@ -921,20 +929,12 @@ if flag_figures == 1
      end
 hold on;
 
-
-% Create invisible plot objects for the legend (to represent the colored markers)
-h1 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(1,:), 'MarkerEdgeColor', Colors(1,:), 'MarkerSize', 10); % Control
-h2 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(2,:), 'MarkerEdgeColor', Colors(2,:), 'MarkerSize', 10); % ADHD
-% Add the legend with the manually created plot handles
-legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 15, 'Position', [0.75, 0.7, 0.1, 0.1]);
-
      ylim([0 0.04]*100)
-     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
-     title(['Omission']);
+     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'Control','ADHD'}); %to change y-axis to percentage
+     %title(['Omission']);
      %     ylabel('% of Omission Errors'); xlabel('Block Number');
      format_fig;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-     xlabel('ADHD');
      saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelB_MissesAvg.svg'])
 
      %% FA/Comission 
@@ -952,14 +952,14 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
 
 
      for j = 1:2
+          plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) 100 * nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
          for i = 1:4
              simpleDotPlot(i + (2*j - 3) * 0.1, 100 * data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
          end
-         plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) 100 * nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
      end
      set(gca, 'xtick',1:4); %to change y-axis to percentage
-     title(['Commission Errors per Block']);
-     ylabel('% of Commission Errors'); xlabel('Block Number');
+     %title(['Commission Errors per Block']);
+     ylabel('% of Trials'); xlabel('Block');
      format_fig;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
      ylim([0 0.6]*100)
@@ -982,12 +982,11 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
          simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
      end
      ylim([0 0.6]*100)
-     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
-     title(['Commission']);
+     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'Control','ADHD'}); %to change y-axis to percentage
+     %title(['Commission']);
      %     ylabel('% of Omission Errors'); xlabel('Block Number');
      format_fig;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-     xlabel('ADHD');
      saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelC_FAAvg.svg'])
 
      %% RT
@@ -1005,14 +1004,14 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
 
 
      for j = 1:2
+          plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
          for i = 1:4
              simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
          end
-         plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
      end
      set(gca, 'xtick',1:4); %to change y-axis to percentage
-     title(['Reaction Time across Block']);
-     ylabel('Reaction Time (s)'); xlabel('Block Number');
+     %title(['Reaction Time across Block']);
+     ylabel('Reaction Time (s)'); xlabel('Block');
      format_fig;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
      ylim([0.35 0.45])
@@ -1035,12 +1034,11 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
          simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
      end
      ylim([0.35 0.45])
-     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
-     title(['Reaction Time (s)']);
+     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'Control','ADHD'}); %to change y-axis to percentage
+     %title(['Reaction Time (s)']);
      %     ylabel('% of Omission Errors'); xlabel('Block Number');
      format_fig;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-     xlabel('ADHD');
      saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelD_RTAvg.svg'])
 
           %% stdRT
@@ -1058,14 +1056,14 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
 
 
      for j = 1:2
+          plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
          for i = 1:4
              simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
          end
-         plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
      end
      set(gca, 'xtick',1:4); %to change y-axis to percentage
-     title(['Std Deviation of RT across Block']);
-     ylabel('Std Dev RT (s)'); xlabel('Block Number');
+     %title(['Std Deviation of RT across Block']);
+     ylabel('Std Dev RT (s)'); xlabel('Block');
      format_fig;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
      ylim([0.05 0.2])
@@ -1088,12 +1086,11 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
          simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
      end
      ylim([0.05 0.2])
-     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
-     title(['Std Deviation', newline,' of RT (s)']);
+     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'Control','ADHD'}); %to change y-axis to percentage
+     %title(['Std Deviation', newline,' of RT (s)']);
      %     ylabel('% of Omission Errors'); xlabel('Block Number');
      format_fig;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-     xlabel('ADHD');
      saveas(gcf,[pwd filesep 'Figures' filesep 'Fig1_PanelD_stdRTAvg.svg'])
 
      %% Mind states
@@ -1114,8 +1111,8 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
          for i = 1:num_states
              simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
          end
-         % Plot mean lines
-         plot((1:num_states) + (2*j - 3) * 0.1, cellfun(@nanmean, data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
+%          % Plot mean lines
+%          plot((1:num_states) + (2*j - 3) * 0.1, cellfun(@nanmean, data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
      end
 
      % Formatting
@@ -1123,7 +1120,7 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
      set(gca, 'XTick', 1:num_states, 'XTickLabel', labels);
      xtickangle(45);
      ylabel('% of Mind State');
-     title(['Mind State Distribution' newline 'per Group']);
+     title(['Mind State Distribution']);
      format_fig;
      set(gca, 'FontSize', 22, 'FontWeight', 'bold', 'LineWidth', 1.5);
      xlim([0.5 num_states + 0.5]);
@@ -1132,7 +1129,7 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
      h1 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(1,:), 'MarkerEdgeColor', Colors(1,:), 'MarkerSize', 10); % Control
      h2 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(2,:), 'MarkerEdgeColor', Colors(2,:), 'MarkerSize', 10); % ADHD
      % Add the legend with the manually created plot handles
-     legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 15, 'Position', [0.75, 0.7, 0.1, 0.1]);
+     legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 16, 'Position', [0.8, 0.72, 0.1, 0.1]);
 
 
      % Save figure
@@ -1218,8 +1215,8 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
      labels = {'Ent int', 'Some int', 'Some Unint', 'Ent Unint'};
      set(gca, 'XTick', 1:num_states, 'XTickLabel', labels);
      xtickangle(0);
-     ylabel(['% of Intention for MW']);
-     title(['Intentionality of' newline 'Mind Wandering per Group']);
+     ylabel(['% of Intention']);
+     title(['Intentionality of Mind Wandering']);
      format_fig;
      set(gca, 'FontSize', 22, 'FontWeight', 'bold', 'LineWidth', 1.5);
      xlim([0.5 num_states + 0.5]);
@@ -1251,11 +1248,12 @@ legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'Fo
      end
 
      % Formatting
-     labels = {'Alert++', 'Alert+','Sleepy+', 'Sleepy++'};
+     labels = {'Ex Alert', 'Alert','Sleepy', 'Ex Sleepy'};
+
      set(gca, 'XTick', 1:num_states, 'XTickLabel', labels);
      xtickangle(45);
      ylabel('% of Vigilance Ratings');
-     title('Vigilance Ratings per Group');
+     title('Vigilance Ratings');
      format_fig;
      set(gca, 'FontSize', 22, 'FontWeight', 'bold', 'LineWidth', 1.5);
      ax = gca; ax.XAxis.FontSize = 18; set(gca, 'FontWeight', 'bold');

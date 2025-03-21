@@ -471,10 +471,10 @@ thisCh=match_str(chLabels,'Fz'); %Pz, Fz, Cz, Oz
 % Group_A=squeeze(all_osci(match_str(group_PowData,'Control'),thisCh,faxis>1 & faxis<15)); % 3:end removes NA columns
 % Group_B=squeeze(all_osci(match_str(group_PowData,'ADHD'),thisCh,faxis>1 & faxis<15));
 
-Group_A=squeeze(all_pow(match_str(group_PowData,'Control'),thisCh,faxis>1 & faxis<15)); % 3:end removes NA columns
-Group_B=squeeze(all_pow(match_str(group_PowData,'ADHD'),thisCh,faxis>1 & faxis<15));
+Group_A=squeeze(all_pow(match_str(group_PowData,'Control'),thisCh,faxis>1 & faxis<40)); % changed from 1-15Hz, to 1-40Hz
+Group_B=squeeze(all_pow(match_str(group_PowData,'ADHD'),thisCh,faxis>1 & faxis<40)); % changed from 1-15Hz, to 1-40Hz
 
-newfaxis=faxis(faxis>1 & faxis<15); 
+newfaxis=faxis(faxis>1 & faxis<40);  % changed from 1-15Hz, to 1-40Hz
 
 Groups=[ones(size(Group_A,1),1) ; 2*ones(size(Group_B,1),1)];
 totPerm=1000;
@@ -500,7 +500,7 @@ end
 Colors=[253,174,97;
     171,217,233;
     44,123,182]/256;
-f1=figure('Position', [100, 100, 1250, 750]); %left, bottom, width, height
+f1=figure('Position', [100, 100, 800, 600]); %left, bottom, width, height
 
 % Plot for Controls
 [~, hp(1)] = simpleTplot(newfaxis, Group_A, 0, Colors(1,:), 0, '-', 0.5, 1, 0, 1, 2);
@@ -522,13 +522,16 @@ if ~isempty(sig_freqs)
 end
 
 legend;
-xlabel('Frequency (Hz)'); xlim([2 15]);
-ylabel('Power'); ylim([-2 -0.75])
+xlabel('Frequency (Hz)'); 
+xlim([1 40]); % changed from [2 15]
+ylabel('Power'); 
+% ylim([-2 -0.75]);
 lgd = legend([hp(1), hp(2), patch([-1 -1], [-1 -1], 'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none')], ...
        {'Control', 'ADHD', 'Significant Diff'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 20);
 lgd.Position = [0.8, 0.8, 0.1, 0.1];
 format_fig
-title('Group Differences in Power - Fz', 'FontSize',30);
+set(gca, 'FontSize', 25);
+title('Group Differences in Power - Fz', 'FontSize',32);
 hold off;
 
 
@@ -540,7 +543,7 @@ end
 line(newfaxis(find(p_aov<0.05)),14*ones(1,sum(p_aov<0.05)),'Color','k','LineWidth',2,'LineStyle',':')
 
 % Save figure
-saveas(gcf, [pwd filesep 'Figures' filesep 'Fig2_PanelB_PS.svg']);
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig3_PanelB_PS.svg']);
 
 %% Figure for Paper: Topo of Sig PS cluster found for Fz
 sig_freq_range = newfaxis(sig_freqs);
@@ -550,6 +553,8 @@ freq_idx = pow.freq >= freq_band(1) & pow.freq <= freq_band(2);
 
 % adhd_idx    = find(design_PowData == 1);  
 % control_idx = find(design_PowData == 0); 
+heatcmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+heatcmap(heatcmap<0)=0;
 
 %ADHD Topo
 temp_topo_adhd = [];
@@ -559,21 +564,17 @@ for nCh = 1:length(layout.label)-2
     temp_topo_adhd(nCh) = squeeze(nanmean(mean(all_pow(adhd_idx, ch_idx, freq_idx),3), 1));
     topo_adhd(nCh,:) = squeeze(mean(all_pow(adhd_idx, ch_idx,freq_idx), 3));
 end
-f2=figure('Position', [100, 100, 1250, 500]); %left, bottom, width, height
+f2=figure('Position', [100, 100, 1050, 500]); %left, bottom, width, height
 subplot(1,3,1)
-ax = gca;        % Get the current axis
-ax.Position(1) = ax.Position(1) - 0.1;
+ax1 = gca;        % Get the current axis
+ax1.Position(1) = ax1.Position(1) - 0.05; % Move left (decrease) or right (increase)
+ax1.Position(2) = ax1.Position(2) + 0.05; % Move up
 simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
-colormap(cmap); 
-cb = colorbar;
-ylabel(cb, 'Power (dB)', 'FontSize',18, 'FontWeight', 'bold');
-cb.Ticks = -2:0.5:-1;
-cb.Position(4) = cb.Position(4) * 0.8; %shorter
-cb.Position(1) = cb.Position(1) + 0.045; % Move it slightly to the right
-cb.Position(2) = cb.Position(2) + 0.05; % Move up
-t = title(['ADHD']);t.Position(2) = t.Position(2) -.2 ;
-set(gca, 'TitleFontSizeMultiplier', 1.1);
 caxis([-2 -1]) 
+colormap(ax1, heatcmap); 
+t = title(['ADHD']); 
+t.Position(2) = t.Position(2) -.3 ;
+set(gca, 'TitleFontSizeMultiplier', 1.1);
 format_fig;
 
 %Control Topo
@@ -585,41 +586,52 @@ for nCh = 1:length(layout.label)-2
     topo_control(nCh,:) = squeeze(mean(all_pow(control_idx, ch_idx,freq_idx), 3));
 end
 
-subplot(1,3,2)
-ax = gca;        % Get the current axis
-ax.Position(1) = ax.Position(1) - 0.05;
+subplot(1,3,2);
+ax2 = gca;        % Get the current axis
 simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
-colormap(cmap);
+colormap(heatcmap); % Apply heatmap colormap
+caxis([-2 -1]);
+
+ax2.Position(1) = ax2.Position(1) - 0.085; % Move left (decrease) or right (increase)
+ax2.Position(2) = ax1.Position(2); % Align Y positions of subplot 1 and 2
+
 cb = colorbar;
-cb.Ticks = -2:0.5:-1;
+cb.Ticks = -2:0.5:1;
 cb.Position(4) = cb.Position(4) * 0.8; %shorter
-cb.Position(1) = cb.Position(1) + 0.045; % Move it slightly to the right
+cb.Position(1) = cb.Position(1) + 0.05; % Move it slightly to the right
 cb.Position(2) = cb.Position(2) + 0.05; % Move up
-t = title(['Control']);t.Position(2) = t.Position(2) -.2;
-ylabel(cb, 'Power (dB)', 'FontSize',18, 'FontWeight', 'bold');
+cb.FontSize = 20;
+t = title(['Control']);
+t.Position(2) = t.Position(2) - 0.3;
+ylabel(cb, 'Power (dB)', 'FontSize',20, 'FontWeight', 'bold');
 set(gca, 'TitleFontSizeMultiplier', 1.1);
-caxis([-2 -1]) 
 format_fig;
 
 
+% T-test for ADHD vs Control
 [H, P, CI, STATS] = ttest2(topo_adhd, topo_control, 'dim', 2); % Perform unpaired t-tests across ppts (dim 2) at each channel
 topo_tval = STATS.tstat; % T-values for each channel
 topo_pval = P;           % P-values for each channel
 
 fdr_sig = fdr(topo_pval, 0.05);
 
-subplot(1,3,3)
+ax3 = subplot(1,3,3);
+ax3.Position(1) = ax3.Position(1) - 0.025; % Move left (decrease) or right (increase)
+ax3.Position(2) = ax1.Position(2);
 simpleTopoPlot_ft(topo_tval, layout,'on',[],0,1);
-colormap(cmap_ttest);
+set(ax3, 'Colormap', cmap_ttest); %colormap(ax3, cmap_ttest);
+set(ax1, 'Colormap', heatcmap);
+set(ax2, 'Colormap', heatcmap);
 cb = colorbar;
 cb.Ticks = -2:2:2;
 cb.Position(4) = cb.Position(4) * 0.8; %shorter
-cb.Position(1) = cb.Position(1) + 0.045; % Move it slightly to the right
+cb.Position(1) = cb.Position(1) + 0.05; % Move it slightly to the right
 cb.Position(2) = cb.Position(2) + 0.05; % Move up
-ylabel(cb, 't-value', 'FontSize',18, 'FontWeight', 'bold');
-t = title(['Group Difference' newline '(ADHD-Control)']); 
+cb.FontSize = 20;
+ylabel(cb, 't-value', 'FontSize',20, 'FontWeight', 'bold');
+t = title(['ADHD-Control']); 
 set(gca, 'TitleFontSizeMultiplier', 1.1);
-t.Position(2) = t.Position(2) -.25;
+t.Position(2) = t.Position(2) - 0.3;
 
 sig_elec =[];
 sig_elec = find(topo_pval < 0.05);
@@ -633,11 +645,10 @@ end
 ft_plot_lay_me(layout, 'chanindx', find(topo_pval < fdr_sig),'pointsymbol', 'o', 'pointcolor', [0 0 0], 'pointsize', 64, 'box', 'no', 'label', 'no');
 caxis([-1 1]*2)
 format_fig;
-
-sgtitle('Power Distribution (3-8.7 Hz)', 'FontWeight', 'bold', 'FontSize', 30);
+sgtitle('Power Distribution (3-8.7 Hz)', 'FontWeight', 'bold', 'FontSize', 25);
 
 % Save figure
-saveas(gcf, [pwd filesep 'Figures' filesep 'Fig2_PanelC_TopoPS.svg']);
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig3_PanelC_TopoPS.svg']);
 
 %% APERIODIC: Cluster perm to see if there are sig group diff between pow and freq 
 thisCh=match_str(chLabels,'Fz'); %Pz, Fz, Cz, Oz
