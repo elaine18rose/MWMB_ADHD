@@ -531,6 +531,14 @@ format_fig
 title('Group Differences in Power - Fz', 'FontSize',30);
 hold off;
 
+
+both_Groups=[Group_A ; Group_B];
+for k=1:size(both_Groups,2)
+    [p_aov(k),anovatab,stats] =anova1(both_Groups(:,k),Groups,'off');
+    [p_ttest2(k)] =ranksum(Group_A(:,k),Group_B(:,k));
+end
+line(newfaxis(find(p_aov<0.05)),14*ones(1,sum(p_aov<0.05)),'Color','k','LineWidth',2,'LineStyle',':')
+
 % Save figure
 saveas(gcf, [pwd filesep 'Figures' filesep 'Fig2_PanelB_PS.svg']);
 

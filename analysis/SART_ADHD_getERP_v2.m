@@ -359,16 +359,45 @@ thisCh=match_str(chLabels,'Pz'); %Pz, Fz
 Group_A=squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:))-squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:));
 Group_B=squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:))-squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:));
 Groups=[ones(size(Group_A,1),1) ; 2*ones(size(Group_B,1),1)];
-totPerm=500;
-[realpos]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.05,0.05,totPerm,xTime,[],[]); % Runs an ANOVA - Main effect of group on the diff
+totPerm=100;
+[realpos]=get_cluster_permutation_aov([Group_A ; Group_B],Groups,0.1,0.05,totPerm,xTime,[],[]); % Runs an ANOVA - Main effect of group on the diff
 
 
 %% Stats for Manuscript part 2:
+f1=figure('Position', [100, 100, 1000, 1000]); 
+thisCh=match_str(chLabels,'Pz');
+hp=[];
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
+hold on;
+[~,hp(3)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+hold on;
+[~,hp(4)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
+hold on;
+% legend(hp,{'No Go','Go'})
+xlabel('Time (s)')
+ylabel('Voltage (µV)')
+ylim([-4 15])
+title('Pz');
+xlim([-0.2 1.6])
+format_fig;
+
+sgtitle('ERP NoGo vs Go', 'FontWeight', 'bold', 'FontSize', 25);
+% Save figure
+
+Group_A=squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:))-squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:));
+Group_B=squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:))-squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:));
+
 both_Groups=[Group_A ; Group_B];
 for k=1:size(both_Groups,2)
     [p_aov(k),anovatab,stats] =anova1(both_Groups(:,k),Groups,'off');
     [p_ttest2(k)] =ranksum(Group_A(:,k),Group_B(:,k));
 end
+line(xTime(find(p_aov<0.05)),14*ones(1,sum(p_aov<0.05)),'Color','k','LineWidth',2,'LineStyle',':')
+
+saveas(gcf, [pwd filesep 'Figures' filesep 'Fig2_PanelA_ERP_TA.svg']); %!! When you get a chance, reimport in inkscape because this should be Fig3 not fig2
+
 %% Stats for Manuscript part 3:
 TimeWin=[0.15 0.25];
 thisCh=match_str(chLabels,'POz');
