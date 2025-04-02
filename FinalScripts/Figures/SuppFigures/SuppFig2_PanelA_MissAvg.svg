@@ -32,6 +32,11 @@
         /><glyph unicode="4" horiz-adv-x="55.6" d="M31.2 52.2 L31.2 27.9 L12.8 27.9 L30.9 52.2 ZM31.2 16.2 L31.2 0 L44.7 0 L44.7 16.2 L54 16.2 L54 27.9 L44.7 27.9 L44.7 70 L32 70 L1.6 29.2 L1.6 16.2 Z"
         /><glyph unicode="5" horiz-adv-x="55.6" d="M50 58.3 L50 70 L10.9 70 L4 31.3 L16.8 31.3 Q18.9 34.2 21.3 35.55 Q23.7 36.9 27.5 36.9 Q30.4 36.9 32.6 35.9 Q34.8 34.9 36.4 33.1 Q38 31.3 38.8 28.9 Q39.6 26.5 39.6 23.8 Q39.6 21.2 38.75 18.75 Q37.9 16.3 36.35 14.45 Q34.8 12.6 32.55 11.45 Q30.3 10.3 27.5 10.3 Q22.7 10.3 19.6 13.15 Q16.5 16 16 20.8 L1.8 20.8 Q1.9 15.3 4.05 11.15 Q6.2 7 9.8 4.2 Q13.4 1.4 18.05 0.05 Q22.7 -1.3 27.8 -1.3 Q33.1 -1.4 37.8 0.45 Q42.5 2.3 46.05 5.7 Q49.6 9.1 51.7 13.75 Q53.8 18.4 53.8 23.8 Q53.8 28.7 52.35 33.05 Q50.9 37.4 48.15 40.6 Q45.4 43.8 41.4 45.7 Q37.4 47.6 32.2 47.6 Q28 47.6 24.7 46.35 Q21.4 45.1 18.5 42.2 L18.3 42.4 L21.1 58.3 Z"
         /><glyph unicode="6" horiz-adv-x="55.6" d="M28.6 36.3 Q31.3 36.3 33.35 35.15 Q35.4 34 36.7 32.15 Q38 30.3 38.65 27.95 Q39.3 25.6 39.3 23.1 Q39.3 20.7 38.6 18.4 Q37.9 16.1 36.5 14.3 Q35.1 12.5 33.15 11.4 Q31.2 10.3 28.6 10.3 Q25.9 10.3 23.8 11.4 Q21.7 12.5 20.25 14.35 Q18.8 16.2 18.05 18.55 Q17.3 20.9 17.3 23.3 Q17.3 25.9 18 28.25 Q18.7 30.6 20.1 32.4 Q21.5 34.2 23.65 35.25 Q25.8 36.3 28.6 36.3 ZM38.8 52 L52.3 52 Q51.7 56.7 49.8 60.3 Q47.9 63.9 44.9 66.35 Q41.9 68.8 38 70.1 Q34.1 71.4 29.6 71.4 Q22.1 71.4 16.9 68.1 Q11.7 64.8 8.4 59.55 Q5.1 54.3 3.6 47.8 Q2.1 41.3 2.1 34.8 Q2.1 28.1 3.3 21.65 Q4.5 15.2 7.6 10.1 Q10.7 5 15.9 1.85 Q21.1 -1.3 29 -1.3 Q34.5 -1.3 39 0.65 Q43.5 2.6 46.75 6.05 Q50 9.5 51.75 14.15 Q53.5 18.8 53.5 24.2 Q53.5 28.4 52.2 32.5 Q50.9 36.6 48.1 39.8 Q45.1 43.1 40.8 45.05 Q36.5 47 32 47 Q26.9 47 23 45.2 Q19.1 43.4 16.2 39.2 L16 39.4 Q16.1 42.3 16.8 46 Q17.5 49.7 19 52.95 Q20.5 56.2 23.05 58.45 Q25.6 60.7 29.4 60.7 Q33.1 60.7 35.6 58.1 Q38.1 55.5 38.8 52 Z"
+        /><glyph unicode=" " horiz-adv-x="27.8" d=""
+        /><glyph unicode=":" horiz-adv-x="27.8" d="M21.8 35.4 L21.8 50.8 L6.1 50.8 L6.1 35.4 ZM6.1 15.4 L6.1 0 L21.8 0 L21.8 15.4 Z"
+        /><glyph unicode="H" horiz-adv-x="74.1" d="M6.9 71.4 L6.9 0 L22.6 0 L22.6 30.8 L51.5 30.8 L51.5 0 L67.2 0 L67.2 71.4 L51.5 71.4 L51.5 44 L22.6 44 L22.6 71.4 Z"
+        /><glyph unicode="D" horiz-adv-x="74.1" d="M22.6 13.2 L22.6 58.2 L33.8 58.2 Q39.6 58.2 43.55 56.55 Q47.5 54.9 49.9 51.8 Q52.3 48.7 53.35 44.35 Q54.4 40 54.4 34.6 Q54.4 28.7 52.9 24.6 Q51.4 20.5 48.9 17.95 Q46.4 15.4 43.2 14.3 Q40 13.2 36.6 13.2 ZM6.9 71.4 L6.9 0 L37.7 0 Q45.9 0 51.95 2.75 Q58 5.5 62.05 10.3 Q66.1 15.1 68.1 21.7 Q70.1 28.3 70.1 36.1 Q70.1 45 67.65 51.6 Q65.2 58.2 60.85 62.6 Q56.5 67 50.55 69.2 Q44.6 71.4 37.7 71.4 Z"
+        /><glyph unicode="A" horiz-adv-x="68.5" d="M24.9 27.6 L34.2 53.8 L34.4 53.8 L43.4 27.6 ZM26.4 71.4 L-0.6 0 L15.2 0 L20.8 15.9 L47.5 15.9 L52.9 0 L69.2 0 L42.5 71.4 Z"
       /></font
     ></defs
     ><g style="fill:white; stroke:white;"
@@ -125,6 +130,36 @@
     /></g
     ><g transform="translate(202.25,213.4349)" style="stroke-linecap:butt; text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke-linejoin:round; color-interpolation:linearRGB; stroke-width:2;"
     ><path style="stroke:none;" d="M0 -5.5711 C3.0768 -5.5711 5.5711 -3.0768 5.5711 0 L5.5711 0 C5.5711 3.0768 3.0768 5.5711 -0 5.5711 C-3.0768 5.5711 -5.5711 3.0768 -5.5711 -0 C-5.5711 -3.0768 -3.0768 -5.5711 0 -5.5711 ZM0 -8.5711 C-4.7337 -8.5711 -8.5711 -4.7337 -8.5711 -0 C-8.5711 4.7337 -4.7337 8.5711 -0 8.5711 C4.7337 8.5711 8.5711 4.7337 8.5711 0 L8.5711 0 C8.5711 -4.7337 4.7337 -8.5711 0 -8.5711 Z"
+    /></g
+    ><g transform="translate(78.5,44.25)" style="font-size:16px; text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; font-family:'Helvetica Neue'; color-interpolation:linearRGB; font-weight:bold;"
+    ><text x="0" xml:space="preserve" y="6" style="stroke:none;"
+      >Control</text
+    ></g
+    ><g transform="translate(60.5,44.25)" style="fill:rgb(252,173,97); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(252,173,97);"
+    ><circle r="5" style="stroke:none;" cx="0" cy="0"
+    /></g
+    ><g transform="translate(60.5,44.25)" style="stroke-linecap:butt; fill:rgb(252,173,97); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:round; stroke:rgb(252,173,97); color-interpolation:linearRGB; stroke-width:2;"
+    ><path style="stroke:none;" d="M0 -4.75 C2.6234 -4.75 4.75 -2.6234 4.75 0 L4.75 0 C4.75 2.6234 2.6234 4.75 -0 4.75 C-2.6234 4.75 -4.75 2.6234 -4.75 -0 C-4.75 -2.6234 -2.6234 -4.75 0 -4.75 ZM0 -5.25 C-2.8995 -5.25 -5.25 -2.8995 -5.25 -0 C-5.25 2.8995 -2.8995 5.25 -0 5.25 C2.8995 5.25 5.25 2.8995 5.25 0 L5.25 0 C5.25 -2.8995 2.8995 -5.25 0 -5.25 Z"
+    /></g
+    ><g transform="translate(78.5,64.25)" style="font-size:16px; text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; font-family:'Helvetica Neue'; color-interpolation:linearRGB; font-weight:bold;"
+    ><text x="0" xml:space="preserve" y="6" style="stroke:none;"
+      >ADHD: Inattentive</text
+    ></g
+    ><g transform="translate(60.5,64.25)" style="fill:rgb(170,216,232); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(170,216,232);"
+    ><circle r="5" style="stroke:none;" cx="0" cy="0"
+    /></g
+    ><g transform="translate(60.5,64.25)" style="stroke-linecap:butt; fill:rgb(170,216,232); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:round; stroke:rgb(170,216,232); color-interpolation:linearRGB; stroke-width:2;"
+    ><path style="stroke:none;" d="M0 -4.75 C2.6234 -4.75 4.75 -2.6234 4.75 0 L4.75 0 C4.75 2.6234 2.6234 4.75 -0 4.75 C-2.6234 4.75 -4.75 2.6234 -4.75 -0 C-4.75 -2.6234 -2.6234 -4.75 0 -4.75 ZM0 -5.25 C-2.8995 -5.25 -5.25 -2.8995 -5.25 -0 C-5.25 2.8995 -2.8995 5.25 -0 5.25 C2.8995 5.25 5.25 2.8995 5.25 0 L5.25 0 C5.25 -2.8995 2.8995 -5.25 0 -5.25 Z"
+    /></g
+    ><g transform="translate(78.5,84.25)" style="font-size:16px; text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; font-family:'Helvetica Neue'; color-interpolation:linearRGB; font-weight:bold;"
+    ><text x="0" xml:space="preserve" y="6" style="stroke:none;"
+      >ADHD: Combined</text
+    ></g
+    ><g transform="translate(60.5,84.25)" style="fill:rgb(44,123,181); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(44,123,181);"
+    ><circle r="5" style="stroke:none;" cx="0" cy="0"
+    /></g
+    ><g transform="translate(60.5,84.25)" style="stroke-linecap:butt; fill:rgb(44,123,181); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:round; stroke:rgb(44,123,181); color-interpolation:linearRGB; stroke-width:2;"
+    ><path style="stroke:none;" d="M0 -4.75 C2.6234 -4.75 4.75 -2.6234 4.75 0 L4.75 0 C4.75 2.6234 2.6234 4.75 -0 4.75 C-2.6234 4.75 -4.75 2.6234 -4.75 -0 C-4.75 -2.6234 -2.6234 -4.75 0 -4.75 ZM0 -5.25 C-2.8995 -5.25 -5.25 -2.8995 -5.25 -0 C-5.25 2.8995 -2.8995 5.25 -0 5.25 C2.8995 5.25 5.25 2.8995 5.25 0 L5.25 0 C5.25 -2.8995 2.8995 -5.25 0 -5.25 Z"
     /></g
   ></g
 ></svg

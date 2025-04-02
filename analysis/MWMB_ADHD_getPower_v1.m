@@ -496,7 +496,7 @@ else
     sig_freqs = [];
 end
 
-%% Figure for Paper: Power spectrum w/ sig freq band highlighted
+%% Figure for Paper/Manuscript: Power spectrum w/ sig freq band highlighted
 Colors=[253,174,97;
     171,217,233;
     44,123,182]/256;
@@ -512,10 +512,36 @@ hold on;
 %plot(newfaxis, mean(Group_B, 1), 'Color', Colors(2,:), 'DisplayName', 'ADHD');
 
 
-% Highlight significant regions
-ylimits = ylim;
+% Highlight significant regions; this was using the cluster perm results
+% ylimits = ylim;
+% if ~isempty(sig_freqs)
+%     sig_freq_values = newfaxis(sig_freqs); % Map indices to frequency values
+%     fill([sig_freq_values, fliplr(sig_freq_values)], ...
+%          [ylimits(1)*ones(1, length(sig_freq_values)), ylimits(2)*ones(1, length(sig_freq_values))], ...
+%          'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', 'Significant Diff');
+% end
+
+% stats uncorrected for multiple comparisons: 
+both_Groups=[Group_A ; Group_B];
+for k=1:size(both_Groups,2)
+    [p_aov(k),anovatab,stats] =anova1(both_Groups(:,k),Groups,'off');
+    [p_ttest2(k)] =ranksum(Group_A(:,k),Group_B(:,k));
+end
+% line(newfaxis(find(p_aov<0.05)),14*ones(1,sum(p_aov<0.05)),'Color','k','LineWidth',2,'LineStyle',':') % code from TA
+
+ylimits = ylim; % Get y-axis limits
+sig_freqs = find(p_aov < 0.05); % Find significant frequencies
+
+if ~isempty(sig_freq_values)
+    sig_range = [min(sig_freq_values), max(sig_freq_values)];
+    disp(['Significant frequency range: ', num2str(sig_range(1)), ' - ', num2str(sig_range(2)), ' Hz']);
+else
+    disp('No significant frequencies found.');
+end
+
+% shading area that is sig. different
 if ~isempty(sig_freqs)
-    sig_freq_values = newfaxis(sig_freqs); % Map indices to frequency values
+    sig_freq_values = newfaxis(sig_freqs); % Get corresponding frequency values
     fill([sig_freq_values, fliplr(sig_freq_values)], ...
          [ylimits(1)*ones(1, length(sig_freq_values)), ylimits(2)*ones(1, length(sig_freq_values))], ...
          'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', 'Significant Diff');
@@ -534,13 +560,6 @@ set(gca, 'FontSize', 25);
 title('Group Differences in Power - Fz', 'FontSize',32);
 hold off;
 
-
-both_Groups=[Group_A ; Group_B];
-for k=1:size(both_Groups,2)
-    [p_aov(k),anovatab,stats] =anova1(both_Groups(:,k),Groups,'off');
-    [p_ttest2(k)] =ranksum(Group_A(:,k),Group_B(:,k));
-end
-line(newfaxis(find(p_aov<0.05)),14*ones(1,sum(p_aov<0.05)),'Color','k','LineWidth',2,'LineStyle',':')
 
 % Save figure
 saveas(gcf, [pwd filesep 'Figures' filesep 'Fig3_PanelB_PS.svg']);
