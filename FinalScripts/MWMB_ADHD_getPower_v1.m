@@ -496,7 +496,7 @@ else
     sig_freqs = [];
 end
 
-%% Figure for Paper: Power spectrum w/ sig freq band highlighted
+%% Figure for Paper/manuscript: Power spectrum w/ sig freq band highlighted
 Colors=[253,174,97;
     171,217,233;
     44,123,182]/256;
@@ -512,27 +512,56 @@ hold on;
 %plot(newfaxis, mean(Group_B, 1), 'Color', Colors(2,:), 'DisplayName', 'ADHD');
 
 
-% Highlight significant regions
-ylimits = ylim;
+% Highlight significant regions; this was using the cluster perm results
+% ylimits = ylim;
+% if ~isempty(sig_freqs)
+%     sig_freq_values = newfaxis(sig_freqs); % Map indices to frequency values
+%     fill([sig_freq_values, fliplr(sig_freq_values)], ...
+%          [ylimits(1)*ones(1, length(sig_freq_values)), ylimits(2)*ones(1, length(sig_freq_values))], ...
+%          'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', 'Significant Diff');
+% end
+
+% stats uncorrected for multiple comparisons: 
+Group_A=squeeze(all_pow(match_str(group_PowData,'Control'),thisCh,faxis>=1 & faxis<40)); % changed from 1-15Hz, to 1-40Hz
+Group_B=squeeze(all_pow(match_str(group_PowData,'ADHD'),thisCh,faxis>=1 & faxis<40)); % changed from 1-15Hz, to 1-40Hz
+both_Groups=[Group_A ; Group_B];
+for k=1:size(both_Groups,2)
+    [p_aov(k),anovatab,stats] =anova1(both_Groups(:,k),Groups,'off');
+    [p_ttest2(k)] =ranksum(Group_A(:,k),Group_B(:,k));
+end
+% line(newfaxis(find(p_aov<0.05)),14*ones(1,sum(p_aov<0.05)),'Color','k','LineWidth',2,'LineStyle',':') % code from TA
+
+ylimits = ylim; % Get y-axis limits
+sig_freqs = find(p_aov < 0.05); % Find significant frequencies
+
+% shading area that is sig. different
 if ~isempty(sig_freqs)
-    sig_freq_values = newfaxis(sig_freqs); % Map indices to frequency values
+    sig_freq_values = newfaxis(sig_freqs); % Get corresponding frequency values
     fill([sig_freq_values, fliplr(sig_freq_values)], ...
          [ylimits(1)*ones(1, length(sig_freq_values)), ylimits(2)*ones(1, length(sig_freq_values))], ...
          'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', 'Significant Diff');
 end
 
+if ~isempty(sig_freq_values)
+    sig_range = [min(sig_freq_values), max(sig_freq_values)];
+    disp(['Significant frequency range: ', num2str(sig_range(1)), ' - ', num2str(sig_range(2)), ' Hz']);
+else
+    disp('No significant frequencies found.');
+end
+
 legend;
 xlabel('Frequency (Hz)'); 
-xlim([2 40]); % changed from [2 15]
+xlim([1 40]); % changed from [2 15]
 ylabel('Power (dB)'); 
 % ylim([-2 -0.75]);
 lgd = legend([hp(1), hp(2), patch([-1 -1], [-1 -1], 'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none')], ...
-       {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 22);  %{'Control', 'ADHD', 'Significant Diff'}
-lgd.Position = [0.8, 0.8, 0.1, 0.1];
+       {'Control', 'ADHD', 'Significant Diff'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 18);
+lgd.Position = [0.75, 0.77, 0.1, 0.1];
 format_fig
-set(gca, 'FontSize', 25);
-title('Group Differences in Power - Fz', 'FontSize',32);
+set(gca, 'FontSize', 23);
+title('Group Differences in Power - Fz', 'FontSize',31);
 hold off;
+
 
 % Save figure
 saveas(gcf, [pwd filesep 'Figures' filesep 'Fig3_PanelB_PS.svg']);
@@ -544,11 +573,8 @@ freq_idx = pow.freq >= freq_band(1) & pow.freq <= freq_band(2);
 %avg_power = mean(all_pow(:, :, freq_idx), 3); % Participants x Channels
 
 % adhd_idx    = find(design_PowData == 1);  
-% control_idx = find(design_PowData == 0); 
-heatcmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
-heatcmap(heatcmap<0)=0;
+% control_idx = find(design_PowData == 0);
 
-%ADHD Topo
 temp_topo_adhd = [];
 topo_adhd = [];
 for nCh = 1:length(layout.label)-2
@@ -556,20 +582,7 @@ for nCh = 1:length(layout.label)-2
     temp_topo_adhd(nCh) = squeeze(nanmean(mean(all_pow(adhd_idx, ch_idx, freq_idx),3), 1));
     topo_adhd(nCh,:) = squeeze(mean(all_pow(adhd_idx, ch_idx,freq_idx), 3));
 end
-f2=figure('Position', [100, 100, 1050, 500]); %left, bottom, width, height
-subplot(1,3,1)
-ax1 = gca;        % Get the current axis
-ax1.Position(1) = ax1.Position(1) - 0.05; % Move left (decrease) or right (increase)
-ax1.Position(2) = ax1.Position(2) + 0.05; % Move up
-simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
-caxis([-2 -1]) 
-colormap(ax1, heatcmap); 
-t = title(['ADHD']); 
-t.Position(2) = t.Position(2) -.3 ;
-set(gca, 'TitleFontSizeMultiplier', 1.1);
-format_fig;
 
-%Control Topo
 temp_topo_control = [];
 topo_control = [];
 for nCh = 1:length(layout.label)-2
@@ -577,18 +590,37 @@ for nCh = 1:length(layout.label)-2
     temp_topo_control(nCh) = squeeze(nanmean(mean(all_pow(control_idx, ch_idx, freq_idx),3), 1));
     topo_control(nCh,:) = squeeze(mean(all_pow(control_idx, ch_idx,freq_idx), 3));
 end
+% cmax = max(abs([temp_topo_adhd(:); temp_topo_control(:)]));% Getting colour bar scale for topos
 
+heatcmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+heatcmap(heatcmap<0)=0;
+
+%ADHD Topo
+f2=figure('Position', [100, 100, 1050, 500]); %left, bottom, width, height
+subplot(1,3,1)
+ax1 = gca;        % Get the current axis
+ax1.Position(1) = ax1.Position(1) - 0.05; % Move left (decrease) or right (increase)
+ax1.Position(2) = ax1.Position(2) + 0.05; % Move up
+simpleTopoPlot_ft(temp_topo_adhd', layout, 'on', [], 0, 1);
+caxis([-1.6 -1]);  
+colormap(ax1, heatcmap); 
+t = title(['ADHD']); 
+t.Position(2) = t.Position(2) -.3 ;
+set(gca, 'TitleFontSizeMultiplier', 1.1);
+format_fig;
+
+%Control Topo
 subplot(1,3,2);
 ax2 = gca;        % Get the current axis
 simpleTopoPlot_ft(temp_topo_control', layout, 'on', [], 0, 1);
 colormap(heatcmap); % Apply heatmap colormap
-caxis([-2 -1]);
+caxis([-1.6 -1]);  
 
 ax2.Position(1) = ax2.Position(1) - 0.085; % Move left (decrease) or right (increase)
 ax2.Position(2) = ax1.Position(2); % Align Y positions of subplot 1 and 2
 
 cb = colorbar;
-cb.Ticks = -2:0.5:1;
+ cb.Ticks = -1.6:0.2:1;
 cb.Position(4) = cb.Position(4) * 0.8; %shorter
 cb.Position(1) = cb.Position(1) + 0.05; % Move it slightly to the right
 cb.Position(2) = cb.Position(2) + 0.05; % Move up
@@ -606,6 +638,7 @@ topo_tval = STATS.tstat; % T-values for each channel
 topo_pval = P;           % P-values for each channel
 
 fdr_sig = fdr(topo_pval, 0.05);
+cmax_tval = max(abs(topo_tval(:))); %for colour bar scale
 
 ax3 = subplot(1,3,3);
 ax3.Position(1) = ax3.Position(1) - 0.025; % Move left (decrease) or right (increase)
@@ -615,7 +648,7 @@ set(ax3, 'Colormap', cmap_ttest); %colormap(ax3, cmap_ttest);
 set(ax1, 'Colormap', heatcmap);
 set(ax2, 'Colormap', heatcmap);
 cb = colorbar;
-cb.Ticks = -2:2:2;
+cb.Ticks = -3:3:3;
 cb.Position(4) = cb.Position(4) * 0.8; %shorter
 cb.Position(1) = cb.Position(1) + 0.05; % Move it slightly to the right
 cb.Position(2) = cb.Position(2) + 0.05; % Move up
@@ -635,7 +668,8 @@ end
 
 %Plotting FDR-corrected sig electrodes 
 ft_plot_lay_me(layout, 'chanindx', find(topo_pval < fdr_sig),'pointsymbol', 'o', 'pointcolor', [0 0 0], 'pointsize', 64, 'box', 'no', 'label', 'no');
-caxis([-1 1]*2)
+% caxis([-1 1]*2)
+caxis([-cmax_tval cmax_tval]); 
 format_fig;
 sgtitle('Power Distribution (3-8.7 Hz)', 'FontWeight', 'bold', 'FontSize', 25);
 

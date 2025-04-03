@@ -72,8 +72,8 @@ probe_subtype_table = join(all_probe_table, behav_demo_summary(:, {'SubID', 'Rep
 probe_subtype_table.SubID = categorical(probe_subtype_table.SubID); 
 probe_subtype_table.Group = categorical(probe_subtype_table.Group); 
 
-all_behav_table.Group = reordercats(all_behav_table.Group, {'C', 'A'}); 
-all_block_table.Group = reordercats(all_block_table.Group, {'C', 'A'}); 
+tbl.Group = reordercats(tbl.Group, {'Control', 'ADHD'}); 
+
 %% trial-level performance
 
 % FAs/Commission Errors
@@ -210,7 +210,7 @@ anova(mdlMW0)
 % Mind Blanking
 mdlMB0 = fitlme(all_block_table,'MB~1+BlockN+Group+(1|SubID)');
 mdlMB1 = fitlme(all_block_table,'MB~1+BlockN*Group+(1|SubID)');
-% mdlMB2 = fitlme(all_block_table,'MB~1+BlockN*Group+(BlockN|SubID)'); % Winning model - Group: p = .028, BlockN: p = .1549
+mdlMB2 = fitlme(all_block_table,'MB~1+BlockN*Group+(BlockN|SubID)'); % Winning model - Group: p = .028, BlockN: p = .1549
 %%% Extract fit statistics for each model
 % AIC_values = [mdlMB0.ModelCriterion.AIC, mdlMB1.ModelCriterion.AIC, mdlMB2.ModelCriterion.AIC];
 % BIC_values = [mdlMB0.ModelCriterion.BIC, mdlMB1.ModelCriterion.BIC, mdlMB2.ModelCriterion.BIC];
@@ -220,7 +220,7 @@ mdlMB1 = fitlme(all_block_table,'MB~1+BlockN*Group+(1|SubID)');
 % disp(fit_table);
 compare(mdlMB0, mdlMB1)
 
-anova(mdlMB0)
+anova(mdlMB2)
 
 
 % Don't Remember
