@@ -24,7 +24,7 @@ end
 addpath(genpath(path_LSCPtools))
 addpath(genpath(path_RainCloudPlot));
 addpath(path_fieldtrip)
-addpath(path_chi2test)
+% addpath(path_chi2test)
 ft_defaults;
 % addpath(genpath(path_ExGauss))
 % addpath(genpath(path_FMINSEARCHBND))
