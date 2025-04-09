@@ -77,7 +77,7 @@ all_block_table.Group = reordercats(all_block_table.Group, {'C', 'A'});
 %% trial-level performance
 
 % FAs/Commission Errors
-mdlFA0  = fitlme(all_behav_table,'FA~1+BlockN+Group+(1|SubID)');
+mdlFA0  = fitlme(all_behav_table,'FA~1+BlockN+Group+(1+|SubID)');
 mdlFA1  = fitlme(all_behav_table,'FA~1+BlockN*Group+(1|SubID)'); 
 %mdlFA2  = fitlme(all_behav_table,'FA~1+BlockN*Group+(BlockN|SubID)'); % Winning AIC and BIC model - Group: p = .02, BlockN p <.001
  %%% Extract fit statistics for each model
