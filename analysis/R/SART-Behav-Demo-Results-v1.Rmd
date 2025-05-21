@@ -73,6 +73,19 @@ dataset2$Subtype <- factor(dataset2$Subtype)
 ```
 
 ```{r}
+# 04/04/25 EP: Quick check to see if I'm getting consistent results with MATLAB function
+all_behav_table <- read.table('/Users/elaine/Desktop/Git_Studies/MWMB_ADHD/tables/MWMB_ADHD_all_behav_byTrial.txt', header = TRUE,sep = ",", dec = ".")
+lm.Miss0 <- lmer(Misses ~ 1 + BlockN + Group + (1|SubID), data = dataset, REML = FALSE)
+lm.Miss1 <- lmer(Misses ~ 1 + BlockN * Group + (1|SubID), data = dataset, REML = FALSE)
+
+anova(lm.Miss0,lm.Miss1)
+anova(lm.Miss1, ddf = "Satterthwaite")
+summary(lm.Miss1)
+confint(lm.Miss1, method = "Wald", oldNames = FALSE)
+
+```
+
+```{r}
 # ---- Averaging Behaviour (all data)---- 
 AvrData <- dataset %>%
   group_by(SubID) %>%

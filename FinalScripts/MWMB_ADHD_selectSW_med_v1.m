@@ -286,6 +286,7 @@ f0=figure;
 clear temp*
 
 Groups={'ADHD','Control'};
+GroupLabels = {'ADHD', 'Neurotypical'};  %
 VOI={'SW_density'};%,'SW_amplitude','SW_frequency','SW_downslope','SW_upslope'};
 cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
 
@@ -305,7 +306,7 @@ for nP=1:length(VOI)
         %colorbar;
         cmap=colormap('hot'); cmap=flipud(cmap);
         colormap(cmap);
-        t = title(Groups{nGroup}); %title({VOI{nP}(4:end),Groups{nGroup}})
+        t = title(GroupLabels{nGroup}); %title({VOI{nP}(4:end),Groups{nGroup}})
         t.Position(2) = t.Position(2) -.4;
         minmax_val=[minmax_val ; min(temp_topo) max(temp_topo)];
         caxis([5 18])
@@ -314,8 +315,8 @@ for nP=1:length(VOI)
     
      % Add one shared colorbar (outside the subplots)
     cb = colorbar;
-    cb.Position = [0.85, 0.2, 0.03, 0.6]; % Adjust colorbar position
-    cb.Label.String = 'SWDensity/min';
+    cb.Position = [0.85, 0.2, 0.02, 0.52]; % [left, bottom, width, height]
+    cb.Label.String = 'wave/min';
     cb.Label.FontSize = 18; % Colorbar label font size
 
     % Move subplots closer to each other
@@ -323,7 +324,7 @@ for nP=1:length(VOI)
     set(ax1, 'Position', get(ax1, 'Position') - [0.05 0 0 0]);  % Shift left
     set(ax2, 'Position', get(ax2, 'Position') - [0.1 0 0 0]);%ax2.Position(1) = ax2.Position(1) - 0.05;
 
-    sgtitle('Slow Wave Density', 'FontWeight', 'bold', 'FontSize', 25);
+%     sgtitle('Slow Wave Density', 'FontWeight', 'bold', 'FontSize', 25);
 end
 
 % Save figure
@@ -479,53 +480,58 @@ end
 all_pval=[topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,2) ; all_pval_SWonBehav ; all_pval_med];
 FDR_thr=fdr(all_pval,0.05);
 
-f1=figure;
+f1 = figure('Position', [100, 100, 1000, 650]);  % wider and taller
+
 cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
 subplot(1,2,1)
 simpleTopoPlot_ft(topo_GroupOnSW_tV(:,1), layout,'on',[],0,1);
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
+ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',100,'box','no','label','no');
 % ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<fdr([topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,2)],0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
+ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',100,'box','no','label','no');
 colormap(cmap2);
-t = title(['Group (A vs C)']); t.Position(2) = t.Position(2) -.3;
+t = title({'Group', '(ADHD vs NT)'}); t.Position(2) = t.Position(2) -.3;
 t.Position(2) = t.Position(2) -.04;
 caxis([-1 1]*5)
 format_fig;
-t.FontSize = 22;
-colorbar('off');
+t.FontSize = 30;
+cb = colorbar;
+  cb.Position = [0.43, 0.2, 0.02, 0.6]; 
+cb.Label.String = 't-values'; 
+cb.FontSize = 25; cb.Label.FontSize = 30; 
 
 subplot(1,2,2)
 simpleTopoPlot_ft(topo_GroupOnSW_tV(:,2), layout,'on',[],0,1);
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',72,'box','no','label','no');
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
+ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',100,'box','no','label','no');
+ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',100,'box','no','label','no');
 colormap(cmap2);
 t = title(['Group * Block']);t.Position(2) = t.Position(2) -.3;
 t.Position(2) = t.Position(2) -.04;
 caxis([-1 1]*5)
 format_fig;
-t.FontSize = 22;
+t.FontSize = 30;
 cb = colorbar;
-cb.Position = [0.85, 0.2, 0.03, 0.6]; 
-cb.Label.String = 't-values'; cb.Label.FontSize = 20; 
+ cb.Position = [0.9, 0.2, 0.02, 0.6]; 
+cb.Label.String = 'f-values'; 
+cb.FontSize = 25; cb.Label.FontSize = 30; 
 
 % Move subplots closer to each other
 ax1 = subplot(1,2,1); ax2 = subplot(1,2,2); 
 set(ax1, 'Position', get(ax1, 'Position') - [0.05 0 0 0]);  % Shift left
-ax2.Position(1) = ax2.Position(1) - 0.1;
+ax2.Position(1) = ax2.Position(1) - 0.02;
 
 hold on;
-h1 = plot(nan, nan, 'o', 'MarkerSize', 12, 'MarkerFaceColor', [1 1 1]*0.7, 'MarkerEdgeColor', [1 1 1]*0.7); % Uncorrected p < 0.05
-h2 = plot(nan, nan, 'o', 'MarkerSize', 12, 'MarkerFaceColor', [0 0 0], 'MarkerEdgeColor', [0 0 0]); % FDR-corrected p < 0.05
+h1 = plot(nan, nan, 'o', 'MarkerSize', 25, 'MarkerFaceColor', [1 1 1]*0.7, 'MarkerEdgeColor', [1 1 1]*0.7); % Uncorrected p < 0.05
+h2 = plot(nan, nan, 'o', 'MarkerSize', 25, 'MarkerFaceColor', [0 0 0], 'MarkerEdgeColor', [0 0 0]); % FDR-corrected p < 0.05
 hold off;
 
 lgd = legend([h1, h2], {'Uncorrected p < 0.05', 'FDR-corrected p < 0.05'}, 'Box', 'off');
-lgd.Position = [0.2, 0.15, 0.1, 0.1]; % horizontal,vertical, width, height 
-lgd.FontSize = 15;
+lgd.Position = [0.2, 0.1, 0.1, 0.1]; % horizontal,vertical, width, height 
+lgd.FontSize = 28;
 
-sgtitle(['Slow Wave Density'],'FontWeight', 'bold', 'FontSize', 25);
+sgtitle(['Slow Wave Density'],'FontWeight', 'bold', 'FontSize', 50);
 
 % Save figure
-saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelC_SWxGroup.svg']);
+ saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelC_SWxGroup.svg']);
 
 %%
 f2=figure('Position', [100, 100, 1650, 400]); 
@@ -545,6 +551,7 @@ for nV=1:length(VOI)
     t.Position(2) = t.Position(2) -.3;
     caxis([-1 1]*5)
     format_fig;
+    t.FontSize = 26;
     %colorbar;
 end
 cb = colorbar;
@@ -555,20 +562,20 @@ cb.FontSize = 22;
 cb.Position = [0.85, 0.2, 0.01, 0.6]; 
 
 titleax = axes('Position',[0 0 1 1],'Visible','off');
-text(0.45, 0.95, 'Slow Wave Density', 'FontWeight', 'bold', 'FontSize', 28, 'HorizontalAlignment', 'center');
+text(0.45, 0.95, 'Slow Wave Density', 'FontWeight', 'bold', 'FontSize', 34, 'HorizontalAlignment', 'center');
 
 hold on;
 h1 = plot(nan, nan, 'o', 'MarkerSize', 15, 'MarkerFaceColor', [1 1 1]*0.7, 'MarkerEdgeColor', [1 1 1]*0.7); % Uncorrected p < 0.05
 h2 = plot(nan, nan, 'o', 'MarkerSize', 15, 'MarkerFaceColor', [0 0 0], 'MarkerEdgeColor', [0 0 0]); % FDR-corrected p < 0.05
 
 lgd = legend([h1, h2], {'Uncorrected p < 0.05', 'FDR-corrected p < threshold'}, 'Box', 'off', 'FontWeight', 'bold');
-lgd.Position = [0.06, 0.1, 0.1, 0.1]; % horizontal,vertical, width, height 
-lgd.FontSize = 18;
+lgd.Position = [0.08, 0.1, 0.1, 0.1]; % horizontal,vertical, width, height 
+lgd.FontSize = 21;
 
 hold off
 
 % Save figure
-saveas(gcf, [pwd filesep 'Figures' filesep 'Fig5_PanelA_SWxBehav.svg']);
+ saveas(gcf, [pwd filesep 'Figures' filesep 'Fig5_PanelA_SWxBehav.svg']);
 
 %%
 f3=figure('Position', [100, 100, 1650, 400]); 
@@ -588,6 +595,7 @@ for nV=1:length(VOI)
     set(t, 'FontSize', 30);
     caxis([-1 1]*5)
     format_fig;
+    t.FontSize = 26;
 %     colorbar;
 end
 cb = colorbar;
@@ -598,7 +606,7 @@ cb.FontSize = 22;
 cb.Position = [0.85, 0.2, 0.01, 0.6]; 
 
 titleax = axes('Position',[0 0 1 1],'Visible','off');
-text(0.45, 0.95, 'Mediation', 'FontWeight', 'bold', 'FontSize', 28, 'HorizontalAlignment', 'center');
+text(0.45, 0.95, 'Mediation', 'FontWeight', 'bold', 'FontSize', 34, 'HorizontalAlignment', 'center');
 
 hold on;
 h1 = plot(nan, nan, '*', 'MarkerSize', 15,'Color', [1 1 1]*0.7); % FDR-corrected p < 0.05 (stars)
@@ -609,8 +617,8 @@ lgd = legend([h1, h2, h3], {'FDR-corrected mediation effect', ...
     'Uncorrected p < .05', ...
     'FDR-corrected p < threshold'}, ...
     'Box', 'off', 'FontWeight', 'bold');
-lgd.Position = [0.06, 0.05, 0.1, 0.1]; % horizontal,vertical, width, height 
-lgd.FontSize = 18;
+lgd.Position = [0.09, 0.05, 0.1, 0.1]; % horizontal,vertical, width, height 
+lgd.FontSize = 21;
 
 hold off
 

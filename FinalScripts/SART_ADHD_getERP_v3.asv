@@ -364,17 +364,22 @@ totPerm=1000;
 
 
 %% Stats for Manuscript part 2:
+Colors2 = [175, 175, 175;  % light grey (darker than off-white)
+    247, 247, 247;  % off-white
+    161, 215, 106   % light green
+] / 256;
 f1=figure('Position', [100, 100, 1000, 1000]); 
 thisCh=match_str(chLabels,'Pz');
 hp=[];
-[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors2(1,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
+[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors2(3,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(3)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+[~,hp(3)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors2(1,:),0,':',0.5,1,0,1,2);
 hold on;
-[~,hp(4)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
+[~,hp(4)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors2(3,:),0,':',0.5,1,0,1,2);
 hold on;
+lgd = legend(hp,{'NoGo Control','NoGo ADHD','Go Control','Go ADHD'},'Location','northeast', 'Box', 'off');
 
 Group_A=squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:))-squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:));
 Group_B=squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:))-squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:));
@@ -392,9 +397,9 @@ sig_time = find(p_aov < 0.05); % Find significant frequencies
 % shading area that is sig. different
 if ~isempty(sig_time)
     sig_time_values = xTime(sig_time); % Get corresponding frequency values
-    fill([sig_time_values, fliplr(sig_time_values)], ...
+    hp(5) = fill([sig_time_values, fliplr(sig_time_values)], ...
          [ylimits(1)*ones(1, length(sig_time_values)), ylimits(2)*ones(1, length(sig_time_values))], ...
-         'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', 'Significant Diff');
+         [0.65 0.65 0.65], 'FaceAlpha', 0.2, 'EdgeColor', 'none', 'DisplayName', 'Significant Diff');
 end
 
 if ~isempty(sig_time_values)
@@ -410,21 +415,15 @@ ylabel('Voltage (µV)')
 ylim([-4 15])
 xlim([-0.2 1.6])
 format_fig;
-lgd = legend(hp,{'NoGo Control','Go Control','NoGo ADHD','Go ADHD', 'Significant Diff'},'Location','northeast', 'Box', 'off');
-lgd.Position = [0.75, 0.75, 0.1, 0.1];
-set(gca, 'FontSize', 25);
-title('ERP NoGo vs Go - Pz', 'FontWeight', 'bold', 'FontSize', 32);
+lgd = legend(hp,{'NoGo Control','Go Control','NoGo ADHD','Go ADHD', 'Significant Diff'},'Location','northeast', 'Box', 'off', 'FontSize', 32);
+lgd.Position = [0.68, 0.72, 0.1, 0.1]; %[X, Y, Width, Height]
+set(gca, 'FontSize', 35);
+title('ERP NoGo vs Go - Pz', 'FontWeight', 'bold', 'FontSize', 45);
 
-saveas(gcf, [pwd filesep 'Figures' filesep 'Fig3_PanelA_ERP.svg']); 
+ saveas(gcf, [pwd filesep 'Figures' filesep 'Fig3_PanelA_ERP.svg']); 
 
 
-lgd = legend([hp(1), hp(2), patch([-1 -1], [-1 -1], 'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none')], ...
-       {'Control', 'ADHD', 'Significant Diff'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 20);
-lgd.Position = [0.8, 0.8, 0.1, 0.1];
-format_fig
-set(gca, 'FontSize', 25);
-title('Group Differences in Power - Fz', 'FontSize',32);
-hold off;
+
 %% Stats 
 TimeWin=[0.15 0.25];
 thisCh=match_str(chLabels,'POz');

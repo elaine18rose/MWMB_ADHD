@@ -191,8 +191,8 @@ for nG=1:length(uniqueGroupIDs)
 end
 legend(hplot,uniqueGroupIDs, 'Box', 'off')
 format_fig;
-xlabel('Amplitude all Waves')
-ylabel('Waves per Min')
+xlabel('Amplitude (µV)')
+ylabel('Density (wave/min)')
 xlim([0 75])
 % Save figure
 saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelAi_Dist.svg']);
@@ -209,8 +209,8 @@ hplot=[];
 % legend(hplot,uniqueGroupIDs)
 yline(0, 'k', 'LineWidth', 2);
 format_fig;
-xlabel('Amplitude All Waves')
-ylabel('microvolts')
+xlabel('Amplitude (µV)')
+ylabel({'Density Diff (ADHD - NT)', 'waves/min'});
 xlim([0 75])
 ylim([-1 1]*3)
 % Save figure

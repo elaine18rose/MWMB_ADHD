@@ -259,18 +259,22 @@ f1=figure('Position', [100, 100, 800, 600]); %left, bottom, width, height
 % xlim([-0.2 1.6])
 % format_fig;
 
+Colors2=[200, 200, 200;
+    247,247,247;
+    161,215,106]/256;
+
 thisCh=match_str(chLabels,'Pz');
 % subplot(2,2,3);
 hp=[];
-[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(1,:),0,'-',0.5,1,0,1,2);
+[~,hp(1)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors2(1,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors1(3,:),0,'-',0.5,1,0,1,2);
+[~,hp(2)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors2(3,:),0,'-',0.5,1,0,1,2);
 hold on;
-[~,hp(3)]=simpleTplot(xTime,squeeze(all_ERP_NG(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(1,:),0,':',0.5,1,0,1,2);
+[~,hp(3)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'Control'),thisCh,:)),0,Colors2(1,:),0,':',0.5,1,0,1,2);
 hold on;
-[~,hp(4)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors1(3,:),0,':',0.5,1,0,1,2);
+[~,hp(4)]=simpleTplot(xTime,squeeze(all_ERP_G(match_str(group_PowDataEO,'ADHD'),thisCh,:)),0,Colors2(3,:),0,':',0.5,1,0,1,2);
 hold on;
-lgd = legend(hp,{'NoGo Control','Go Control','NoGo ADHD','Go ADHD'},'Location','northeast', 'Box', 'off');
+lgd = legend(hp,{'NoGo Control','NoGo ADHD','Go Control','Go ADHD'},'Location','northeast', 'Box', 'off');
 lgd.Position = [0.75, 0.75, 0.1, 0.1];
 xlabel('Time (s)')
 ylabel('Voltage (µV)')
@@ -301,7 +305,7 @@ title(['ERP NoGo vs Go - Pz'], 'FontSize',32);
 
 %sgtitle('ERP NoGo vs Go', 'FontWeight', 'bold', 'FontSize', 25);
 % Save figure
-saveas(gcf, [pwd filesep 'Figures' filesep 'Fig3_PanelA_ERP.svg']); 
+% saveas(gcf, [pwd filesep 'Figures' filesep 'Fig3_PanelA_ERP.svg']); 
 
 %% ERP differences
 figure;

@@ -154,7 +154,7 @@ anova(mdldprime0)
 %criterion
 mdlcrit0 = fitlme(all_block_table,'criterion~1+BlockN+Group+(1|SubID)'); % Winning BIC model - Group: p = .02, BlockN: p = .70
 mdlcrit1 = fitlme(all_block_table,'criterion~1+BlockN*Group+(1|SubID)');  
-mdlcrit2 = fitlme(all_block_table,'criterion~1+BlockN*Group+(BlockN|SubID)'); % Winning AIC model - Group: p = .02, BlockN: p = .77
+% mdlcrit2 = fitlme(all_block_table,'criterion~1+BlockN*Group+(BlockN|SubID)'); % Winning AIC model - Group: p = .02, BlockN: p = .77
 % %% Extract fit statistics for each model
 % AIC_values = [mdlcrit0.ModelCriterion.AIC, mdlcrit1.ModelCriterion.AIC, mdlcrit2.ModelCriterion.AIC];
 % BIC_values = [mdlcrit0.ModelCriterion.BIC, mdlcrit1.ModelCriterion.BIC, mdlcrit2.ModelCriterion.BIC];
@@ -162,8 +162,9 @@ mdlcrit2 = fitlme(all_block_table,'criterion~1+BlockN*Group+(BlockN|SubID)'); % 
 % ModelNames = {'Model 0', 'Model 1', 'Model 2'};
 % fit_table = table(ModelNames', AIC_values', BIC_values', 'VariableNames', {'Model', 'AIC', 'BIC'});
 % disp(fit_table);
+compare(mdlcrit0,mdlcrit1)
 
-anova(mdlcrit1)
+anova(mdlcrit0)
 
 % CV_CTR=[];
 % for nc=1:length(ctrs)
