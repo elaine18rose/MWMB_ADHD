@@ -6,6 +6,7 @@ if isempty(findstr(pwd,'thandrillon'))==0
     path_LSCPtools='/Users/thandrillon/WorkGit/LSCPtools/';
     path_fieldtrip='/Users/thandrillon/WorkGit/projects/ext/fieldtrip/';
     behav_path = '/Users/thandrillon/Data/ADHD_MW/Behaviour/';
+    preproc_path='/Users/thandrillon/Data/ADHD_MW/Preproc/';
     save_path = '/Users/thandrillon/WorkGit/projects/inprogress/MWMB_ADHD/tables';
     path_RainCloudPlot='/Users/thandrillon/WorkGit/projects/ext/RainCloudPlots/';
 else
@@ -24,9 +25,9 @@ end
 % adding relevant toolboxes to the path
 addpath(genpath(path_LSCPtools))
 addpath(genpath(path_RainCloudPlot));
-addpath(genpath(path_DataViz));
+% addpath(genpath(path_DataViz));
 addpath(path_fieldtrip)
-addpath(path_chi2test)
+% addpath(path_chi2test)
 ft_defaults;
 % addpath(genpath(path_ExGauss))
 % addpath(genpath(path_FMINSEARCHBND))
@@ -196,27 +197,40 @@ set(gca, 'XTickLabelRotation', 0);
 saveas(gcf,fullfile(suppfig_path,'SuppFig1_PanelB_FAAvg.svg'))
 
 
+%%
 % RT
 figure; hold on;
 subjects = [];
 data_to_plot=[];
 meandata_to_plot=[];
 group_labels={'Control','ADHD'};
+for j = 1:2 % number of group
+    for i = 1:4 % number of repetitions
+        subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+        subject_means = [];
+        for s = 1:length(subjects)
+            subject_mean = mean(SW_table.Behav_RT( SW_table.Block == num2str(i) & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+            subject_means = [subject_means; subject_mean];
+        end
+        data_to_plot{i, j} = subject_means;
+        meandata_to_plot(i, j) = nanmean(subject_means);
+    end
+    plot((1:4)+(2*j-3)*0.1,meandata_to_plot(:,j)','Color',Colors(j,:),'LineWidth',4)
+
+    subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+    subject_means = [];
+    for s = 1:length(subjects)
+        subject_mean = mean(SW_table.Behav_RT(SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+        subject_means = [subject_means; subject_mean];
+    end
+    data_to_plot_perS{j} = subject_means;
+
+end
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
-        %              data_to_plot{i, j} = SW_table.Behav_RT(SW_table.Block==num2str(i) & SW_table.Group==group_labels{j});
-        data_to_plot{i, j} = SW_table.Behav_RT(double(SW_table.Block) == i  & SW_table.Group==group_labels{j});
-
+        simpleDotPlot(i+(2*j-3)*0.1,data_to_plot{i, j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
     end
 end
-
-for j = 1:2
-    plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
-    for i = 1:4
-        simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
-    end
-end
-
 set(gca, 'xtick',1:4); %to change y-axis to percentage
 %title(['Reaction Time across Block']);
 ylabel('Reaction Time (s)'); xlabel('Block');
@@ -226,17 +240,6 @@ ylim([0.35 0.4]); yticks(0.36:0.02:0.4);
 xlim([0.5 4.5])
 saveas(gcf,fullfile(suppfig_path,'SuppFig1_PanelC_RTPerBlock.svg'))
 
-
-for j = 1:2 % number of group
-    subjects = unique(SW_table.SubID(SW_table.Group==group_labels{j})); % Getting all subjects in this group
-    subject_means = [];
-
-    for s = 1:length(subjects)
-        subject_mean = mean(SW_table.Behav_RT(SW_table.Group==group_labels{j} & ismember(SW_table.SubID, subjects(s))));
-        subject_means = [subject_means; subject_mean];
-    end
-    data_to_plot_perS{j} = subject_means;
-end
 figure('Position',[2245         400         260         428])
 for j = 1:2 % number of group
     simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
@@ -256,16 +259,31 @@ subjects = [];
 data_to_plot=[];
 meandata_to_plot=[];
 group_labels={'Control','ADHD'};
+for j = 1:2 % number of group
+    for i = 1:4 % number of repetitions
+        subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+        subject_means = [];
+        for s = 1:length(subjects)
+            subject_mean = mean(SW_table.Behav_stdRT( SW_table.Block == num2str(i) & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+            subject_means = [subject_means; subject_mean];
+        end
+        data_to_plot{i, j} = subject_means;
+        meandata_to_plot(i, j) = nanmean(subject_means);
+    end
+    plot((1:4)+(2*j-3)*0.1,meandata_to_plot(:,j)','Color',Colors(j,:),'LineWidth',4)
+
+    subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+    subject_means = [];
+    for s = 1:length(subjects)
+        subject_mean = mean(SW_table.Behav_stdRT(SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+        subject_means = [subject_means; subject_mean];
+    end
+    data_to_plot_perS{j} = subject_means;
+
+end
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
-        data_to_plot{i, j} = SW_table.Behav_stdRT(SW_table.Block==num2str(i) & SW_table.Group==group_labels{j});
-    end
-end
-
-for j = 1:2
-    plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
-    for i = 1:4
-        simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+        simpleDotPlot(i+(2*j-3)*0.1,data_to_plot{i, j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
     end
 end
 set(gca, 'xtick',1:4); %to change y-axis to percentage
@@ -276,18 +294,6 @@ set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
 ylim([0.05 0.16]); yticks(0.05:0.05:0.2);
 xlim([0.5 4.5])
 saveas(gcf,fullfile(suppfig_path, 'SuppFig1_PanelD_StdRTPerBlock.svg'))
-
-
-for j = 1:2 % number of group
-    subjects = unique(SW_table.SubID(SW_table.Group==group_labels{j})); % Getting all subjects in this group
-    subject_means = [];
-
-    for s = 1:length(subjects)
-        subject_mean = mean(SW_table.Behav_stdRT(SW_table.Group==group_labels{j} & ismember(SW_table.SubID, subjects(s))));
-        subject_means = [subject_means; subject_mean];
-    end
-    data_to_plot_perS{j} = subject_means;
-end
 
 figure('Position',[2245         400         260         428])
 for j = 1:2 % number of group

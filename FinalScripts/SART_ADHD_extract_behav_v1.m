@@ -48,6 +48,9 @@ stategroup_cond=[];
 resblock_mat=[];
 behavres_table=[];
 
+duration_SART=[];
+numT_SART=[];
+duration_SART_blocks=[];
 for nF=1:length(files)
     File_Name=files(nF).name;
     if contains(File_Name, "AUTOSAVE") ==1 %Skips autosaves per block
@@ -67,6 +70,10 @@ for nF=1:length(files)
         Group='missing';
     end
     
+    % task info
+    duration_SART(end+1)=(test_res(end,8)-all_tstartblock(1))/60;
+    duration_SART_blocks(end+1)=mean([diff(all_tstartblock) test_res(end,8)-all_tstartblock(end)]/60);
+    numT_SART(end+1)=size(test_res,1);
     %%% Blocks, MWMB responses and performance
     this_probe = probe_res(:,1);
     probe_block = probe_res(:,4);
@@ -115,7 +122,7 @@ for nF=1:length(files)
     stdRT = std(valid_RT); % Calculate the standard deviation of valid RTs
     % Adding as a new column
     this_behav(:,13) = stdRT;
-
+    cvRT=std(valid_RT)/mean(valid_RT)*100;
 
     this_state2=nan(length(probe_res),11);
     this_state2(:,3)=this_probe;
@@ -211,6 +218,7 @@ for nF=1:length(files)
 
     % Reaction Time Variability
     block_table.stdRT = grpstats(all_RT, test_res(:,1), 'std');
+    block_table.cvRT = grpstats(all_RT, test_res(:,1), 'std')./grpstats(all_RT, test_res(:,1), 'mean');
 
 
     block_table.Intention=grpstats(probe_res(:,21),probe_res(:,4));
