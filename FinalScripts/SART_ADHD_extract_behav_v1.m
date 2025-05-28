@@ -252,6 +252,36 @@ for nF=1:length(files)
     end
 end
 
+%% Getting trial numbers by group
+% Calculating trials per participant grouped by both SubID and Group
+participant_group_trials = grpstats(behavres_table, {'SubID', 'Group'}, 'numel', 'DataVars', 'nTrial');
+group_stats = grpstats(participant_group_trials, 'Group', {'mean', 'std'}, 'DataVars', 'numel_nTrial');
+% Display the results for each group
+fprintf('Average number of trials for Control group (C): %.2f (SD = %.2f)\n', ...
+    group_stats.mean_numel_nTrial(strcmp(group_stats.Group, 'C')), ...
+    group_stats.std_numel_nTrial(strcmp(group_stats.Group, 'C')));
+fprintf('Average number of trials for ADHD group (A): %.2f (SD = %.2f)\n', ...
+    group_stats.mean_numel_nTrial(strcmp(group_stats.Group, 'A')), ...
+    group_stats.std_numel_nTrial(strcmp(group_stats.Group, 'A')));
+
+disp('Group statistics for trial numbers:');
+disp(group_stats);
+
+% fprintf('\nDetailed breakdown by participant:\n');
+% disp(sortrows(participant_group_trials, 'Group'));
+
+% t-test to see if there's a sig diff between no. of trials completed
+control_trials = participant_group_trials.numel_nTrial(strcmp(participant_group_trials.Group, 'C'));
+adhd_trials = participant_group_trials.numel_nTrial(strcmp(participant_group_trials.Group, 'A'));
+[h, p, ci, stats] = ttest2(control_trials, adhd_trials);
+fprintf('\nT-test results for difference in trial numbers between groups:\n');
+fprintf('t(%d) = %.3f, p = %.3f\n', stats.df, stats.tstat, p);
+
+if p < 0.05
+    fprintf('There is a significant difference in the number of trials between Control and ADHD groups.\n');
+else
+    fprintf('There is no significant difference in the number of trials between Control and ADHD groups.\n');
+end
 
 %% Saving table of all data 
 writetable(all_behav_table,[save_path filesep 'MWMB_ADHD_all_behav_byTrial.txt']);
@@ -458,7 +488,7 @@ if flag_figures == 1
      h1 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(1,:), 'MarkerEdgeColor', Colors(1,:), 'MarkerSize', 10); % Control
      h2 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(2,:), 'MarkerEdgeColor', Colors(2,:), 'MarkerSize', 10); % ADHD
      % Add the legend with the manually created plot handles
-     legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 16, 'Position', [0.2, 0.8, 0, 0]);
+     legend([h1, h2], {'Neurotypical', 'ADHD'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 16, 'Position', [0.25, 0.8, 0, 0]);
 
      ylim([0 0.04]*100)
      xlim([0.5 4.5])
@@ -482,7 +512,7 @@ if flag_figures == 1
 hold on;
 
      ylim([0 0.04]*100)
-     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'Control','ADHD'}); %to change y-axis to percentage
+     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); %to change y-axis to percentage
      %title(['Omission']);
      %     ylabel('% of Omission Errors'); xlabel('Block Number');
      format_fig;
@@ -534,7 +564,7 @@ hold on;
          simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
      end
      ylim([0 0.6]*100)
-     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'Control','ADHD'}); %to change y-axis to percentage
+     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); %to change y-axis to percentage
      %title(['Commission']);
      %     ylabel('% of Omission Errors'); xlabel('Block Number');
      format_fig;
@@ -586,7 +616,7 @@ hold on;
          simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
      end
      ylim([0.35 0.45])
-     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'Control','ADHD'}); %to change y-axis to percentage
+     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); %to change y-axis to percentage
      %title(['Reaction Time (s)']);
      %     ylabel('% of Omission Errors'); xlabel('Block Number');
      format_fig;
@@ -638,7 +668,7 @@ hold on;
          simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
      end
      ylim([0.05 0.2])
-     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'Control','ADHD'}); %to change y-axis to percentage
+     set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); %to change y-axis to percentage
      %title(['Std Deviation', newline,' of RT (s)']);
      %     ylabel('% of Omission Errors'); xlabel('Block Number');
      format_fig;
@@ -684,7 +714,7 @@ hold on;
     ADHD_state_percentage_distribution = ADHD_state_total_occurrences / sum(ADHD_state_total_occurrences) * 100;
      numbers_of_interest = [1, 2, 3, 4];
      figure; hold on;
-     group_labels = {'Control', 'ADHD'};
+     group_labels = {'Neurotypical', 'ADHD'};
      num_states = length(numbers_of_interest); % 4 states
      data_to_plot = cell(num_states, 2);
 
@@ -717,7 +747,7 @@ hold on;
      h1 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(1,:), 'MarkerEdgeColor', Colors(1,:), 'MarkerSize', 10); % Control
      h2 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(2,:), 'MarkerEdgeColor', Colors(2,:), 'MarkerSize', 10); % ADHD
      % Add the legend with the manually created plot handles
-     legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 16, 'Position', [0.8, 0.72, 0.1, 0.1]);
+     legend([h1, h2], {'Neurotypical', 'ADHD'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 16, 'Position', [0.75, 0.72, 0.1, 0.1]);
 
 
      % Save figure
@@ -774,7 +804,7 @@ hold on;
      % Plot the distribution - dot plots
      numbers_of_interest = [1, 2, 3, 4]; % Intentionality response categories
      figure; hold on;
-     group_labels = {'Control', 'ADHD'};
+     group_labels = {'NT', 'ADHD'};
      num_states = length(numbers_of_interest); % 4 intentionality responses
 
      % Convert raw counts to percentages per participant
@@ -850,7 +880,7 @@ hold on;
     ADHD_vig_percentage_distribution = ADHD_vig_total_occurrences / sum(ADHD_vig_total_occurrences) * 100;
 
      figure; hold on;
-     group_labels = {'Control', 'ADHD'};
+     group_labels = {'NT', 'ADHD'};
      num_states = length(numbers_of_interest); % 4 states
      data_to_plot = cell(num_states, 2);
 

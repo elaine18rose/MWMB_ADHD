@@ -37,6 +37,17 @@ addpath(genpath(path_FMINSEARCHBND))
 demo_table = readtable([save_path filesep 'SART_ADHD_behav_demo_v1.txt']);
 demo_table.Group = categorical(demo_table.Group);
 demo_table.Sex = categorical(demo_table.Sex);
+
+SW_demo_table = readtable([save_path filesep 'SART_ADHD_SW_demo_v1.txt']);
+SW_demo_table.Group = categorical(SW_demo_table.Group);
+SW_demo_table.Sex = categorical(SW_demo_table.Sex);
+SW_demo_table.SubID = categorical(SW_demo_table.SubID);
+
+
+probe_demo_table = readtable([save_path filesep 'SART_ADHD_probe_demo_v1.txt']);
+probe_demo_table.Group = categorical(probe_demo_table.Group);
+probe_demo_table.Sex = categorical(probe_demo_table.Sex);
+probe_demo_table.SubID = categorical(probe_demo_table.SubID);
 %% Age 
 unique_subids = unique(demo_table.SubID);
 unique_ages = zeros(length(unique_subids), 1);
@@ -139,3 +150,245 @@ if h == 0
 else
     fprintf('Significant difference between ADHD and Control groups. p-value = %.4f\n', p);
 end
+
+%% ESS 
+% Loop through each unique participant ID to get their ESS
+for i = 1:length(unique_subids)
+    idx = strcmp(demo_table.SubID, unique_subids{i});
+    participant_ESS = demo_table.Epworth(idx);
+    participant_group = demo_table.Group(idx); 
+    unique_ESS(i) = participant_ESS(1);  % Store the first (and only) ESS value for the participant
+    unique_groups(i) = participant_group(1); % Store the group for the participant
+end
+
+ADHD_ESS = unique_ESS(unique_groups == 'A');
+% ADHD_ESS = ADHD_edu(~isnan(ADHD_edu));
+Control_ESS = unique_ESS(unique_groups == 'C');
+
+%Test for normality
+%Kolmogorov-Smirnov Test:
+[h_adhd, p_adhd] = kstest((ADHD_ESS - mean(ADHD_ESS)) / std(ADHD_ESS));
+fprintf('ADHD group normality: h = %d, p = %.4f\n', h_adhd, p_adhd); % h = 0 means data doesn't sig deviate from normal dist.
+[h_control, p_control] = kstest((Control_ESS - mean(Control_ESS)) / std(Control_ESS));
+fprintf('Control group normality: h = %d, p = %.4f\n', h_control, p_control);
+
+% Test for Equal Variance
+% F-test for equality of variances
+[h_var, p_var] = vartest2(ADHD_ESS, Control_ESS);
+fprintf('Equality of variances: h = %d, p = %.4f\n', h_var, p_var);% h = 0 means variance is equal
+
+
+% t-test
+[h, p] = ttest2(ADHD_ESS, Control_ESS);
+% Display results
+if h == 0
+    fprintf('No significant difference between ADHD and Control groups. p-value = %.4f\n', p);
+else
+    fprintf('Significant difference between ADHD and Control groups. p-value = %.4f\n', p);
+end
+
+%% CAARS - Inattentiveness (Subscale E) 
+% Loop through each unique participant ID 
+for i = 1:length(unique_subids)
+    idx = strcmp(demo_table.SubID, unique_subids{i});
+    ppt_CAARSInt = demo_table.CAARS_Inattentiveness(idx);
+    participant_group = demo_table.Group(idx); 
+    unique_CAARSInt(i) = ppt_CAARSInt(1);  % Store the first (and only) CAARS value for the participant
+    unique_groups(i) = participant_group(1); % Store the group for the participant
+end
+
+ADHD_CAARSInt = unique_CAARSInt(unique_groups == 'A');
+% ADHD_ESS = ADHD_edu(~isnan(ADHD_edu));
+Control_CAARSInt = unique_CAARSInt(unique_groups == 'C');
+
+%Test for normality
+%Kolmogorov-Smirnov Test:
+[h_adhd, p_adhd] = kstest((ADHD_CAARSInt - mean(ADHD_CAARSInt)) / std(ADHD_CAARSInt));
+fprintf('ADHD group normality: h = %d, p = %.4f\n', h_adhd, p_adhd); % h = 0 means data doesn't sig deviate from normal dist.
+[h_control, p_control] = kstest((Control_CAARSInt - mean(Control_CAARSInt)) / std(Control_CAARSInt));
+fprintf('Control group normality: h = %d, p = %.4f\n', h_control, p_control);
+
+% Test for Equal Variance
+% F-test for equality of variances
+[h_var, p_var] = vartest2(ADHD_CAARSInt, Control_CAARSInt);
+fprintf('Equality of variances: h = %d, p = %.4f\n', h_var, p_var);% h = 0 means variance is equal
+
+
+% t-test
+[h, p] = ttest2(ADHD_CAARSInt, Control_CAARSInt);
+% Display results
+if h == 0
+    fprintf('No significant difference between ADHD and Control groups. p-value = %.4f\n', p);
+else
+    fprintf('Significant difference between ADHD and Control groups. p-value = %.4f\n', p);
+end
+
+
+%% CAARS - Hyperactive-Impulsive (Subscale F) 
+% Loop through each unique participant ID 
+for i = 1:length(unique_subids)
+    idx = strcmp(demo_table.SubID, unique_subids{i});
+    ppt_CAARSHyp = demo_table.CAARS_Hyperactivity(idx);
+    participant_group = demo_table.Group(idx); 
+    unique_CAARSHyp(i) = ppt_CAARSHyp(1);  % Store the first (and only) CAARS value for the participant
+    unique_groups(i) = participant_group(1); % Store the group for the participant
+end
+
+ADHD_CAARSHyp = unique_CAARSHyp(unique_groups == 'A');
+% ADHD_ESS = ADHD_edu(~isnan(ADHD_edu));
+Control_CAARSHyp = unique_CAARSHyp(unique_groups == 'C');
+
+%Test for normality
+%Kolmogorov-Smirnov Test:
+[h_adhd, p_adhd] = kstest((ADHD_CAARSHyp - mean(ADHD_CAARSHyp)) / std(ADHD_CAARSHyp));
+fprintf('ADHD group normality: h = %d, p = %.4f\n', h_adhd, p_adhd); % h = 0 means data doesn't sig deviate from normal dist.
+[h_control, p_control] = kstest((Control_CAARSHyp - mean(Control_CAARSHyp)) / std(Control_CAARSHyp));
+fprintf('Control group normality: h = %d, p = %.4f\n', h_control, p_control);
+
+% Test for Equal Variance
+% F-test for equality of variances
+[h_var, p_var] = vartest2(ADHD_CAARSHyp, Control_CAARSHyp);
+fprintf('Equality of variances: h = %d, p = %.4f\n', h_var, p_var);% h = 0 means variance is equal
+
+
+% t-test
+[h, p] = ttest2(ADHD_CAARSHyp, Control_CAARSHyp);
+% Display results
+if h == 0
+    fprintf('No significant difference between ADHD and Control groups. p-value = %.4f\n', p);
+else
+    fprintf('Significant difference between ADHD and Control groups. p-value = %.4f\n', p);
+end
+
+%% CAARS - Total ADHD Symptoms (Subscale G) 
+% Loop through each unique participant ID 
+for i = 1:length(unique_subids)
+    idx = strcmp(demo_table.SubID, unique_subids{i});
+    ppt_CAARSTot = demo_table.CAARS_TotalADHDSymptoms(idx);
+    participant_group = demo_table.Group(idx); 
+    unique_CAARSTot(i) = ppt_CAARSTot(1);  % Store the first (and only) CAARS value for the participant
+    unique_groups(i) = participant_group(1); % Store the group for the participant
+end
+
+ADHD_CAARSTot = unique_CAARSTot(unique_groups == 'A');
+% ADHD_ESS = ADHD_edu(~isnan(ADHD_edu));
+Control_CAARSTot = unique_CAARSTot(unique_groups == 'C');
+
+%Test for normality
+%Kolmogorov-Smirnov Test:
+[h_adhd, p_adhd] = kstest((ADHD_CAARSTot - mean(ADHD_CAARSTot)) / std(ADHD_CAARSTot));
+fprintf('ADHD group normality: h = %d, p = %.4f\n', h_adhd, p_adhd); % h = 0 means data doesn't sig deviate from normal dist.
+[h_control, p_control] = kstest((Control_CAARSTot - mean(Control_CAARSTot)) / std(Control_CAARSTot));
+fprintf('Control group normality: h = %d, p = %.4f\n', h_control, p_control);
+
+% Test for Equal Variance
+% F-test for equality of variances
+[h_var, p_var] = vartest2(ADHD_CAARSTot, Control_CAARSTot);
+fprintf('Equality of variances: h = %d, p = %.4f\n', h_var, p_var);% h = 0 means variance is equal
+
+
+% t-test
+[h, p] = ttest2(ADHD_CAARSTot, Control_CAARSTot);
+% Display results
+if h == 0
+    fprintf('No significant difference between ADHD and Control groups. p-value = %.4f\n', p);
+else
+    fprintf('Significant difference between ADHD and Control groups. p-value = %.4f\n', p);
+end
+
+%% CAARS - ADHD Index (Subscale H) 
+% Loop through each unique participant ID 
+for i = 1:length(unique_subids)
+    idx = strcmp(demo_table.SubID, unique_subids{i});
+    ppt_CAARSInd = demo_table.CAARS_ADHDIndex(idx);
+    participant_group = demo_table.Group(idx); 
+    unique_CAARSInd(i) = ppt_CAARSInd(1);  % Store the first (and only) CAARS value for the participant
+    unique_groups(i) = participant_group(1); % Store the group for the participant
+end
+
+ADHD_CAARSInd = unique_CAARSInd(unique_groups == 'A');
+% ADHD_ESS = ADHD_edu(~isnan(ADHD_edu));
+Control_CAARSInd = unique_CAARSInd(unique_groups == 'C');
+
+%Test for normality
+%Kolmogorov-Smirnov Test:
+[h_adhd, p_adhd] = kstest((ADHD_CAARSInd - mean(ADHD_CAARSInd)) / std(ADHD_CAARSInd));
+fprintf('ADHD group normality: h = %d, p = %.4f\n', h_adhd, p_adhd); % h = 0 means data doesn't sig deviate from normal dist.
+[h_control, p_control] = kstest((Control_CAARSInd - mean(Control_CAARSInd)) / std(Control_CAARSInd));
+fprintf('Control group normality: h = %d, p = %.4f\n', h_control, p_control);
+
+% Test for Equal Variance
+% F-test for equality of variances
+[h_var, p_var] = vartest2(ADHD_CAARSInd, Control_CAARSInd);
+fprintf('Equality of variances: h = %d, p = %.4f\n', h_var, p_var);% h = 0 means variance is equal
+
+
+% t-test
+[h, p] = ttest2(ADHD_CAARSInd, Control_CAARSInd);
+% Display results
+if h == 0
+    fprintf('No significant difference between ADHD and Control groups. p-value = %.4f\n', p);
+else
+    fprintf('Significant difference between ADHD and Control groups. p-value = %.4f\n', p);
+end
+
+%% Average SWD and ESS (correlation)
+unique_subids = unique(SW_demo_table.SubID);
+nSubs = length(unique_subs);
+mean_SWD = zeros(nSubs,1);
+ESS_scores = zeros(nSubs,1);
+
+for i = 1:nSubs
+    this_idx = sub_idx == i;
+    mean_SWD(i) = mean(SW_demo_table.SW_density(this_idx), 'omitnan');
+    ESS_scores(i) = SW_demo_table.Epworth(find(this_idx,1)); % get ESS once per subject
+end
+
+%Test for normality
+%Kolmogorov-Smirnov Test:
+[h_SWD, p_SWD] = kstest((mean_SWD - mean(mean_SWD)) / std(mean_SWD));
+fprintf('SWD normality: h = %d, p = %.4f\n', h_SWD, p_SWD); % h = 0 means data doesn't sig deviate from normal dist.
+[h_ESS, p_ESS] = kstest((ESS_scores - mean(ESS_scores)) / std(ESS_scores));
+fprintf('ESS normality: h = %d, p = %.4f\n', h_ESS, p_ESS);
+
+
+valid_idx = ~isnan(mean_SWD) & ~isnan(ESS_scores);
+[r, p] = corr(mean_SWD(valid_idx), ESS_scores(valid_idx), 'Type', 'Pearson'); 
+fprintf('Correlation between mean SWD and ESS: r = %.3f, p = %.4f\n', r, p);
+
+% LME for SWD and ESS
+lmeSW = fitlme(SW_demo_table, 'SW_density ~ Epworth + (1|SubID)');
+
+%% Average SWAmp and ESS (correlation)
+unique_subids = unique(SW_demo_table.SubID);
+nSubs = length(unique_subs);
+mean_SWAmp= zeros(nSubs,1);
+ESS_scores = zeros(nSubs,1);
+
+for i = 1:nSubs
+    this_idx = sub_idx == i;
+    mean_SWAmp(i) = mean(SW_demo_table.SW_amplitude(this_idx), 'omitnan');
+    ESS_scores(i) = SW_demo_table.Epworth(find(this_idx,1)); % get ESS once per subject
+end
+
+%Test for normality
+%Kolmogorov-Smirnov Test:
+[h_SWAmp, p_SWAmp] = kstest((mean_SWAmp - mean(mean_SWAmp)) / std(mean_SWAmp));
+fprintf('SWAmp normality: h = %d, p = %.4f\n', h_SWAmp, p_SWAmp); % h = 0 means data doesn't sig deviate from normal dist.
+[h_ESS, p_ESS] = kstest((ESS_scores - mean(ESS_scores)) / std(ESS_scores));
+fprintf('ESS normality: h = %d, p = %.4f\n', h_ESS, p_ESS);
+
+
+valid_idx = ~isnan(mean_SWAmp) & ~isnan(ESS_scores);
+[r, p] = corr(mean_SWAmp(valid_idx), ESS_scores(valid_idx), 'Type', 'Pearson'); 
+fprintf('Correlation between mean SWAmp and ESS: r = %.3f, p = %.4f\n', r, p);
+
+% LME for SWAmp and ESS
+lmeSW = fitlme(SW_demo_table, 'SW_amplitude~ Epworth + (1|SubID)');
+
+%% Sleepiness Ratings and ESS
+
+lmeVigxESS = fitlme(probe_demo_table, 'Vigilance~ Epworth + (1|SubID)');
+
+
+

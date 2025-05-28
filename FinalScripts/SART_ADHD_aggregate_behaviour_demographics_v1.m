@@ -36,17 +36,18 @@ addpath(genpath(path_FMINSEARCHBND))
 
 
 % readtable([save_path filesep 'MWMB_ADHD_all_block.txt']);
-% readtable([save_path filesep 'MWMB_ADHD_all_probe_behav.txt'])
+table_probe =readtable([save_path filesep 'MWMB_ADHD_all_probe_behav.txt']);
 
 
 %%
-table_behav=readtable([save_path filesep 'MWMB_ADHD_all_behav_byTrial.txt']);;
+table_behav=readtable([save_path filesep 'MWMB_ADHD_all_behav_byTrial.txt']);
 
 table_ques=readtable([save_path filesep  'SART-Ppt-Demo-Questionnaire-Scores.xlsx']);
 table_ques.SubID=categorical(table_ques.SubID);
 
+table_SW = readtable([preproc_path filesep 'all_SW_perProbe_exGaussCTR_v3.csv']);
 
-%% Writing a table for all data
+%% Writing a table for behav + demo data
 table_behav_demo=table_behav;
 table_behav_demo.SubID=categorical(table_behav_demo.SubID);
 
@@ -130,6 +131,176 @@ for k=1:length(unique_IDs)
 end
 
 writetable(table_behav_demo,[save_path filesep 'SART_ADHD_behav_demo_v1.txt']);
+
+%% Writing a table for probe + demo data
+table_probe_demo=table_probe;
+table_probe_demo.SubID=categorical(table_probe_demo.SubID);
+
+
+table_probe_demo.Age=nan(size(table_probe_demo,1),1);
+table_probe_demo.Sex=nan(size(table_probe_demo,1),1);
+table_probe_demo.Education_Years=nan(size(table_probe_demo,1),1);
+table_probe_demo.Depression=nan(size(table_probe_demo,1),1);
+table_probe_demo.Anxiety=nan(size(table_probe_demo,1),1);
+table_probe_demo.ReportedSubtype=nan(size(table_probe_demo,1),1);
+table_probe_demo.DIVASubtype=nan(size(table_probe_demo,1),1);
+
+table_probe_demo.ASRS_Inattentiveness=nan(size(table_probe_demo,1),1);
+table_probe_demo.ASRS_Hyperactivity=nan(size(table_probe_demo,1),1);
+table_probe_demo.ASRS_5=nan(size(table_probe_demo,1),1);
+table_probe_demo.CAARS_Inattentiveness=nan(size(table_probe_demo,1),1);
+table_probe_demo.CAARS_Hyperactivity=nan(size(table_probe_demo,1),1);
+table_probe_demo.CAARS_TotalADHDSymptoms=nan(size(table_probe_demo,1),1);
+table_probe_demo.CAARS_ADHDIndex=nan(size(table_probe_demo,1),1);
+table_probe_demo.CAARS_InconsistencyIndex=nan(size(table_probe_demo,1),1);
+table_probe_demo.Epworth=nan(size(table_probe_demo,1),1);
+table_probe_demo.Epworth_Rating=nan(size(table_probe_demo,1),1);
+
+table_probe_demo.ReportedSubtype=string(table_probe_demo.ReportedSubtype);
+table_probe_demo.DIVASubtype=string(table_probe_demo.DIVASubtype);
+table_probe_demo.Sex=string(table_probe_demo.Sex);
+table_probe_demo.CAARS_InconsistencyIndex=string(table_probe_demo.CAARS_InconsistencyIndex);
+table_probe_demo.Epworth_Rating=string(table_probe_demo.Epworth_Rating);
+
+unique_IDs=unique(table_probe_demo.SubID);
+for k=1:length(unique_IDs)
+    table_probe_demo.Age(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.Age(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.Sex(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.Sex(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.Education_Years(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.YearsOfEducation(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.Depression(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.Depression(table_ques.SubID==unique_IDs(k));
+    table_probe_demo.Anxiety(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.Anxiety(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.ReportedSubtype(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.ReportedSubtype(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.DIVASubtype(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.DIVASubtype(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.ASRS_Inattentiveness(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.ASRS_Inattentiveness(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.ASRS_Hyperactivity(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.ASRS_Hyperactivity(table_ques.SubID==unique_IDs(k));
+    
+    table_probe_demo.ASRS_5(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.ASRS_5(table_ques.SubID==unique_IDs(k));
+    
+    table_probe_demo.CAARS_Inattentiveness(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_Inattentiveness(table_ques.SubID==unique_IDs(k));
+    
+    table_probe_demo.CAARS_Hyperactivity(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_Hyperactivity(table_ques.SubID==unique_IDs(k));
+    
+    table_probe_demo.CAARS_TotalADHDSymptoms(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_TotalADHDSymptoms(table_ques.SubID==unique_IDs(k));
+    
+    table_probe_demo.CAARS_ADHDIndex(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_ADHDIndex(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.CAARS_InconsistencyIndex(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_InconsistencyIndex(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.Epworth(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.Epworth(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.Epworth_Rating(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.Epworth_Rating(table_ques.SubID==unique_IDs(k));
+end
+
+writetable(table_probe_demo,[save_path filesep 'SART_ADHD_probe_demo_v1.txt']);
+
+%% Writing a table for SW + demo data
+table_sw_demo=table_SW;
+table_sw_demo.SubID=categorical(table_sw_demo.SubID);
+
+
+table_sw_demo.Age=nan(size(table_sw_demo,1),1);
+table_sw_demo.Sex=nan(size(table_sw_demo,1),1);
+table_sw_demo.Education_Years=nan(size(table_sw_demo,1),1);
+table_sw_demo.Depression=nan(size(table_sw_demo,1),1);
+table_sw_demo.Anxiety=nan(size(table_sw_demo,1),1);
+table_sw_demo.ReportedSubtype=nan(size(table_sw_demo,1),1);
+table_sw_demo.DIVASubtype=nan(size(table_sw_demo,1),1);
+
+table_sw_demo.ASRS_Inattentiveness=nan(size(table_sw_demo,1),1);
+table_sw_demo.ASRS_Hyperactivity=nan(size(table_sw_demo,1),1);
+table_sw_demo.ASRS_5=nan(size(table_sw_demo,1),1);
+table_sw_demo.CAARS_Inattentiveness=nan(size(table_sw_demo,1),1);
+table_sw_demo.CAARS_Hyperactivity=nan(size(table_sw_demo,1),1);
+table_sw_demo.CAARS_TotalADHDSymptoms=nan(size(table_sw_demo,1),1);
+table_sw_demo.CAARS_ADHDIndex=nan(size(table_sw_demo,1),1);
+table_sw_demo.CAARS_InconsistencyIndex=nan(size(table_sw_demo,1),1);
+table_sw_demo.Epworth=nan(size(table_sw_demo,1),1);
+table_sw_demo.Epworth_Rating=nan(size(table_sw_demo,1),1);
+
+table_sw_demo.ReportedSubtype=string(table_sw_demo.ReportedSubtype);
+table_sw_demo.DIVASubtype=string(table_sw_demo.DIVASubtype);
+table_sw_demo.Sex=string(table_sw_demo.Sex);
+table_sw_demo.CAARS_InconsistencyIndex=string(table_sw_demo.CAARS_InconsistencyIndex);
+table_sw_demo.Epworth_Rating=string(table_sw_demo.Epworth_Rating);
+
+unique_IDs=unique(table_sw_demo.SubID);
+for k=1:length(unique_IDs)
+    table_sw_demo.Age(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.Age(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.Sex(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.Sex(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.Education_Years(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.YearsOfEducation(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.Depression(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.Depression(table_ques.SubID==unique_IDs(k));
+    table_sw_demo.Anxiety(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.Anxiety(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.ReportedSubtype(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.ReportedSubtype(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.DIVASubtype(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.DIVASubtype(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.ASRS_Inattentiveness(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.ASRS_Inattentiveness(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.ASRS_Hyperactivity(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.ASRS_Hyperactivity(table_ques.SubID==unique_IDs(k));
+    
+    table_sw_demo.ASRS_5(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.ASRS_5(table_ques.SubID==unique_IDs(k));
+    
+    table_sw_demo.CAARS_Inattentiveness(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_Inattentiveness(table_ques.SubID==unique_IDs(k));
+    
+    table_sw_demo.CAARS_Hyperactivity(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_Hyperactivity(table_ques.SubID==unique_IDs(k));
+    
+    table_sw_demo.CAARS_TotalADHDSymptoms(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_TotalADHDSymptoms(table_ques.SubID==unique_IDs(k));
+    
+    table_sw_demo.CAARS_ADHDIndex(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_ADHDIndex(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.CAARS_InconsistencyIndex(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.CAARS_InconsistencyIndex(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.Epworth(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.Epworth(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.Epworth_Rating(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.Epworth_Rating(table_ques.SubID==unique_IDs(k));
+end
+
+writetable(table_sw_demo,[save_path filesep 'SART_ADHD_SW_demo_v1.txt']);
 
 
 

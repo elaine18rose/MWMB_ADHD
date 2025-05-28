@@ -555,11 +555,11 @@ xlim([1 40]); % changed from [2 15]
 ylabel('Power (dB)'); 
 % ylim([-2 -0.75]);
 lgd = legend([hp(1), hp(2), patch([-1 -1], [-1 -1], 'k', 'FaceAlpha', 0.1, 'EdgeColor', 'none')], ...
-       {'Control', 'ADHD', 'Significant Diff'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 18);
-lgd.Position = [0.75, 0.77, 0.1, 0.1];
+       {'Neurotypical', 'ADHD', 'Significant Diff'}, 'Location', 'northeast', 'Box', 'off', 'FontSize', 23);
+lgd.Position = [0.7, 0.77, 0.1, 0.1];
 format_fig
 set(gca, 'FontSize', 23);
-title('Group Differences in Power - Fz', 'FontSize',31);
+title('Group Differences in Power - Fz', 'FontSize',32);
 hold off;
 
 
@@ -625,7 +625,7 @@ cb.Position(4) = cb.Position(4) * 0.8; %shorter
 cb.Position(1) = cb.Position(1) + 0.05; % Move it slightly to the right
 cb.Position(2) = cb.Position(2) + 0.05; % Move up
 cb.FontSize = 20;
-t = title(['Control']);
+t = title(['Neurotypical']);
 t.Position(2) = t.Position(2) - 0.3;
 ylabel(cb, 'Power (dB)', 'FontSize',20, 'FontWeight', 'bold');
 set(gca, 'TitleFontSizeMultiplier', 1.1);
@@ -654,7 +654,7 @@ cb.Position(1) = cb.Position(1) + 0.05; % Move it slightly to the right
 cb.Position(2) = cb.Position(2) + 0.05; % Move up
 cb.FontSize = 20;
 ylabel(cb, 't-value', 'FontSize',20, 'FontWeight', 'bold');
-t = title(['ADHD-Control']); 
+t = title(['ADHD-Neurotypical']); 
 set(gca, 'TitleFontSizeMultiplier', 1.1);
 t.Position(2) = t.Position(2) - 0.3;
 
