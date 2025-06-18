@@ -485,9 +485,9 @@ f1 = figure('Position', [100, 100, 1000, 650]);  % wider and taller
 cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
 subplot(1,2,1)
 simpleTopoPlot_ft(topo_GroupOnSW_tV(:,1), layout,'on',[],0,1);
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',100,'box','no','label','no');
+ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',180,'box','no','label','no');
 % ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<fdr([topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,2)],0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',100,'box','no','label','no');
+ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',180,'box','no','label','no');
 colormap(cmap2);
 t = title({'Group', '(ADHD vs NT)'}); t.Position(2) = t.Position(2) -.3;
 t.Position(2) = t.Position(2) -.04;
@@ -501,12 +501,12 @@ cb.FontSize = 25; cb.Label.FontSize = 30;
 
 subplot(1,2,2)
 simpleTopoPlot_ft(topo_GroupOnSW_tV(:,2), layout,'on',[],0,1);
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',100,'box','no','label','no');
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',100,'box','no','label','no');
+ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',180,'box','no','label','no');
+ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',180,'box','no','label','no');
 colormap(cmap2);
 t = title(['Group * Block']);t.Position(2) = t.Position(2) -.3;
 t.Position(2) = t.Position(2) -.04;
-caxis([-1 1]*5)
+caxis([-1 1]*8)
 format_fig;
 t.FontSize = 30;
 cb = colorbar;
