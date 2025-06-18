@@ -79,6 +79,12 @@ table_behav_demo.Epworth_Rating=string(table_behav_demo.Epworth_Rating);
 
 unique_IDs=unique(table_behav_demo.SubID);
 for k=1:length(unique_IDs)
+
+    currentID = unique_IDs(k);
+    if ismember(char(currentID), {'C015'})
+        continue;
+    end
+
     table_behav_demo.Age(table_behav_demo.SubID==unique_IDs(k))=...
         table_ques.Age(table_ques.SubID==unique_IDs(k));
 
@@ -164,6 +170,12 @@ table_probe_demo.Epworth_Rating=string(table_probe_demo.Epworth_Rating);
 
 unique_IDs=unique(table_probe_demo.SubID);
 for k=1:length(unique_IDs)
+
+    currentID = unique_IDs(k);
+    if ismember(char(currentID), {'C015'})
+        continue;
+    end
+
     table_probe_demo.Age(table_probe_demo.SubID==unique_IDs(k))=...
         table_ques.Age(table_ques.SubID==unique_IDs(k));
 
@@ -249,6 +261,12 @@ table_sw_demo.Epworth_Rating=string(table_sw_demo.Epworth_Rating);
 
 unique_IDs=unique(table_sw_demo.SubID);
 for k=1:length(unique_IDs)
+
+    currentID = unique_IDs(k);
+    if ismember(char(currentID), {'C015'})
+        continue;
+    end
+
     table_sw_demo.Age(table_sw_demo.SubID==unique_IDs(k))=...
         table_ques.Age(table_ques.SubID==unique_IDs(k));
 

@@ -164,6 +164,7 @@ end
 ADHD_ESS = unique_ESS(unique_groups == 'A');
 % ADHD_ESS = ADHD_edu(~isnan(ADHD_edu));
 Control_ESS = unique_ESS(unique_groups == 'C');
+Control_ESS = Control_ESS(~isnan(Control_ESS));  % remove NaNs
 
 %Test for normality
 %Kolmogorov-Smirnov Test:
@@ -390,5 +391,79 @@ lmeSW = fitlme(SW_demo_table, 'SW_amplitude~ Epworth + (1|SubID)');
 
 lmeVigxESS = fitlme(probe_demo_table, 'Vigilance~ Epworth + (1|SubID)');
 
+%% ASRS v1.1
+unique_subids = unique(probe_demo_table.SubID); % get unique participant IDs
+unique_subids(unique_subids == "C015") = [];
+unique_ASRS_total = zeros(length(unique_subids),1);
+unique_groups = categorical(repmat("", length(unique_subids),1));
 
+for i = 1:length(unique_subids)
+    idx = (probe_demo_table.SubID == unique_subids(i));
+    asrs_sum = probe_demo_table.ASRS_Inattentiveness(idx) + probe_demo_table.ASRS_Hyperactivity(idx);
+    unique_ASRS_total(i) = asrs_sum(1);
+    tempGroup = probe_demo_table.Group(idx);
+    unique_groups(i) = tempGroup(1);
+end
+
+ADHD_ASRS = unique_ASRS_total(unique_groups == 'A');
+Control_ASRS = unique_ASRS_total(unique_groups == 'C');
+
+%Test for normality
+%Kolmogorov-Smirnov Test:
+[h_adhd, p_adhd] = kstest((ADHD_ASRS - mean(ADHD_ASRS)) / std(ADHD_ASRS));
+fprintf('ADHD group normality: h = %d, p = %.4f\n', h_adhd, p_adhd); % h = 0 means data doesn't sig deviate from normal dist.
+[h_control, p_control] = kstest((Control_ASRS - mean(Control_ASRS)) / std(Control_ASRS));
+fprintf('Control group normality: h = %d, p = %.4f\n', h_control, p_control);
+
+% Test for Equal Variance
+% F-test for equality of variances
+[h_var, p_var] = vartest2(ADHD_ASRS, Control_ASRS);
+fprintf('Equality of variances: h = %d, p = %.4f\n', h_var, p_var);% h = 0 means variance is equal; in this case it was unequal
+
+
+% t-test
+if h_var == 1
+    fprintf('Variances differ significantly. Using Welch''s t-test.\n');
+    [h, p] = ttest2(ADHD_ASRS, Control_ASRS, 'Vartype', 'unequal');
+else
+    fprintf('Variances equal. Using standard t-test.\n');
+    [h, p] = ttest2(ADHD_ASRS, Control_ASRS);
+end
+
+% Display results
+if h == 0
+    fprintf('No significant difference between ADHD and Control groups. p-value = %.4f\n', p);
+else
+    fprintf('Significant difference between ADHD and Control groups. p-value = %.4f\n', p);
+end
+
+%% Sleepiness Ratings and Mind states
+stateLabels = {'ON', 'MW', 'MB', 'DK'};
+probe_demo_table.StateCat = categorical(probe_demo_table.State, [1 2 3 4], stateLabels);
+sleepLabels = {'Ex Alert', 'Alert', 'Sleepy', 'Ex Sleepy'};
+probe_demo_table.SleepinessCat = categorical(probe_demo_table.Vigilance, [1 2 3 4], sleepLabels);
+
+[contingency_table, chi2_stat, p_val] = crosstab(probe_demo_table.SleepinessCat, probe_demo_table.StateCat);
+disp(['Chi-squared Statistic: ', num2str(chi2_stat)]);
+disp(['p-value: ', num2str(p_val)]);
+disp(array2table(contingency_table, ...
+    'VariableNames', categories(probe_demo_table.StateCat), ...
+    'RowNames', categories(probe_demo_table.SleepinessCat)));
+
+
+%Post hoc 
+
+n = sum(contingency_table(:));                       % Total number of observations
+row_totals = sum(contingency_table, 2);              % Row totals (sleepiness levels)
+col_totals = sum(contingency_table, 1);              % Column totals (mind states)
+expected = row_totals * col_totals / n;              % Expected frequencies
+
+std_residuals = (contingency_table - expected) ./ sqrt(expected); % standardised residuals
+
+resid_table = array2table(std_residuals, ...
+    'VariableNames', categories(probe_demo_table.StateCat), ...
+    'RowNames', categories(probe_demo_table.SleepinessCat));
+
+disp('Standardized Residuals Table:');
+disp(resid_table);
 
