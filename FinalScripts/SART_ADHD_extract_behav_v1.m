@@ -570,7 +570,7 @@ hold on;
      format_fig;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
      saveas(gcf,fullfile(figures_path,'Fig1_PanelC_FAAvg.svg'))
-
+        
      %% RT
      figure; hold on;
      subjects = [];
