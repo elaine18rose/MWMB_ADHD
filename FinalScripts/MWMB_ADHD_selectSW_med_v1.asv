@@ -518,7 +518,7 @@ for i = 1:4 % number of repetitions
         subjects = unique(SW_table.SubID(SW_table.Block == num2str(i) & SW_table.Group == group_labels{j})); % Getting all subjects in this group
         subject_means = [];
         for s = 1:length(subjects)
-            subject_mean = nanmean(SW_table.SW_amplitude(SW_table.Block == num2str(i) & SW_table.Group == group_labels{j} & SW_table.SubID ==  subjects(s)));
+            subject_mean = mean(SW_table.SW_density(SW_table.Block == num2str(i) & SW_table.Group == group_labels{j} & SW_table.SubID ==  subjects(s)));
             subject_means = [subject_means; subject_mean];
         end
         data_to_plot{i, j} = subject_means;
@@ -534,7 +534,7 @@ for j = 1:2
 end
 set(gca, 'xtick',1:4); %to change y-axis to percentage
 %title(['Commission Errors per Block']);
-ylabel('SW amplitude (\muV)'); xlabel('Block');
+ylabel('SW density (/min)'); xlabel('Block');
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
 % ylim([0 0.6]*100)
@@ -547,7 +547,7 @@ for j = 1:2 % number of group
     subject_means = [];
 
     for s = 1:length(subjects)
-        subject_mean = nanmean(SW_table.SW_amplitude(SW_table.Group == group_labels{j} & SW_table.SubID ==  subjects(s)));
+        subject_mean = mean(SW_table.SW_density(SW_table.Group == group_labels{j} & SW_table.SubID ==  subjects(s)));
         subject_means = [subject_means; subject_mean];
     end
     data_to_plot_perS{j} = subject_means;
