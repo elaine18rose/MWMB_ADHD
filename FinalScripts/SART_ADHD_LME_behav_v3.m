@@ -12,6 +12,7 @@ else
     path_LSCPtools = '/Users/elaine/desktop/MATLAB_Functions/LSCPtools/';
     path_fieldtrip = '/Users/elaine/desktop/MATLAB_Functions/fieldtrip/';
     path_RainCloudPlot='/Users/elaine/desktop/MATLAB_Functions/RainCloudPlots/';
+    path_fdrbh = '/Users/elaine/desktop/MATLAB_Functions/fdr_bh/';
     path_chi2test= '/Users/elaine/desktop/MATLAB_Functions/chi2test/';
     behav_path = '/Volumes/Seagate/MWMB_ADHD_SART/Behaviour/';
     preproc_path='/Volumes/Seagate/MWMB_ADHD_SART/preproc/';
@@ -24,10 +25,11 @@ end
 addpath(genpath(path_LSCPtools))
 addpath(genpath(path_RainCloudPlot));
 addpath(path_fieldtrip)
-% addpath(path_chi2test)
+addpath(path_chi2test)
 ft_defaults;
 % addpath(genpath(path_ExGauss))
 % addpath(genpath(path_FMINSEARCHBND))
+addpath(genpath(path_fdrbh))
 
 addpath(behav_path)
 
@@ -49,9 +51,11 @@ behav_demo_table.SubID=categorical(behav_demo_table.SubID);
 behav_demo_table.Sex=categorical(behav_demo_table.Sex);
 behav_demo_table.ReportedSubtype=categorical(behav_demo_table.ReportedSubtype);
 behav_demo_table.DIVASubtype=categorical(behav_demo_table.DIVASubtype);
+behav_demo_table = behav_demo_table(~strcmpi(strtrim(string(behav_demo_table.SubID)), 'C015'), :);
 
 all_probe_table.SubID = string(all_probe_table.SubID); % Convert cell array to string
 all_probe_table.Group = string(all_probe_table.Group);
+all_probe_table = all_probe_table(~strcmp(all_probe_table.SubID, 'C015'), :);
 
 all_probe_table.StateC=categorical(nan(size(all_probe_table,1),1));
 all_probe_table.StateC(all_probe_table.State==1)='ON';
@@ -63,11 +67,13 @@ all_probe_table.VigC(all_probe_table.Vigilance==1)='Ex. Alert';
 all_probe_table.VigC(all_probe_table.Vigilance==2)='Alert';
 all_probe_table.VigC(all_probe_table.Vigilance==3)='Sleepy';
 all_probe_table.VigC(all_probe_table.Vigilance==4)='Ex. Sleepy';
+
 behav_demo_table.SubID = string(behav_demo_table.SubID); % Convert character array to string
 behav_demo_summary = varfun(@(x) x(1), behav_demo_table, ...
     'GroupingVariables', 'SubID', ...
     'InputVariables', {'ReportedSubtype'}); %Summary table because there were SubID repeats as it was byTrial
 behav_demo_summary.Properties.VariableNames{'Fun_ReportedSubtype'} = 'ReportedSubtype';
+
 probe_subtype_table = join(all_probe_table, behav_demo_summary(:, {'SubID', 'ReportedSubtype'}), 'Keys', 'SubID');
 probe_subtype_table.SubID = categorical(probe_subtype_table.SubID); 
 probe_subtype_table.Group = categorical(probe_subtype_table.Group); 
@@ -77,7 +83,7 @@ all_block_table.Group = reordercats(all_block_table.Group, {'C', 'A'});
 %% trial-level performance
 
 % FAs/Commission Errors
-mdlFA0  = fitlme(all_behav_table,'FA~1+BlockN+Group+(1+|SubID)');
+mdlFA0  = fitlme(all_behav_table,'FA~1+BlockN+Group+(1|SubID)');
 mdlFA1  = fitlme(all_behav_table,'FA~1+BlockN*Group+(1|SubID)'); 
 %mdlFA2  = fitlme(all_behav_table,'FA~1+BlockN*Group+(BlockN|SubID)'); % Winning AIC and BIC model - Group: p = .02, BlockN p <.001
  %%% Extract fit statistics for each model
@@ -136,6 +142,14 @@ compare(mdlstdRT0, mdlstdRT1)
 anova(mdlstdRT0)
 
 
+%Intraindividual Coeff of Variation 
+mdlcvRT0  = fitlme(all_block_table,'cvRT~1+BlockN+Group+(1|SubID)'); 
+mdlcvRT1  = fitlme(all_block_table,'cvRT~1+BlockN*Group+(1|SubID)'); 
+compare(mdlcvRT0, mdlcvRT1)
+
+anova(mdlcvRT0)
+
+
 % D prime
 mdldprime0 = fitlme(all_block_table,'dprime~1+BlockN+Group+(1|SubID)');% Winning BIC model - Group: p = .034, BlockN: p <.001
 mdldprime1 = fitlme(all_block_table,'dprime~1+BlockN*Group+(1|SubID)');  
@@ -174,6 +188,38 @@ anova(mdlcrit0)
 % for nc=1:length(adhds)
 %     CV_ADHD(nc)=nanmean(all_behav_table.stdRT(all_behav_table.SubID==adhds(nc)))./nanmean(all_behav_table.RT(all_behav_table.SubID==adhds(nc)));
 % end
+
+
+%% Benjamini correction for behaviour p-values 
+all_pvals = [ ...
+    mdlMiss1.Coefficients.pValue(strcmp(mdlMiss1.Coefficients.Name, 'Group_A')); ...
+    mdlMiss1.Coefficients.pValue(strcmp(mdlMiss1.Coefficients.Name, 'BlockN')); ...
+    mdlMiss1.Coefficients.pValue(strcmp(mdlMiss1.Coefficients.Name, 'Group_A:BlockN')); ...
+    mdlFA0.Coefficients.pValue(strcmp(mdlFA0.Coefficients.Name, 'Group_A')); ...
+    mdlFA0.Coefficients.pValue(strcmp(mdlFA0.Coefficients.Name, 'BlockN')); ...
+    mdldprime0.Coefficients.pValue(strcmp(mdldprime0.Coefficients.Name, 'Group_A')); ...
+    mdldprime0.Coefficients.pValue(strcmp(mdldprime0.Coefficients.Name, 'BlockN')); ...
+    mdlcrit0.Coefficients.pValue(strcmp(mdlcrit0.Coefficients.Name, 'Group_A')); ...
+    mdlcrit0.Coefficients.pValue(strcmp(mdlcrit0.Coefficients.Name, 'BlockN')); ...
+    mdlRT0.Coefficients.pValue(strcmp(mdlRT0.Coefficients.Name, 'Group_A')); ...
+    mdlRT0.Coefficients.pValue(strcmp(mdlRT0.Coefficients.Name, 'BlockN')); ...
+%     mdlstdRT0.Coefficients.pValue(strcmp(mdlstdRT0.Coefficients.Name, 'Group_A')); ...
+%     mdlstdRT0.Coefficients.pValue(strcmp(mdlstdRT0.Coefficients.Name, 'BlockN')); ...
+    mdlcvRT0.Coefficients.pValue(strcmp(mdlcvRT0.Coefficients.Name, 'Group_A')); ...
+    mdlcvRT0.Coefficients.pValue(strcmp(mdlcvRT0.Coefficients.Name, 'BlockN')) ...
+]';
+
+[h, crit_p, ~,adj_p] = fdr_bh(all_pvals, 0.05, 'pdep', 'yes');
+
+labels = {'Miss: Group_A';'Miss: BlockN';'Miss: Group_A*BlockN';'FA: Group_A';'FA: BlockN';'dprime: Group_A';'dprime: BlockN';
+    'criterion: Group_A';'criterion: BlockN';'RT: Group_A';'RT: BlockN';
+%     'stdRT: Group_A';'stdRT: BlockN';
+    'cvRT: Group_A';'cvRT: BlockN'};
+behaviour_corr_pV = table(labels, all_pvals(:), adj_p(:), 'VariableNames', ...
+    {'Coefficient', 'Raw_p', 'Adj_p'});
+behaviour_corr_pV.Significant = behaviour_corr_pV.Adj_p < 0.05;
+disp(behaviour_corr_pV)
+
 
 %% block-level stats - mind states
 % On Task
@@ -238,6 +284,28 @@ mdlDK2 = fitlme(all_block_table,'DK~1+BlockN*Group+(BlockN|SubID)'); % Winning m
 compare(mdlDK0, mdlDK1) %NOTE: mdlDK1 was better fitting but the interaction, although sig (p=.02), doesn't withhold sig after bonferroni correction (new alpha = .0125)
 
 anova(mdlDK1)
+
+%% Benjamini correction for mental states p-values 
+all_mental_pvals = [ ...
+    mdlON0.Coefficients.pValue(strcmp(mdlON0.Coefficients.Name, 'Group_A')); ...
+    mdlON0.Coefficients.pValue(strcmp(mdlON0.Coefficients.Name, 'BlockN')); ...
+    mdlMW0.Coefficients.pValue(strcmp(mdlMW0.Coefficients.Name, 'Group_A')); ...
+    mdlMW0.Coefficients.pValue(strcmp(mdlMW0.Coefficients.Name, 'BlockN')); ...
+    mdlMB0.Coefficients.pValue(strcmp(mdlMB0.Coefficients.Name, 'Group_A')); ...
+    mdlMB0.Coefficients.pValue(strcmp(mdlMB0.Coefficients.Name, 'BlockN')); ...
+    mdlDK1.Coefficients.pValue(strcmp(mdlDK1.Coefficients.Name, 'Group_A')); ...
+    mdlDK1.Coefficients.pValue(strcmp(mdlDK1.Coefficients.Name, 'BlockN')); ...
+    mdlDK1.Coefficients.pValue(strcmp(mdlDK1.Coefficients.Name, 'Group_A:BlockN')) ...
+]';
+
+[h, crit_p, ~,adj_p] = fdr_bh(all_mental_pvals, 0.05, 'pdep', 'yes');
+
+labels = {'On: Group_A';'On: BlockN';'MW: Group_A';'MW: BlockN';'MB: Group_A';'MB: BlockN';
+    'DK: Group_A';'DK: BlockN';'DK: Group_A:BlockN'};
+mental_corr_pV = table(labels, all_mental_pvals(:), adj_p(:), 'VariableNames', ...
+    {'Coefficient', 'Raw_p', 'Adj_p'});
+mental_corr_pV.Significant = mental_corr_pV.Adj_p < 0.05;
+disp(mental_corr_pV)
 
 %% probe-level stats
 all_probe_table.Group=categorical(all_probe_table.Group);
@@ -426,16 +494,35 @@ Ctr_int_percent = Control_int ./ sum(Control_int, 2) * 100;
 ADHD_int_percent = ADHD_int ./ sum(ADHD_int, 2) * 100;
 
 
-Int_Paired_test = nan(4, 3); % Preallocate for p-value, t-statistic, and df
+Int_Paired_test = nan(4, 4); % Preallocate for p-value, t-statistic, df, Cohen's d
 for nCat = 1:length(numbers_of_interest)
+    ctr_vals = Ctr_int_percent(:, nCat);
+    adhd_vals = ADHD_int_percent(:, nCat);
+
     % Paired t-test for the current category
     [h, p, ci, stats] = ttest2(Ctr_int_percent(:, nCat), ADHD_int_percent(:, nCat));
-    Int_Paired_test(nCat, :) = [p, stats.tstat, stats.df];
+
+    % Calculate pooled standard deviation
+    n1 = length(ctr_vals);
+    n2 = length(adhd_vals);
+    s1 = std(ctr_vals, 'omitnan');
+    s2 = std(adhd_vals, 'omitnan');
+    s_pooled = sqrt(((n1-1)*s1^2 + (n2-1)*s2^2) / (n1+n2-2));
+
+    % Only compute d if s_pooled is valid
+    if s_pooled > 0 && ~isnan(s_pooled)
+        d = (mean(ctr_vals, 'omitnan') - mean(adhd_vals, 'omitnan')) / s_pooled;
+    else
+        d = NaN;
+    end
+
+    % Store results: [p-value, t-statistic, df, Cohen's d]
+    Int_Paired_test(nCat, :) = [p, stats.tstat, stats.df, d];
 end
 
 % Convert the results to a table for display
 Int_Paired_test_table = array2table(Int_Paired_test, ...
-    'VariableNames', {'p', 't-stat', 'df'}, ...
+    'VariableNames', {'p', 't_stat', 'df', 'Cohens_d'}, ...
     'RowNames', {'Entirely Int.', 'Somewhat Int.', 'Somewhat Unint.', 'Entirely Unint.'});
 
 disp(Int_Paired_test_table);
@@ -450,6 +537,17 @@ significant_idx = Int_Paired_test(:, 1) < adjusted_alpha;
 disp('Significant results (Bonferroni corrected):');
 disp(Int_Paired_test(significant_idx, :));
 
+
+
+%%% Benjamini correction for MW x intention states p-values 
+all_MWxInt_pvals = Int_Paired_test_table.p;
+
+[h, crit_p, ~,adj_p] = fdr_bh(all_MWxInt_pvals, 0.05, 'dep', 'yes'); %NOTE: using dependent version as its percentages
+
+Int_Paired_test_table.FDR_p = adj_p;
+Int_Paired_test_table.Significant_FDR = h;
+
+disp(Int_Paired_test_table);
 
 %% 
 % State (1 = On, 2 = MW, 3 = MB)
@@ -532,12 +630,27 @@ compare(mdlvig0, mdlvig1)
 
 anova(mdlvig0)
 
+all_vig_pvals = [ ...
+    mdlON0.Coefficients.pValue(strcmp(mdlON0.Coefficients.Name, 'Group_A')); ...
+    mdlON0.Coefficients.pValue(strcmp(mdlON0.Coefficients.Name, 'BlockN')); ...
+]';
+
+[h, crit_p, ~,adj_p] = fdr_bh(all_vig_pvals, 0.05, 'pdep', 'yes');
+
+labels = {'Vig: Group';'Vig: BlockN'};
+vig_pV = table(labels, all_vig_pvals(:), adj_p(:), 'VariableNames', ...
+    {'Coefficient', 'all_vig_pvals', 'Adj_p'});
+vig_pV.Significant = vig_pV.Adj_p < 0.05;
+disp(vig_pV)
+
+
 
 vigilance_levels = 1:4;
 
 % Initialize result arrays
 p_values = NaN(length(vigilance_levels), 1);
 Q_values = NaN(length(vigilance_levels), 1);
+effect_sizes = NaN(length(vigilance_levels), 1); % For Phi/Cramér's V
 
 % Loop through each vigilance level
 for vigilance_level = vigilance_levels
@@ -558,10 +671,14 @@ for vigilance_level = vigilance_levels
     % Perform chi-square test using chi2test
     [p, Q] = chi2test(count_matrix);
 
+    N = sum(count_matrix, 'all');    % Compute total sample size
+    phi = sqrt(Q / N);        % Compute effect size (Phi for 2x2)
+
     % Store results
     p_values(vigilance_level) = p;
     Q_values(vigilance_level) = Q;
     N_values(vigilance_level) = sum(count_matrix, 'all'); % Compute total sample size
+    effect_sizes(vigilance_level) = phi;
 
     % Display results for this vigilance level
     disp(['Vigilance Level ', num2str(vigilance_level)]);
@@ -570,13 +687,20 @@ for vigilance_level = vigilance_levels
     disp(['Chi-square test p-value: ', num2str(p)]);
     disp(['Chi-square statistic (Q): ', num2str(Q)]);
     disp(['Total sample size (N): ', num2str(N_values(vigilance_level))]);
+    disp(['Effect size (Phi): ', num2str(phi)]);
     disp('------------------------------');
 end
 
 % Display final results for all vigilance levels
 disp('Summary of Chi-square test results for all vigilance levels:');
-disp(table(vigilance_levels', p_values, Q_values, 'VariableNames', {'VigilanceLevel', 'pValue', 'QStatistic'}));
+summary_table = table(vigilance_levels', p_values, Q_values, effect_sizes, 'VariableNames', ...
+    {'VigilanceLevel', 'pValue', 'QStatistic', 'EffectSize_Phi'});
 
+[h, crit_p, ~, adj_p] = fdr_bh(p_values, 0.05, 'dep', 'no');
+summary_table.FDR_pValue = adj_p;
+summary_table.Significant_FDR = h;
+
+disp(summary_table);
 %% EP - exploratory analysis on task performance x mind state 
 mdl_FAxState = fitlme(all_probe_table, 'FA ~ 1 + Block + Group*StateC + (1|SubID)', 'DummyVarCoding', 'reference'); %'reference' (default), your output will have coefficients for MW and MB relative to On Task.
 mdl_MissxState = fitlme(all_probe_table, 'Misses ~ 1 +  Block + Group*StateC + (1|SubID)', 'DummyVarCoding', 'reference');

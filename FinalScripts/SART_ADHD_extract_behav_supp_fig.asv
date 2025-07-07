@@ -817,11 +817,11 @@ end
 
 for j = 1:num_groups
     % Plot the group mean for each block with a line
-    plot((1:4) + (2*j - 3) * 0.1, 100*meandata_to_plot(:, j), 'Color', Colors(j+1, :), 'LineWidth', 4);
+    plot((1:4) + (2*j - 3) * 0.1, meandata_to_plot(:, j), 'Color', Colors(j+1, :), 'LineWidth', 4);
 
     % Plot individual subject points (dots) for each block
     for i = 1:4
-        simpleDotPlot(i + (2*j - 3) * 0.1, 100*data_to_plot{i, j}, 200, Colors(j+1,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+        simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j+1,:), 1, 'k', 'o', [], 3, 0, 0, 0);
     end
 end
 set(gca, 'xtick', 1:4);
@@ -829,7 +829,7 @@ ylabel('RT Variability (%CV)');
 xlabel('Block');
 format_fig;
 set(gca, 'FontSize', 22, 'FontWeight', 'bold', 'LineWidth', 1.5);
- ylim([20 50]);
+% ylim([0.05 0.2]);
 xlim([0.5 4.5]);
 hold off
 saveas(gcf,fullfile(suppfig_path,'SuppFig2_PanelD_cvRT.svg'))
@@ -842,7 +842,7 @@ for j = 1:num_groups
     subjects = group_subIDs{j}; % Get the relevant SubIDs for the group
     subject_means = [];
     for s = 1:length(subjects)
-        subject_mean = nanmean(block_subtype_table.cvRT(ismember(block_subtype_table.SubID, subjects(s))));
+        subject_mean = nanmean(block_subtype_table.stdRT(ismember(block_subtype_table.SubID, subjects(s))));
         subject_means = [subject_means; subject_mean];
     end
 
@@ -853,15 +853,15 @@ end
 figure('Position',[2245         400         260         428])
 x_positions = [-0.2, 0, 0.2]; % Control, ADHD-Inattentive, ADHD-Combined
 for j = 1:num_groups % number of group
-    simpleDotPlot(x_positions(j),100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+    simpleDotPlot(x_positions(j),data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
 end
- ylim([20 50]);
+ylim([0.05 0.2]);
 set(gca, 'xtick',x_positions,'xticklabel',{'NT','Inattentive', 'Combined'}); %to change y-axis to percentage
 %title(['Std Deviation', newline,' of RT (s)']);
 %     ylabel('% of Omission Errors'); xlabel('Block Number');
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-saveas(gcf,fullfile(suppfig_path,'SuppFig2_PanelD_cvRTAvg.svg'))
+saveas(gcf,fullfile(suppfig_path,'SuppFig2_PanelD_stdRTAvg.svg'))
 
 
 
@@ -991,10 +991,7 @@ mdlStdRT1 = fitlme(block_subtype_table, 'stdRT ~ 1 + DIVASubtype * BlockN +(1|Su
 compare(mdlStdRT0, mdlStdRT1)
 anova(mdlStdRT1)
 
-mdlcvRT0 = fitlme(block_subtype_table, 'cvRT ~ 1 + DIVASubtype + BlockN +(1|SubID)');
-mdlcvRT1 = fitlme(block_subtype_table, 'cvRT ~ 1 + DIVASubtype * BlockN +(1|SubID)');
-compare(mdlcvRT0, mdlcvRT1)
-anova(mdlcvRT0)
+%EP - do a post hoc
 
 
 %% Mind state

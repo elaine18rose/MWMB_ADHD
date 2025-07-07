@@ -53,7 +53,8 @@ CTR_threshold_SW=all_threshold_SW(all_threshold_SW.Group=='Control' & all_thresh
 
 CTR_threshold_SW.Thr_EG(CTR_threshold_SW.Thr_EG>(nanmean(CTR_threshold_SW.Thr_EG)+5*nanstd(CTR_threshold_SW.Thr_EG)))=NaN;
 [Elec_group, ~, idx] = unique(CTR_threshold_SW.Elec);
-mean_Thr = splitapply(@nanmean, CTR_threshold_SW.Thr_EG, idx);
+% mean_Thr = splitapply(@nanmean, CTR_threshold_SW.Thr_EG, idx);
+mean_Thr = splitapply(@nanmean, CTR_threshold_SW.Thr_PC, idx);
 av_CTR_threshold_SW = table(Elec_group, mean_Thr, 'VariableNames', {'Elec', 'mean_Thr'});
 
 cfg = [];
@@ -76,7 +77,7 @@ colormap(cmap); colorbar;
 load([pwd filesep '..' filesep 'Preproc' filesep 'all_badChannels_badProbes.mat']);
 
 %%
-SW_table=array2table(zeros(0,18),'VariableNames',{'SubID','Group','Block','Probe','Elec','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope','SW_threshold','SW_peakneg','SW_peakpos','Probe_MS','Probe_Vig','Behav_Miss','Behav_FA','Behav_RT'});
+SW_table=array2table(zeros(0,19),'VariableNames',{'SubID','Group','Block','Probe','Elec','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope','SW_threshold','SW_peakneg','SW_peakpos','Probe_MS','Probe_Vig','Behav_Miss','Behav_FA','Behav_RT' 'Behav_cvRT'});
 SW_table.SubID=categorical(SW_table.SubID);
 SW_table.Group=categorical(SW_table.Group);
 SW_table.Elec=categorical(SW_table.Elec);
@@ -240,6 +241,18 @@ for nF=1:length(SW_files)
         SW_table.Behav_RT(table_length+(1:length(labels)))=repmat(nanmean(temp_gos(:,10)-temp_gos(:,8)),length(labels),1);
         SW_table.Behav_stdRT(table_length+(1:length(labels)))=repmat(nanstd(temp_gos(:,10)-temp_gos(:,8)),length(labels),1);
         SW_table.Behav_FA(table_length+(1:length(labels)))=repmat(nanmean(temp_nogos(:,11)==0),length(labels),1);
+
+        %EP Added for ICVRT
+        valid_RT = temp_gos(:,10) - temp_gos(:,8);
+        valid_RT = valid_RT(~isnan(valid_RT));  % remove NaNs
+
+        if isempty(valid_RT) || mean(valid_RT) == 0
+            cvRT = NaN;
+        else
+            cvRT = std(valid_RT) / mean(valid_RT) * 100;
+        end
+        SW_table.Behav_cvRT(table_length+(1:length(labels))) = repmat(cvRT, length(labels), 1);
+
     end
 
     slow_Waves_perE=[];
@@ -309,7 +322,7 @@ for nP=1:length(VOI)
         t = title(GroupLabels{nGroup}); %title({VOI{nP}(4:end),Groups{nGroup}})
         t.Position(2) = t.Position(2) -.4;
         minmax_val=[minmax_val ; min(temp_topo) max(temp_topo)];
-        caxis([5 18])
+        caxis([6 32])
         format_fig;
     end
     
@@ -329,57 +342,6 @@ end
 
 % Save figure
 saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelB_SWD.svg']);
-
-%% Ctr vs ADHD SW figure (EP - copied from selectSW_v4.m)
-f0=figure;
-clear temp*
-
-Groups={'ADHD','Control'};
-GroupLabels = {'ADHD', 'Neurotypical'};  %
-VOI={'SW_downslope'};%,'SW_amplitude','SW_frequency','SW_downslope','SW_upslope'};
-cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
-
-all_Groups=[];
-for nP=1:length(VOI)
-    minmax_val=[];
-    for nGroup=1:2
-        figure(f0);
-        subplot(1,2, nGroup); %subplot(2,length(VOI),nP+(nGroup-1)*length(VOI))
-        
-        temp_topo=[];
-        for nE=1:length(layout.label)-2
-            temp=SW_table.(VOI{nP})(SW_table.Elec==layout.label{nE} & SW_table.Group==Groups{nGroup}); %Getting the values per electrode by group
-            temp_topo(nE)=nanmean(temp); % Getting the means per electrode by group
-        end
-        all_Groups{nGroup}=temp_topo;
-
-        simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-        %colorbar;
-        cmap=colormap('hot'); cmap=flipud(cmap);
-        colormap(cmap);
-        t = title(GroupLabels{nGroup}); %title({VOI{nP}(4:end),Groups{nGroup}})
-        t.Position(2) = t.Position(2) -.4;
-        minmax_val=[minmax_val ; min(temp_topo) max(temp_topo)];
-%         caxis([5 18])
-        format_fig;
-    end
-    
-     % Add one shared colorbar (outside the subplots)
-    cb = colorbar;
-    cb.Position = [0.85, 0.2, 0.02, 0.52]; % [left, bottom, width, height]
-    cb.Label.String = 'wave/min';
-    cb.Label.FontSize = 18; % Colorbar label font size
-
-    % Move subplots closer to each other
-    ax1 = subplot(1,2,1); ax2 = subplot(1,2,2);
-    set(ax1, 'Position', get(ax1, 'Position') - [0.05 0 0 0]);  % Shift left
-    set(ax2, 'Position', get(ax2, 'Position') - [0.1 0 0 0]);%ax2.Position(1) = ax2.Position(1) - 0.05;
-
-%     sgtitle('Slow Wave Density', 'FontWeight', 'bold', 'FontSize', 25);
-end
-
-% Save figure
-% saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelB_SWD.svg']);
 
 
 %%
@@ -432,6 +394,7 @@ for nE=1:length(layout.label)-2
     fprintf('... %g/%g\n',nE,length(layout.label)-2)
     sub_table=SW_table(SW_table.Elec==layout.label(nE),:);
     temp_mdl_byG=fitlme(sub_table,sprintf('SW_density~1+Block*%s+(1|SubID)','Group'));
+%     temp_mdl_byG=fitlme(sub_table,sprintf('SW_density~1+Block+%s+(1|SubID)','Group'));
 temp_aov=anova(temp_mdl_byG);
     topo_GroupOnSW_tV(nE,1)=temp_mdl_byG.Coefficients.tStat(match_str(temp_mdl_byG.Coefficients.Name,"Group_ADHD"));
     topo_GroupOnSW_pV(nE,1)=temp_mdl_byG.Coefficients.pValue(match_str(temp_mdl_byG.Coefficients.Name,"Group_ADHD"));
@@ -449,7 +412,7 @@ subjects = [];
 data_to_plot=[];
 meandata_to_plot=[];
 group_labels={'Control','ADHD'};
-%all_block_table.Group=categorical(all_block_table.Group);
+
 for i = 1:4 % number of repetitions
     for j = 1:2 % number of group
         subjects = unique(SW_table.SubID(SW_table.Block == num2str(i) & SW_table.Group == group_labels{j})); % Getting all subjects in this group
@@ -469,14 +432,13 @@ for j = 1:2
         simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
     end
 end
-set(gca, 'xtick',1:4); %to change y-axis to percentage
-%title(['Commission Errors per Block']);
+set(gca, 'xtick',1:4); 
 ylabel('SW density (/min)'); xlabel('Block');
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-% ylim([0 0.6]*100)
+ ylim([12 26]);set(gca, 'ytick',[12:2:26]);
 xlim([0.5 4.5])
-%      saveas(gcf,fullfile(figures_path,'Fig1_PanelC_FAPerBlock.svg'))
+saveas(gcf, [pwd filesep 'Figures' filesep,'Fig5_MiddlePanel_SWxBlock.svg']) %NOTE: the other non-med SW figures were labelled Fig 4 as we had the task + behav originally in one fig
 
 
 for j = 1:2 % number of group
@@ -493,17 +455,18 @@ figure('Position',[2245         400         260         428])
 for j = 1:2 % number of group
     simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
 end
-% ylim([0 0.6]*100)
-set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); %to change y-axis to percentage
+  ylim([12 26]);set(gca, 'ytick',[12:2:26]);
+set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); 
 %title(['Commission']);
-%     ylabel('% of Omission Errors'); xlabel('Block Number');
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-%      saveas(gcf,fullfile(figures_path,'Fig1_PanelC_FAAvg.svg'))
+saveas(gcf, [pwd filesep 'Figures' filesep,'Fig5_MiddlePanel_SWxBlockAvg.svg']); %NOTE: the other non-med SW figures were labelled Fig 4 as we had the task + behav originally in one fig
+
+mdlSWdens = fitlme(SW_table,'SW_density ~ 1+Block+Group+(1|SubID)');
+anova(mdlSWdens)
 
 
 %% SW on behav
-
 % clear topo_*
 % clear sub_table
 % clear temp_mdl_*
@@ -579,8 +542,8 @@ cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
 subplot(1,2,1)
 simpleTopoPlot_ft(topo_GroupOnSW_tV(:,1), layout,'on',[],0,1);
 ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',180,'box','no','label','no');
-% ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<fdr([topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,2)],0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',180,'box','no','label','no');
+%  ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<fdr([topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,1)],0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
+ ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',180,'box','no','label','no');
 colormap(cmap2);
 t = title({'Group', '(ADHD vs NT)'}); t.Position(2) = t.Position(2) -.3;
 t.Position(2) = t.Position(2) -.04;
@@ -588,7 +551,7 @@ caxis([-1 1]*5)
 format_fig;
 t.FontSize = 30;
 cb = colorbar;
-  cb.Position = [0.43, 0.2, 0.02, 0.6]; 
+%   cb.Position = [0.43, 0.2, 0.02, 0.6]; 
 cb.Label.String = 't-values'; 
 cb.FontSize = 25; cb.Label.FontSize = 30; 
 
@@ -599,13 +562,14 @@ ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<FDR_thr), 'points
 colormap(cmap2);
 t = title(['Group * Block']);t.Position(2) = t.Position(2) -.3;
 t.Position(2) = t.Position(2) -.04;
-caxis([-1 1]*8)
+caxis([-1 1]*7)
 format_fig;
 t.FontSize = 30;
 cb = colorbar;
  cb.Position = [0.9, 0.2, 0.02, 0.6]; 
 cb.Label.String = 'f-values'; 
 cb.FontSize = 25; cb.Label.FontSize = 30; 
+cb.Ticks = -6:2:6;
 
 % Move subplots closer to each other
 ax1 = subplot(1,2,1); ax2 = subplot(1,2,2); 
@@ -642,7 +606,7 @@ for nV=1:length(VOI)
     colormap(cmap2);
     t = title({VOIlabels{nV}});
     t.Position(2) = t.Position(2) -.3;
-    caxis([-1 1]*5)
+    caxis([-1 1]*6)
     format_fig;
     t.FontSize = 26;
     %colorbar;
@@ -686,7 +650,7 @@ for nV=1:length(VOI)
     t = title({VOIlabels{nV}});
     t.Position(2) = t.Position(2) -.3;
     set(t, 'FontSize', 30);
-    caxis([-1 1]*5)
+    caxis([-1 1]*6)
     format_fig;
     t.FontSize = 26;
 %     colorbar;

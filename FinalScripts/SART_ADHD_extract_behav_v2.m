@@ -27,6 +27,7 @@ addpath(path_fieldtrip)
 ft_defaults;
 % addpath(genpath(path_ExGauss))
 % addpath(genpath(path_FMINSEARCHBND))
+addpath(genpath(path_fdrbh))
 
 addpath(behav_path)
 
@@ -570,7 +571,7 @@ hold on;
      format_fig;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
      saveas(gcf,fullfile(figures_path,'Fig1_PanelC_FAAvg.svg'))
-        
+
      %% RT
      figure; hold on;
      subjects = [];
@@ -623,7 +624,7 @@ hold on;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
      saveas(gcf,fullfile(figures_path,'Fig1_PanelD_RTAvg.svg'))
 
-     %% cvRT
+          %% cvRT
      figure; hold on;
      subjects = [];
      data_to_plot=[];
@@ -673,6 +674,7 @@ hold on;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
      saveas(gcf,fullfile(figures_path, 'Fig1_PanelD_cvRTAvg.svg'))
 
+     
 %           %% stdRT
 %      figure; hold on;
 %      subjects = [];
@@ -955,8 +957,8 @@ hold on;
 
      set(gca, 'XTick', 1:num_states, 'XTickLabel', labels);
      xtickangle(45);
-     ylabel('% of Vigilance Ratings');
-     title('Vigilance Ratings');
+     ylabel('% of Sleepiness Ratings');
+     title('Sleepiness Ratings');
      format_fig;
      set(gca, 'FontSize', 22, 'FontWeight', 'bold', 'LineWidth', 1.5);
      ax = gca; ax.XAxis.FontSize = 18; set(gca, 'FontWeight', 'bold');
@@ -968,3 +970,4 @@ hold on;
 
 end
 
+%% Benjamini correction for p values 
