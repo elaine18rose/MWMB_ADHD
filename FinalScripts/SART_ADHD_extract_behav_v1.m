@@ -623,7 +623,7 @@ hold on;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
      saveas(gcf,fullfile(figures_path,'Fig1_PanelD_RTAvg.svg'))
 
-          %% stdRT
+     %% cvRT
      figure; hold on;
      subjects = [];
      data_to_plot=[];
@@ -632,25 +632,23 @@ hold on;
      %all_block_table.Group=categorical(all_block_table.Group);
      for i = 1:4 % number of repetitions
          for j = 1:2 % number of group
-             data_to_plot{i, j} = all_block_table.stdRT(all_block_table.BlockN==i & strcmp(all_block_table.Group,group_labels{j}));
+             data_to_plot{i, j} = all_block_table.cvRT(all_block_table.BlockN==i & strcmp(all_block_table.Group,group_labels{j}));
          end
      end
 
-
      for j = 1:2
-          plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
+          plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) 100 * nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
          for i = 1:4
-             simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+             simpleDotPlot(i + (2*j - 3) * 0.1, 100 * data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
          end
      end
      set(gca, 'xtick',1:4); %to change y-axis to percentage
-     %title(['Std Deviation of RT across Block']);
-     ylabel('Std Dev RT (s)'); xlabel('Block');
+     ylabel('RT Variability (%CV)'); xlabel('Block');
      format_fig;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-     ylim([0.05 0.2])
+     ylim([0.2 0.5]*100)
      xlim([0.5 4.5])
-     saveas(gcf,fullfile(figures_path, 'Fig1_PanelD_stdRTPerBlock.svg'))
+     saveas(gcf,fullfile(figures_path, 'Fig1_PanelD_cvRTPerBlock.svg'))
 
 
      for j = 1:2 % number of group
@@ -658,22 +656,74 @@ hold on;
          subject_means = [];
 
          for s = 1:length(subjects)
-             subject_mean = mean(all_block_table.stdRT(strcmp(all_block_table.Group , group_labels{j}) & ismember(all_block_table.SubID, subjects(s))));
+             subject_mean = mean(all_block_table.cvRT(strcmp(all_block_table.Group , group_labels{j}) & ismember(all_block_table.SubID, subjects(s))));
              subject_means = [subject_means; subject_mean];
          end
          data_to_plot_perS{j} = subject_means;
      end
      figure('Position',[2245         400         260         428])
      for j = 1:2 % number of group
-         simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+         simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
      end
-     ylim([0.05 0.2])
+     ylim([0.2 0.5]*100)
      set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); %to change y-axis to percentage
      %title(['Std Deviation', newline,' of RT (s)']);
      %     ylabel('% of Omission Errors'); xlabel('Block Number');
      format_fig;
      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-     saveas(gcf,fullfile(figures_path, 'Fig1_PanelD_stdRTAvg.svg'))
+     saveas(gcf,fullfile(figures_path, 'Fig1_PanelD_cvRTAvg.svg'))
+
+%           %% stdRT
+%      figure; hold on;
+%      subjects = [];
+%      data_to_plot=[];
+%      meandata_to_plot=[];
+%      group_labels={'C','A'};
+%      %all_block_table.Group=categorical(all_block_table.Group);
+%      for i = 1:4 % number of repetitions
+%          for j = 1:2 % number of group
+%              data_to_plot{i, j} = all_block_table.stdRT(all_block_table.BlockN==i & strcmp(all_block_table.Group,group_labels{j}));
+%          end
+%      end
+% 
+% 
+%      for j = 1:2
+%           plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
+%          for i = 1:4
+%              simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+%          end
+%      end
+%      set(gca, 'xtick',1:4); %to change y-axis to percentage
+%      %title(['Std Deviation of RT across Block']);
+%      ylabel('Std Dev RT (s)'); xlabel('Block');
+%      format_fig;
+%      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+%      ylim([0.05 0.2])
+%      xlim([0.5 4.5])
+%      saveas(gcf,fullfile(figures_path, 'Fig1_PanelD_stdRTPerBlock.svg'))
+% 
+% 
+%      for j = 1:2 % number of group
+%          subjects = unique(all_block_table.SubID(strcmp(all_block_table.Group , group_labels{j}))); % Getting all subjects in this group
+%          subject_means = [];
+% 
+%          for s = 1:length(subjects)
+%              subject_mean = mean(all_block_table.stdRT(strcmp(all_block_table.Group , group_labels{j}) & ismember(all_block_table.SubID, subjects(s))));
+%              subject_means = [subject_means; subject_mean];
+%          end
+%          data_to_plot_perS{j} = subject_means;
+%      end
+%      figure('Position',[2245         400         260         428])
+%      for j = 1:2 % number of group
+%          simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+%      end
+%      ylim([0.05 0.2])
+%      set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); %to change y-axis to percentage
+%      %title(['Std Deviation', newline,' of RT (s)']);
+%      %     ylabel('% of Omission Errors'); xlabel('Block Number');
+%      format_fig;
+%      set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+%      saveas(gcf,fullfile(figures_path, 'Fig1_PanelD_stdRTAvg.svg'))
 
      %% Mind states
          numbers_of_interest = [1, 2, 3, 4];

@@ -68,6 +68,23 @@ SW_table.Block = categorical(SW_table.Block, 1:4, 'Ordinal', true);
 SW_table.Group=categorical(SW_table.Group);
 SW_table.SubID=categorical(SW_table.SubID);
 
+
+%%%removing participant who didn't understand task
+exclude_sub = categorical("C015");  
+
+tables_to_clean = {'behav_demo_table', 'all_behav_table', 'all_block_table', 'all_probe_table', 'SW_table'};
+for i = 1:length(tables_to_clean)
+    tbl = eval(tables_to_clean{i});
+    if ismember('SubID', tbl.Properties.VariableNames)
+        if ~iscategorical(tbl.SubID)
+            tbl.SubID = categorical(tbl.SubID);
+        end
+        tbl(tbl.SubID == exclude_sub, :) = [];  % remove rows for C015
+    end
+    assignin('base', tables_to_clean{i}, tbl);  % update the table in workspace
+end
+
+
 %% Manuscript Supp Fig 1: Behaviour results 20s prior to probe
 Colors=[253,174,97;
     171,217,233;
@@ -115,10 +132,10 @@ set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
 hold on;
 
 % Create invisible plot objects for the legend (to represent the colored markers)
-h1 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(1,:), 'MarkerEdgeColor', Colors(1,:), 'MarkerSize', 10); % Control
-h2 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(2,:), 'MarkerEdgeColor', Colors(2,:), 'MarkerSize', 10); % ADHD
+h1 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(1,:), 'MarkerEdgeColor', Colors(1,:), 'MarkerSize', 16.5); % Control
+h2 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(2,:), 'MarkerEdgeColor', Colors(2,:), 'MarkerSize', 16.5); % ADHD
 % Add the legend with the manually created plot handles
-legend([h1, h2], {'Control', 'ADHD'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 16, 'Position', [0.225, 0.85, 0, 0]);
+legend([h1, h2], {'Neurotypical', 'ADHD'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 16, 'Position', [0.28, 0.85, 0, 0]);
 
 ylim([0 0.045]*100)
 xlim([0.5 4.5])
@@ -131,7 +148,7 @@ for j = 1:2 % number of group
     simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
 end
 ylim([0 0.045]*100)
-set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'Control','ADHD'});
+set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'});
 %     title(['Omission']);
 %     ylabel('% of Omission Errors'); xlabel('Block Number');
 format_fig;
@@ -188,7 +205,7 @@ for j = 1:2 % number of group
     simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
 end
 ylim([0 0.6]*100)
-set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'Control','ADHD'});
+set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'});
 %title(['Commission']);
 %     ylabel('% of Omission Errors'); xlabel('Block Number');
 format_fig;
@@ -236,7 +253,7 @@ set(gca, 'xtick',1:4); %to change y-axis to percentage
 ylabel('Reaction Time (s)'); xlabel('Block');
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-ylim([0.35 0.4]); yticks(0.36:0.02:0.4);
+ylim([0.35 0.43]); yticks(0.36:0.02:0.45);
 xlim([0.5 4.5])
 saveas(gcf,fullfile(suppfig_path,'SuppFig1_PanelC_RTPerBlock.svg'))
 
@@ -244,8 +261,8 @@ figure('Position',[2245         400         260         428])
 for j = 1:2 % number of group
     simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
 end
-ylim([0.35 0.4]); yticks(0.36:0.02:0.4);
-set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'Control','ADHD'}); %to change y-axis to percentage
+ylim([0.35 0.43]); yticks(0.36:0.02:0.45);
+set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); %to change y-axis to percentage
 %title(['Reaction Time (s)']);
 %     ylabel('% of Omission Errors'); xlabel('Block Number');
 format_fig;
@@ -253,7 +270,7 @@ set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
 saveas(gcf,fullfile(suppfig_path,'SuppFig1_PanelC_RTAvg.svg'))
 
 
-% stdRT
+%% cvRT
 figure; hold on;
 subjects = [];
 data_to_plot=[];
@@ -264,7 +281,7 @@ for j = 1:2 % number of group
         subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
         subject_means = [];
         for s = 1:length(subjects)
-            subject_mean = mean(SW_table.Behav_stdRT( SW_table.Block == num2str(i) & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+            subject_mean = mean(SW_table.Behav_cvRT( SW_table.Block == num2str(i) & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
             subject_means = [subject_means; subject_mean];
         end
         data_to_plot{i, j} = subject_means;
@@ -275,7 +292,7 @@ for j = 1:2 % number of group
     subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
     subject_means = [];
     for s = 1:length(subjects)
-        subject_mean = mean(SW_table.Behav_stdRT(SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+        subject_mean = mean(SW_table.Behav_cvRT(SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
         subject_means = [subject_means; subject_mean];
     end
     data_to_plot_perS{j} = subject_means;
@@ -287,30 +304,83 @@ for i = 1:4 % number of repetitions
     end
 end
 set(gca, 'xtick',1:4); %to change y-axis to percentage
-%title(['Std Deviation of RT across Block']);
-ylabel('Std Dev RT (s)'); xlabel('Block');
+ylabel('RT Variability (%CV)'); xlabel('Block');
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-ylim([0.05 0.16]); yticks(0.05:0.05:0.2);
+ ylim([20 40]); yticks(20:5:40);
 xlim([0.5 4.5])
-saveas(gcf,fullfile(suppfig_path, 'SuppFig1_PanelD_StdRTPerBlock.svg'))
+saveas(gcf,fullfile(suppfig_path, 'SuppFig1_PanelD_cvRTPerBlock.svg'))
 
 figure('Position',[2245         400         260         428])
 for j = 1:2 % number of group
     simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
 end
-ylim([0.05 0.16]); yticks(0.05:0.05:0.2);
-set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'Control','ADHD'}); %to change y-axis to percentage
-%title(['Std Deviation', newline,' of RT (s)']);
-%     ylabel('% of Omission Errors'); xlabel('Block Number');
+ ylim([20 40]); yticks(20:5:40);
+set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); %to change y-axis to percentage
+
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-saveas(gcf,fullfile(suppfig_path, 'SuppFig1_PanelD_StdRTAvg.svg'))
+saveas(gcf,fullfile(suppfig_path, 'SuppFig1_PanelD_cvRTAvg.svg'))
+%% 
+
+% % stdRT
+% figure; hold on;
+% subjects = [];
+% data_to_plot=[];
+% meandata_to_plot=[];
+% group_labels={'Control','ADHD'};
+% for j = 1:2 % number of group
+%     for i = 1:4 % number of repetitions
+%         subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+%         subject_means = [];
+%         for s = 1:length(subjects)
+%             subject_mean = mean(SW_table.Behav_stdRT( SW_table.Block == num2str(i) & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+%             subject_means = [subject_means; subject_mean];
+%         end
+%         data_to_plot{i, j} = subject_means;
+%         meandata_to_plot(i, j) = nanmean(subject_means);
+%     end
+%     plot((1:4)+(2*j-3)*0.1,meandata_to_plot(:,j)','Color',Colors(j,:),'LineWidth',4)
+% 
+%     subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+%     subject_means = [];
+%     for s = 1:length(subjects)
+%         subject_mean = mean(SW_table.Behav_stdRT(SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+%         subject_means = [subject_means; subject_mean];
+%     end
+%     data_to_plot_perS{j} = subject_means;
+% 
+% end
+% for i = 1:4 % number of repetitions
+%     for j = 1:2 % number of group
+%         simpleDotPlot(i+(2*j-3)*0.1,data_to_plot{i, j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+%     end
+% end
+% set(gca, 'xtick',1:4); %to change y-axis to percentage
+% %title(['Std Deviation of RT across Block']);
+% ylabel('Std Dev RT (s)'); xlabel('Block');
+% format_fig;
+% set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+% ylim([0.05 0.16]); yticks(0.05:0.05:0.2);
+% xlim([0.5 4.5])
+% saveas(gcf,fullfile(suppfig_path, 'SuppFig1_PanelD_StdRTPerBlock.svg'))
+% 
+% figure('Position',[2245         400         260         428])
+% for j = 1:2 % number of group
+%     simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+% end
+% ylim([0.05 0.16]); yticks(0.05:0.05:0.2);
+% set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); %to change y-axis to percentage
+% %title(['Std Deviation', newline,' of RT (s)']);
+% %     ylabel('% of Omission Errors'); xlabel('Block Number');
+% format_fig;
+% set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+% saveas(gcf,fullfile(suppfig_path, 'SuppFig1_PanelD_StdRTAvg.svg'))
 
 
 %% Stats for supp figure 1: block-level stats
 % Preparing a table for LMEs:
-behav_vars = {'SubID', 'Block', 'Group', 'Behav_Miss', 'Behav_FA', 'Behav_RT', 'Behav_stdRT'};
+behav_vars = {'SubID', 'Block', 'Group', 'Behav_Miss', 'Behav_FA', 'Behav_RT', 'Behav_stdRT', 'Behav_cvRT'};
 SW_behav_table = unique(SW_table(:, behav_vars), 'rows'); % Remove duplicate rows (caused by repeated electrodes)
 
 % Misses/Omission Errors
@@ -346,9 +416,15 @@ mdlblockstdRT1 = fitlme(SW_behav_table,'Behav_stdRT~1+Block*Group+(1|SubID)');
 compare(mdlblockstdRT0, mdlblockstdRT1)
 anova(mdlblockstdRT1) %Although group is NS, Block*Group is sig (p = .01)
 
+% ICVRT 
+mdlblockcvRT0 = fitlme(SW_behav_table,'Behav_cvRT~1+Block+Group+(1|SubID)');
+mdlblockcvRT1 = fitlme(SW_behav_table,'Behav_cvRT~1+Block*Group+(1|SubID)');
+compare(mdlblockcvRT0, mdlblockcvRT1)
+anova(mdlblockcvRT0)
 
 %%  Prepping for Manuscript Supp Fig 2
 ctrs=unique(behav_demo_table.SubID(behav_demo_table.Group=='C' ));
+
 Miss_CTR=[];
 for nc=1:length(ctrs)
     Miss_CTR(nc) = nanmean(behav_demo_table.Misses(behav_demo_table.SubID == ctrs(nc)));
@@ -405,6 +481,18 @@ for nc=1:length(adhds_com)
     stdRT_ADHD_com(nc)=nanmean(all_block_table.stdRT(all_block_table.SubID==adhds_com(nc)));
 end
 
+cvRT_CTR=[];
+for nc=1:length(ctrs)
+    cvRT_CTR(nc)=nanmean(all_block_table.cvRT(all_block_table.SubID==ctrs(nc)));
+end
+cvRT_ADHD_inn=[];
+for nc=1:length(adhds_inn)
+    cvRT_ADHD_inn(nc)=nanmean(all_block_table.cvRT(all_block_table.SubID==adhds_inn(nc)));
+end
+cvRT_ADHD_com=[];
+for nc=1:length(adhds_com)
+    cvRT_ADHD_com(nc)=nanmean(all_block_table.cvRT(all_block_table.SubID==adhds_com(nc)));
+end
 
 %% Manuscript Supp Fig 2: Behav by subtype
 Colors=[253,174,97;
@@ -521,13 +609,13 @@ h1 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(1, :), 'MarkerEdgeColor', Col
 h2 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(2, :), 'MarkerEdgeColor', Colors(2, :), 'MarkerSize', 10); % ADHD Inattentive
 h3 = plot(NaN, NaN, 'o', 'MarkerFaceColor', Colors(3, :), 'MarkerEdgeColor', Colors(3, :), 'MarkerSize', 10); % ADHD Combined
 
-legend([h1, h2, h3], {'Control', 'ADHD: Inattentive', 'ADHD: Combined'}, ...
+legend([h1, h2, h3], {'Neurotypical', 'ADHD: Inattentive', 'ADHD: Combined'}, ...
     'Location', 'northwest', 'Box', 'off', 'FontSize', 16, 'Position', [0.5, 0.85, 0, 0]);
 % legend([h2, h3], {'ADHD: Inattentive', 'ADHD: Combined'}, ...
 %     'Location', 'northwest', 'Box', 'off', 'FontSize', 16, 'Position', [0.3, 0.85, 0, 0]);
 
 ylim([0 0.06] * 100);% yticks(0.05:0.05:0.2);
-set(gca, 'xtick',x_positions,'xticklabel',{'Control','Inattentive', 'Combined'}); %to change y-axis to percentage
+set(gca, 'xtick',x_positions,'xticklabel',{'NT','Inattentive', 'Combined'}); %to change y-axis to percentage
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
 saveas(gcf,fullfile(suppfig_path, 'SuppFig2_PanelA_MissAvg.svg'))
@@ -609,7 +697,7 @@ for j = 1:num_groups % number of group
     simpleDotPlot(x_positions(j),100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
 end
 ylim([0.2 0.55] * 100);
-set(gca, 'xtick',x_positions,'xticklabel',{'Control','Inattentive', 'Combined'}); %to change y-axis to percentage
+set(gca, 'xtick',x_positions,'xticklabel',{'NT','Inattentive', 'Combined'}); %to change y-axis to percentage
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
 saveas(gcf,fullfile(suppfig_path,'SuppFig2_PanelB_FAAvg.svg'))
@@ -689,7 +777,7 @@ for j = 1:num_groups % number of group
     simpleDotPlot(x_positions(j),data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
 end
 ylim([0.3 0.45]);
-set(gca, 'xtick',x_positions,'xticklabel',{'Control','Inattentive', 'Combined'}); %to change y-axis to percentage
+set(gca, 'xtick',x_positions,'xticklabel',{'NT','Inattentive', 'Combined'}); %to change y-axis to percentage
 %title(['Std Deviation', newline,' of RT (s)']);
 %     ylabel('% of Omission Errors'); xlabel('Block Number');
 format_fig;
@@ -697,20 +785,7 @@ set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
 saveas(gcf,fullfile(suppfig_path,'SuppFig2_PanelC_RTAvg.svg'))
 
 
-%% stdRT
-% all_stdRT = [stdRT_CTR, stdRT_ADHD_inn stdRT_ADHD_com]';
-% all_Group=[zeros(1,length(stdRT_CTR)) , ones(1,length(stdRT_ADHD_inn)), 2 * ones(1,length(stdRT_ADHD_com))]';
-% 
-% figure('Position',[347   167   441   447]);
-% h = daviolinplot(all_stdRT,'groups',all_Group,'outsymbol','k+','colors',Colors,...
-%     'boxcolors','same','scatter',1,'jitter',1,'xtlabels', {'CTRL','ADHD: Inattentive', 'ADHD: Combined'},...
-%     'boxwidth',1.5,'scattersize',70);
-% ylabel('StdDev of Reaction Time (s)');
-% xl = xlim; xlim([xl(1)-0.1, xl(2)+0.2]); % make more space for the legend
-% set(gca,'FontSize',10);
-% format_fig;
-% ylim([0. 0.35])
-
+%% cvRT
 behav_demo_summary = varfun(@(x) x(1), behav_demo_table, ...
     'GroupingVariables', 'SubID', ...
     'InputVariables', {'DIVASubtype'}); %Summary table because there were SubID repeats as it was byTrial
@@ -719,13 +794,6 @@ behav_demo_summary.SubID = categorical(behav_demo_summary.SubID);
 block_subtype_table = join(all_block_table, behav_demo_summary(:, {'SubID', 'DIVASubtype'}), 'Keys', 'SubID');
 block_subtype_table.SubID = categorical(block_subtype_table.SubID);
 block_subtype_table.Group = categorical(block_subtype_table.Group);
-% block_subtype_table.DIVASubtype((block_subtype_table.Group== 'C')) = {'Control'};
-% block_subtype_table.DIVASubtype = reordercats(block_subtype_table.DIVASubtype, {'Control', 'Combined', 'Inattention'});
-% block_subtype_table.DIVASubtype = categorical(block_subtype_table.DIVASubtype);
-
-% subtype_stdRT = varfun(@nanmean, behav_demo_table, ...
-%                        'InputVariables', 'stdRT', ...
-%                        'GroupingVariables', {'SubID', 'BlockN', 'DIVASubtype'});
 
 group_subIDs = {adhds_inn, adhds_com};  % Only ADHD subtypes
 num_groups = length(group_subIDs);
@@ -737,7 +805,7 @@ for i = 1:4  % Number of blocks
         % Collect data for current block and group
         subject_means = [];
         for s = 1:length(subjects)
-            subject_mean = nanmean(block_subtype_table.stdRT(ismember(block_subtype_table.SubID, subjects(s)) & ...
+            subject_mean = nanmean(block_subtype_table.cvRT(ismember(block_subtype_table.SubID, subjects(s)) & ...
                 block_subtype_table.BlockN == i));  % Get ADHD subtype data
             subject_means = [subject_means; subject_mean];
         end
@@ -749,22 +817,22 @@ end
 
 for j = 1:num_groups
     % Plot the group mean for each block with a line
-    plot((1:4) + (2*j - 3) * 0.1, meandata_to_plot(:, j), 'Color', Colors(j+1, :), 'LineWidth', 4);
+    plot((1:4) + (2*j - 3) * 0.1, 100*meandata_to_plot(:, j), 'Color', Colors(j+1, :), 'LineWidth', 4);
 
     % Plot individual subject points (dots) for each block
     for i = 1:4
-        simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j+1,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+        simpleDotPlot(i + (2*j - 3) * 0.1, 100*data_to_plot{i, j}, 200, Colors(j+1,:), 1, 'k', 'o', [], 3, 0, 0, 0);
     end
 end
 set(gca, 'xtick', 1:4);
-ylabel('Std Dev RT (s)');
+ylabel('RT Variability (%CV)');
 xlabel('Block');
 format_fig;
 set(gca, 'FontSize', 22, 'FontWeight', 'bold', 'LineWidth', 1.5);
-ylim([0.05 0.2]);
+ ylim([20 50]);
 xlim([0.5 4.5]);
 hold off
-saveas(gcf,fullfile(suppfig_path,'SuppFig2_PanelD_stdRT.svg'))
+saveas(gcf,fullfile(suppfig_path,'SuppFig2_PanelD_cvRT.svg'))
 
 
 group_subIDs = {ctrs, adhds_inn, adhds_com};
@@ -774,7 +842,7 @@ for j = 1:num_groups
     subjects = group_subIDs{j}; % Get the relevant SubIDs for the group
     subject_means = [];
     for s = 1:length(subjects)
-        subject_mean = nanmean(block_subtype_table.stdRT(ismember(block_subtype_table.SubID, subjects(s))));
+        subject_mean = nanmean(block_subtype_table.cvRT(ismember(block_subtype_table.SubID, subjects(s))));
         subject_means = [subject_means; subject_mean];
     end
 
@@ -785,16 +853,116 @@ end
 figure('Position',[2245         400         260         428])
 x_positions = [-0.2, 0, 0.2]; % Control, ADHD-Inattentive, ADHD-Combined
 for j = 1:num_groups % number of group
-    simpleDotPlot(x_positions(j),data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+    simpleDotPlot(x_positions(j),100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
 end
-ylim([0.05 0.2]);
-set(gca, 'xtick',x_positions,'xticklabel',{'Control','Inattentive', 'Combined'}); %to change y-axis to percentage
+ ylim([20 50]);
+set(gca, 'xtick',x_positions,'xticklabel',{'NT','Inattentive', 'Combined'}); %to change y-axis to percentage
 %title(['Std Deviation', newline,' of RT (s)']);
 %     ylabel('% of Omission Errors'); xlabel('Block Number');
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-saveas(gcf,fullfile(suppfig_path,'SuppFig2_PanelD_stdRTAvg.svg'))
+saveas(gcf,fullfile(suppfig_path,'SuppFig2_PanelD_cvRTAvg.svg'))
 
+
+
+% %% stdRT
+% % all_stdRT = [stdRT_CTR, stdRT_ADHD_inn stdRT_ADHD_com]';
+% % all_Group=[zeros(1,length(stdRT_CTR)) , ones(1,length(stdRT_ADHD_inn)), 2 * ones(1,length(stdRT_ADHD_com))]';
+% % 
+% % figure('Position',[347   167   441   447]);
+% % h = daviolinplot(all_stdRT,'groups',all_Group,'outsymbol','k+','colors',Colors,...
+% %     'boxcolors','same','scatter',1,'jitter',1,'xtlabels', {'CTRL','ADHD: Inattentive', 'ADHD: Combined'},...
+% %     'boxwidth',1.5,'scattersize',70);
+% % ylabel('StdDev of Reaction Time (s)');
+% % xl = xlim; xlim([xl(1)-0.1, xl(2)+0.2]); % make more space for the legend
+% % set(gca,'FontSize',10);
+% % format_fig;
+% % ylim([0. 0.35])
+% 
+% behav_demo_summary = varfun(@(x) x(1), behav_demo_table, ...
+%     'GroupingVariables', 'SubID', ...
+%     'InputVariables', {'DIVASubtype'}); %Summary table because there were SubID repeats as it was byTrial
+% behav_demo_summary.Properties.VariableNames{'Fun_DIVASubtype'} = 'DIVASubtype';
+% behav_demo_summary.SubID = categorical(behav_demo_summary.SubID);
+% block_subtype_table = join(all_block_table, behav_demo_summary(:, {'SubID', 'DIVASubtype'}), 'Keys', 'SubID');
+% block_subtype_table.SubID = categorical(block_subtype_table.SubID);
+% block_subtype_table.Group = categorical(block_subtype_table.Group);
+% % block_subtype_table.DIVASubtype((block_subtype_table.Group== 'C')) = {'Control'};
+% % block_subtype_table.DIVASubtype = reordercats(block_subtype_table.DIVASubtype, {'Control', 'Combined', 'Inattention'});
+% % block_subtype_table.DIVASubtype = categorical(block_subtype_table.DIVASubtype);
+% 
+% % subtype_stdRT = varfun(@nanmean, behav_demo_table, ...
+% %                        'InputVariables', 'stdRT', ...
+% %                        'GroupingVariables', {'SubID', 'BlockN', 'DIVASubtype'});
+% 
+% group_subIDs = {adhds_inn, adhds_com};  % Only ADHD subtypes
+% num_groups = length(group_subIDs);
+% 
+% figure; hold on;
+% for i = 1:4  % Number of blocks
+%     for j = 1:num_groups
+%         subjects = group_subIDs{j};  % Get the relevant SubIDs for the group
+%         % Collect data for current block and group
+%         subject_means = [];
+%         for s = 1:length(subjects)
+%             subject_mean = nanmean(block_subtype_table.stdRT(ismember(block_subtype_table.SubID, subjects(s)) & ...
+%                 block_subtype_table.BlockN == i));  % Get ADHD subtype data
+%             subject_means = [subject_means; subject_mean];
+%         end
+%         % Store individual subject means and group means
+%         data_to_plot{i, j} = subject_means;
+%         meandata_to_plot(i, j) = nanmean(subject_means);  % Group mean
+%     end
+% end
+% 
+% for j = 1:num_groups
+%     % Plot the group mean for each block with a line
+%     plot((1:4) + (2*j - 3) * 0.1, meandata_to_plot(:, j), 'Color', Colors(j+1, :), 'LineWidth', 4);
+% 
+%     % Plot individual subject points (dots) for each block
+%     for i = 1:4
+%         simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j+1,:), 1, 'k', 'o', [], 3, 0, 0, 0);
+%     end
+% end
+% set(gca, 'xtick', 1:4);
+% ylabel('Std Dev RT (s)');
+% xlabel('Block');
+% format_fig;
+% set(gca, 'FontSize', 22, 'FontWeight', 'bold', 'LineWidth', 1.5);
+% ylim([0.05 0.2]);
+% xlim([0.5 4.5]);
+% hold off
+% saveas(gcf,fullfile(suppfig_path,'SuppFig2_PanelD_stdRT.svg'))
+% 
+% 
+% group_subIDs = {ctrs, adhds_inn, adhds_com};
+% num_groups = length(group_subIDs);
+% 
+% for j = 1:num_groups
+%     subjects = group_subIDs{j}; % Get the relevant SubIDs for the group
+%     subject_means = [];
+%     for s = 1:length(subjects)
+%         subject_mean = nanmean(block_subtype_table.stdRT(ismember(block_subtype_table.SubID, subjects(s))));
+%         subject_means = [subject_means; subject_mean];
+%     end
+% 
+%     % Store subject-level mean data
+%     data_to_plot_perS{j} = subject_means;
+% end
+% 
+% figure('Position',[2245         400         260         428])
+% x_positions = [-0.2, 0, 0.2]; % Control, ADHD-Inattentive, ADHD-Combined
+% for j = 1:num_groups % number of group
+%     simpleDotPlot(x_positions(j),data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+% end
+% ylim([0.05 0.2]);
+% set(gca, 'xtick',x_positions,'xticklabel',{'NT','Inattentive', 'Combined'}); %to change y-axis to percentage
+% %title(['Std Deviation', newline,' of RT (s)']);
+% %     ylabel('% of Omission Errors'); xlabel('Block Number');
+% format_fig;
+% set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
+% saveas(gcf,fullfile(suppfig_path,'SuppFig2_PanelD_stdRTAvg.svg'))
+% 
 
 %% Stats for Supp Fig 2: part 1 - Behaviour x subtype
 % FAs/Commission Errors
@@ -823,7 +991,10 @@ mdlStdRT1 = fitlme(block_subtype_table, 'stdRT ~ 1 + DIVASubtype * BlockN +(1|Su
 compare(mdlStdRT0, mdlStdRT1)
 anova(mdlStdRT1)
 
-%EP - do a post hoc
+mdlcvRT0 = fitlme(block_subtype_table, 'cvRT ~ 1 + DIVASubtype + BlockN +(1|SubID)');
+mdlcvRT1 = fitlme(block_subtype_table, 'cvRT ~ 1 + DIVASubtype * BlockN +(1|SubID)');
+compare(mdlcvRT0, mdlcvRT1)
+anova(mdlcvRT0)
 
 
 %% Mind state
@@ -1259,7 +1430,7 @@ xlim([0.5 numel(labels) + 0.5]);
 ylabel('% of Types of MW');
 ylim([0 80]);
 set(gca, 'FontSize', 30, 'FontWeight', 'bold');
-legend([h1, h2, h3], {'Control', 'ADHD: Inattentive', 'ADHD: Combined'}, 'Location', 'northeast', 'FontSize', 18);
+legend([h1, h2, h3], {'Neurotypical', 'ADHD: Inattentive', 'ADHD: Combined'}, 'Location', 'northeast', 'FontSize', 18);
 format_fig;
 
 
@@ -1705,7 +1876,7 @@ xlim([0.5 4.5]);
 ylabel('% of Responses');
 ylim([0 70]);
 set(gca, 'FontSize', 30, 'FontWeight', 'bold');
-legend([h1, h2, h3], {'Control', 'ADHD: Inattentive', 'ADHD: Combined'}, 'Location', 'northeast', 'FontSize', 18);
+legend([h1, h2, h3], {'Neurotypical', 'ADHD: Inattentive', 'ADHD: Combined'}, 'Location', 'northeast', 'FontSize', 18);
 format_fig;
 
 

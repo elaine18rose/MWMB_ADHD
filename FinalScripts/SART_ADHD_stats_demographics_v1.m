@@ -440,6 +440,7 @@ end
 %% Sleepiness Ratings and Mind states
 stateLabels = {'ON', 'MW', 'MB', 'DK'};
 probe_demo_table.StateCat = categorical(probe_demo_table.State, [1 2 3 4], stateLabels);
+
 sleepLabels = {'Ex Alert', 'Alert', 'Sleepy', 'Ex Sleepy'};
 probe_demo_table.SleepinessCat = categorical(probe_demo_table.Vigilance, [1 2 3 4], sleepLabels);
 
@@ -467,3 +468,25 @@ resid_table = array2table(std_residuals, ...
 disp('Standardized Residuals Table:');
 disp(resid_table);
 
+%%% Percentage table for manuscript 
+[observed, sleep_levels, mind_states] = crosstab(probe_demo_table.SleepinessCat, probe_demo_table.StateCat);
+percent_table = 100 * observed ./ sum(observed, 2);  % each row sums to 100%
+
+disp('Percentage of Mind States by Vigilance Level:');
+disp(percent_table);
+
+%%% Report for manuscript
+N = sum(observed(:)); % Total N (number of included probes)
+df = (size(observed,1) - 1) * (size(observed,2) - 1);% Degrees of freedom = (rows - 1) * (columns - 1)
+% Chi-squared statistic manually:
+expected = sum(observed,2) * sum(observed,1) / N;
+chi2_stat = sum(((observed - expected).^2) ./ expected, 'all');
+p_val = 1 - chi2cdf(chi2_stat, df); % p-value
+
+% Calculate Cramér's V
+k = min(size(observed)); 
+cramers_V = sqrt(chi2_stat / (N * (k - 1)));
+
+% Display everything
+fprintf('Chi-squared test of independence:\n');
+fprintf('χ²(%d, N = %d) = %.2f, p < %.3g, Cramér''s V = %.3f\n', df, N, chi2_stat, p_val, cramers_V);
