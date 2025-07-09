@@ -1,0 +1,181 @@
+function [all_clus]=get_clusterperm_lme_bygroup_interaction(model_est,clus_alpha,montecarlo_alpha,totperm,neighbours,limSize)
+
+if nargin<6
+    limSize=[]; % ???
+end
+for nEffect=1:2 % Main effect and interaction
+    real_clus=cell(1,2);
+    for nsign=1
+        sig_elec=model_est{1}(model_est{1}(:,1+2*nEffect)<clus_alpha,1);
+        Fstat_elec=model_est{1}(model_est{1}(:,1+2*nEffect)<clus_alpha,2*nEffect);
+        
+        clusters = find_clusters(sig_elec, neighbours);
+        for nclus=1:length(clusters)
+            real_clus{nsign}{nclus,1}=clusters{nclus}; % Get the names of its neighbours
+            real_clus{nsign}{nclus,3}=sum(Fstat_elec(ismember({neighbours(sig_elec).label},clusters{nclus}))); % And its t value
+            real_clus{nsign}{nclus,2}=[]; % And its neighbours? (how is this different?)
+        end
+        if ~isempty(sig_elec) % If there are significant electrodes
+            if size(neighbours(sig_elec(1)).neighblabel,2)>1
+                temp=neighbours(sig_elec(1)).neighblabel';
+            else
+                temp=neighbours(sig_elec(1)).neighblabel;
+            end
+            real_clus{nsign}{1,1}={neighbours(sig_elec(1)).label}; % Get the names of its neighbours
+            real_clus{nsign}{1,3}=Fstat_elec(1); % And its t value
+            real_clus{nsign}{1,2}=temp; % And its neighbours? (how is this different?)
+            for nEl=2:length(sig_elec) % For all significant electrodes
+                clus_found=0;
+                fprintf('%s\n',neighbours(sig_elec(nEl)).label)
+                if strcmp(neighbours(sig_elec(nEl)).label,'Pz')
+                    pause;
+                end
+                for nclus=1:size(real_clus{nsign},1) % For all clusters
+                    if sum(ismember(real_clus{nsign}{nclus,1},neighbours(sig_elec(nEl)).neighblabel'))~=0 % If
+                        real_clus{nsign}{nclus,1}=unique([real_clus{nsign}{nclus,1} ; {neighbours(sig_elec(nEl)).label}]);
+                        real_clus{nsign}{nclus,3}=[real_clus{nsign}{nclus,3} ; Fstat_elec(nEl)];
+                        if size(neighbours(sig_elec(nEl)).neighblabel,2)>1
+                            temp=neighbours(sig_elec(nEl)).neighblabel';
+                        else
+                            temp=neighbours(sig_elec(nEl)).neighblabel;
+                        end
+                        real_clus{nsign}{nclus,2}=unique([real_clus{nsign}{nclus,2} ; temp]);
+                        clus_found=1;
+                        break;
+                    end
+                end
+                if clus_found==0
+                    num_clus=size(real_clus{nsign},1);
+                    real_clus{nsign}{num_clus+1,1}= {neighbours(sig_elec(nEl)).label};
+                    real_clus{nsign}{num_clus+1,3}=Fstat_elec(nEl);
+                    if size(neighbours(sig_elec(nEl)).neighblabel,2)>1
+                            temp=neighbours(sig_elec(nEl)).neighblabel';
+                        else
+                            temp=neighbours(sig_elec(nEl)).neighblabel;
+                        end
+                    real_clus{nsign}{num_clus+1,2}=temp;
+                end
+            end
+            if ~isempty(limSize)
+                clus_discard=[];
+                for m=1:size(real_clus{nsign},1)
+                    if size(real_clus{nsign}{m,1},1)<=limSize
+                        clus_discard=[clus_discard m];
+                    end
+                end
+                real_clus{nsign}(clus_discard,:)=[];
+            end
+            clus_merged=[];
+            for nclus=1:size(real_clus{nsign},1)
+                if ismember(nclus,clus_merged)
+                    continue;
+                end
+                for nclus2=nclus+1:size(real_clus{nsign},1)
+                    if sum(ismember(real_clus{nsign}{nclus2,1},real_clus{nsign}{nclus,2}))~=0
+                        real_clus{nsign}{nclus,3}=[real_clus{nsign}{nclus,3} ; real_clus{nsign}{nclus2,3}(~ismember(real_clus{nsign}{nclus2,1},real_clus{nsign}{nclus,1}))];
+                        real_clus{nsign}{nclus,1}=unique([real_clus{nsign}{nclus,1} ; real_clus{nsign}{nclus2,1}]);
+                        real_clus{nsign}{nclus,2}=unique([real_clus{nsign}{nclus,2} ; real_clus{nsign}{nclus2,2}]);
+                        clus_merged=[clus_merged nclus2];
+                    end
+                end
+            end
+            real_clus{nsign}(clus_merged,:)=[];
+        end
+    end
+
+    perm_clus=cell(2,totperm);
+    for nperm=1:totperm
+        for nsign=1
+            sig_elec=model_est{2}(model_est{2}(:,1+2*nEffect)<clus_alpha & model_est{2}(:,6)==nperm,1);
+            Fstat_elec=model_est{2}(model_est{2}(:,1+2*nEffect)<clus_alpha & model_est{2}(:,6)==nperm,2*nEffect);
+            if ~isempty(sig_elec)
+                perm_clus{nsign,nperm}{1,1}={neighbours(sig_elec(1)).label};
+                perm_clus{nsign,nperm}{1,3}=Fstat_elec(1);
+                if size(neighbours(sig_elec(1)).neighblabel,2)>1
+                    temp=neighbours(sig_elec(1)).neighblabel';
+                else
+                    temp=neighbours(sig_elec(1)).neighblabel;
+                end
+                perm_clus{nsign,nperm}{1,2}=temp;
+                for nEl=2:length(sig_elec)
+                    clus_found=0;
+                    for nclus=1:size(perm_clus{nsign,nperm},1)
+                        if sum(ismember(perm_clus{nsign,nperm}{nclus,1},neighbours(sig_elec(nEl)).neighblabel'))~=0
+                            perm_clus{nsign,nperm}{nclus,1}=unique([perm_clus{nsign,nperm}{nclus,1} ; {neighbours(sig_elec(nEl)).label}]);
+                            perm_clus{nsign,nperm}{nclus,3}=[perm_clus{nsign,nperm}{nclus,3} ; Fstat_elec(nEl)];
+                            if size(neighbours(sig_elec(nEl)).neighblabel,2)>1
+                                temp=neighbours(sig_elec(nEl)).neighblabel';
+                            else
+                                temp=neighbours(sig_elec(nEl)).neighblabel;
+                            end
+                            perm_clus{nsign,nperm}{nclus,2}=unique([perm_clus{nsign,nperm}{nclus,2} ; temp]);
+                            clus_found=1;
+                            break;
+                        end
+                    end
+                    if clus_found==0
+                        num_clus=size(perm_clus{nsign,nperm},1);
+                        perm_clus{nsign,nperm}{num_clus+1,1}= {neighbours(sig_elec(nEl)).label};
+                        perm_clus{nsign,nperm}{num_clus+1,3}=Fstat_elec(nEl);
+                        if size(neighbours(sig_elec(nEl)).neighblabel,2)>1
+                                temp=neighbours(sig_elec(nEl)).neighblabel';
+                            else
+                                temp=neighbours(sig_elec(nEl)).neighblabel;
+                            end
+                        perm_clus{nsign,nperm}{num_clus+1,2}=temp;
+                    end
+                end
+                if ~isempty(limSize)
+                    clus_discard=[];
+                    for m=1:size(perm_clus{nsign,nperm},1)
+                        if size(perm_clus{nsign,nperm}{m,1},1)<=limSize
+                            clus_discard=[clus_discard m];
+                        end
+                    end
+                    perm_clus{nsign,nperm}(clus_discard,:)=[];
+                end
+                clus_merged=[];
+                for nclus=1:size(perm_clus{nsign,nperm},1)
+                    if ismember(nclus,clus_merged)
+                        continue;
+                    end
+                    for nclus2=nclus+1:size(perm_clus{nsign,nperm},1)
+                        if sum(ismember(perm_clus{nsign,nperm}{nclus2,1},perm_clus{nsign,nperm}{nclus,2}))~=0
+                            perm_clus{nsign,nperm}{nclus,3}=[perm_clus{nsign,nperm}{nclus,3} ; perm_clus{nsign,nperm}{nclus2,3}(~ismember(perm_clus{nsign,nperm}{nclus2,1},perm_clus{nsign,nperm}{nclus,1}))];
+                            perm_clus{nsign,nperm}{nclus,1}=unique([perm_clus{nsign,nperm}{nclus,1} ; perm_clus{nsign,nperm}{nclus2,1}]);
+                            perm_clus{nsign,nperm}{nclus,2}=unique([perm_clus{nsign,nperm}{nclus,2} ; perm_clus{nsign,nperm}{nclus2,2}]);
+                            clus_merged=[clus_merged nclus2];
+                        end
+                    end
+                end
+                perm_clus{nsign,nperm}(clus_merged,:)=[];
+            end
+        end
+    end
+
+    perm_Fval=cell(1,2);
+    for nsign=1 %:2
+        for nperm=1:totperm
+            temp_Fval=[];
+            for nclus=1:size(perm_clus{nsign,nperm},1)
+                temp_Fval=[temp_Fval sum(perm_clus{nsign,nperm}{nclus,3})];
+            end
+                if isempty(temp_Fval)
+                    perm_Fval{nsign}=[perm_Fval{nsign} 0];
+                else
+                    perm_Fval{nsign}=[perm_Fval{nsign} max(temp_Fval)];
+                end
+        end
+    end
+
+    all_clus{nEffect}=[]; nc=0;
+    for nsign=1 %:2
+        for nclus=1:size(real_clus{nsign},1)
+            this_Fval=sum(real_clus{nsign}{nclus,3});
+                if mean(this_Fval>perm_Fval{nsign})>1-montecarlo_alpha
+                    nc=nc+1;
+                    all_clus{nEffect}{nc}={'pos' real_clus{nsign}{nclus,1} this_Fval sum(this_Fval<perm_Fval{nsign})/totperm};
+                end
+        end
+    end
+end

@@ -466,69 +466,6 @@ mdlSWdens = fitlme(SW_table,'SW_density ~ 1+Block+Group+(1|SubID)');
 anova(mdlSWdens)
 
 
-%% SW per probe
-Colors=[253,174,97;
-    171,217,233;
-    44,123,182]/256;
-
-figure; hold on;
-subjects = [];
-data_to_plot=[];
-meandata_to_plot=[];
-group_labels={'Control','ADHD'};
-%all_block_table.Group=categorical(all_block_table.Group);
-for i = 1:4 % number of repetitions
-    for j = 1:2 % number of group
-        subjects = unique(SW_table.SubID(SW_table.Block == num2str(i) & SW_table.Group == group_labels{j})); % Getting all subjects in this group
-        subject_means = [];
-        for s = 1:length(subjects)
-            subject_mean = nanmean(SW_table.SW_amplitude(SW_table.Block == num2str(i) & SW_table.Group == group_labels{j} & SW_table.SubID ==  subjects(s)));
-            subject_means = [subject_means; subject_mean];
-        end
-        data_to_plot{i, j} = subject_means;
-    end
-end
-
-
-for j = 1:2
-    plot((1:4) + (2*j - 3) * 0.1, cellfun(@(x) nanmean(x), data_to_plot(:, j)), 'Color', Colors(j,:), 'LineWidth', 4);
-    for i = 1:4
-        simpleDotPlot(i + (2*j - 3) * 0.1, data_to_plot{i, j}, 200, Colors(j,:), 1, 'k', 'o', [], 3, 0, 0, 0);
-    end
-end
-set(gca, 'xtick',1:4); %to change y-axis to percentage
-%title(['Commission Errors per Block']);
-ylabel('SW amplitude (\muV)'); xlabel('Block');
-format_fig;
-set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-% ylim([0 0.6]*100)
-xlim([0.5 4.5])
-%      saveas(gcf,fullfile(figures_path,'Fig1_PanelC_FAPerBlock.svg'))
-
-
-for j = 1:2 % number of group
-    subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
-    subject_means = [];
-
-    for s = 1:length(subjects)
-        subject_mean = nanmean(SW_table.SW_amplitude(SW_table.Group == group_labels{j} & SW_table.SubID ==  subjects(s)));
-        subject_means = [subject_means; subject_mean];
-    end
-    data_to_plot_perS{j} = subject_means;
-end
-figure('Position',[2245         400         260         428])
-for j = 1:2 % number of group
-    simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
-end
-% ylim([0 0.6]*100)
-set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); %to change y-axis to percentage
-%title(['Commission']);
-%     ylabel('% of Omission Errors'); xlabel('Block Number');
-format_fig;
-set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-%      saveas(gcf,fullfile(figures_path,'Fig1_PanelC_FAAvg.svg'))
-
-
 %% SW on behav
 % clear topo_*
 % clear sub_table
@@ -994,3 +931,110 @@ mdlblockstdRT2 = fitlme(SW_table,'Behav_stdRT~1+Block*Group+(Block|SubID)');
 % disp(fit_table);
 
 anova(mdlblockstdRT1)
+
+%% Topos of the relationship between Group and SWDens using LMEs with BlockN as random slope
+
+SWdens_est=cell(1,2);
+totperm=500;
+addpath([pwd filesep '..' filesep 'analysis'])
+for nCh=1:length(layout.label)-2
+    sub_table=SW_table(SW_table.Elec==layout.label(nCh),:);
+    if nCh==1
+        out_pred_perm=[];
+        [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_bygroup_interaction(sub_table,'Group','SW_density~1+Block*pred+(1|SubID)',totperm);
+    else
+        [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_bygroup_interaction(sub_table,'Group','SW_density~1+Block*pred+(1|SubID)',totperm,out_pred_perm);
+    end
+    SWdens_est{1}=[SWdens_est{1} ; [nCh real_out]];
+    SWdens_est{2}=[SWdens_est{2} ; [nCh*ones(totperm,1) perm_out]];
+end
+
+%%
+clus_alpha=0.05;
+montecarlo_alpha=0.05;
+
+cfg_neighb=[];
+cfg_neighb.method = 'triangulation';
+cfg_neighb.layout='EEG1010.lay';
+cfg_neighb.channel=layout.label(1:end-2);
+neighbours = ft_prepare_neighbours(cfg_neighb);
+neighbours(~ismember({neighbours.label},unique(SW_table.Elec)))=[];
+[SWdens_clus]=get_clusterperm_lme_bygroup_interaction(SWdens_est,clus_alpha,montecarlo_alpha,totperm,neighbours,1);
+
+
+cmap2=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
+cmap2=flipud(cmap2);
+limNumClus=1;
+
+f1 = figure('Position', [100, 100, 1000, 650]);  % wider and taller
+
+cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
+subplot(1,2,1)
+simpleTopoPlot_ft(topo_GroupOnSW_tV(:,1), layout,'on',[],0,1);
+ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',180,'box','no','label','no');
+
+temp_clus=SWdens_clus{1};
+if ~isempty(temp_clus)
+    hold on;
+    for nclus=1:length(temp_clus)
+        if length(match_str(layout.label,temp_clus{nclus}{2}))<limNumClus
+            continue;
+        end
+        ft_plot_lay_me(layout, 'chanindx',match_str(layout.label,temp_clus{nclus}{2}),'pointsymbol','o','pointcolor','k','pointsize',180,'box','no','label','no')
+    end
+end
+
+colormap(cmap2);
+t = title({'Group', '(ADHD vs NT)'}); t.Position(2) = t.Position(2) -.3;
+t.Position(2) = t.Position(2) -.04;
+caxis([-1 1]*5)
+format_fig;
+t.FontSize = 30;
+cb = colorbar;
+%   cb.Position = [0.43, 0.2, 0.02, 0.6]; 
+cb.Label.String = 't-values'; 
+cb.FontSize = 25; cb.Label.FontSize = 30; 
+
+subplot(1,2,2)
+simpleTopoPlot_ft(topo_GroupOnSW_tV(:,2), layout,'on',[],0,1);
+ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',180,'box','no','label','no');
+
+
+temp_clus=SWdens_clus{2};
+if ~isempty(temp_clus)
+    hold on;
+    for nclus=1:length(temp_clus)
+        if length(match_str(layout.label,temp_clus{nclus}{2}))<limNumClus
+            continue;
+        end
+        ft_plot_lay_me(layout, 'chanindx',match_str(layout.label,temp_clus{nclus}{2}),'pointsymbol','o','pointcolor','k','pointsize',180,'box','no','label','no')
+    end
+end
+
+colormap(cmap2);
+t = title(['Group * Block']);t.Position(2) = t.Position(2) -.3;
+t.Position(2) = t.Position(2) -.04;
+caxis([-1 1]*7)
+format_fig;
+t.FontSize = 30;
+cb = colorbar;
+ cb.Position = [0.9, 0.2, 0.02, 0.6]; 
+cb.Label.String = 'f-values'; 
+cb.FontSize = 25; cb.Label.FontSize = 30; 
+cb.Ticks = -6:2:6;
+
+% Move subplots closer to each other
+ax1 = subplot(1,2,1); ax2 = subplot(1,2,2); 
+set(ax1, 'Position', get(ax1, 'Position') - [0.05 0 0 0]);  % Shift left
+ax2.Position(1) = ax2.Position(1) - 0.02;
+
+% hold on;
+% h1 = plot(nan, nan, 'o', 'MarkerSize', 25, 'MarkerFaceColor', [1 1 1]*0.7, 'MarkerEdgeColor', [1 1 1]*0.7); % Uncorrected p < 0.05
+% h2 = plot(nan, nan, 'o', 'MarkerSize', 25, 'MarkerFaceColor', [0 0 0], 'MarkerEdgeColor', [0 0 0]); % FDR-corrected p < 0.05
+% hold off;
+
+lgd = legend([h1, h2], {'Uncorrected p < 0.05', 'FDR-corrected p < 0.05'}, 'Box', 'off');
+lgd.Position = [0.2, 0.1, 0.1, 0.1]; % horizontal,vertical, width, height 
+lgd.FontSize = 28;
+
+sgtitle(['Slow Wave Density'],'FontWeight', 'bold', 'FontSize', 50);
