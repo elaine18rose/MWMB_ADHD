@@ -45,7 +45,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 %redo=0;
-all_threshold_SW=readtable([preproc_path filesep 'all_threshold_SW_v2.csv']); %EP - This is
+all_threshold_SW=readtable([preproc_path filesep 'all_threshold_SW_90pc.csv']); % all_threshold_SW_v2.csv ; EP - This is from get SW script
 all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
 all_threshold_SW.Group=categorical(all_threshold_SW.Group);
 all_threshold_SW.Elec=categorical(all_threshold_SW.Elec);
@@ -322,7 +322,7 @@ for nP=1:length(VOI)
         t = title(GroupLabels{nGroup}); %title({VOI{nP}(4:end),Groups{nGroup}})
         t.Position(2) = t.Position(2) -.4;
         minmax_val=[minmax_val ; min(temp_topo) max(temp_topo)];
-        caxis([6 32])
+        caxis([4 18])
         format_fig;
     end
     
@@ -341,7 +341,7 @@ for nP=1:length(VOI)
 end
 
 % Save figure
-saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelB_SWD.svg']);
+% saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelB_SWD.svg']);
 
 
 %%
@@ -436,7 +436,7 @@ set(gca, 'xtick',1:4);
 ylabel('SW density (/min)'); xlabel('Block');
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
- ylim([12 26]);set(gca, 'ytick',[12:2:26]);
+ ylim([6 16]);set(gca, 'ytick',[6:2:16]);
 xlim([0.5 4.5])
 saveas(gcf, [pwd filesep 'Figures' filesep,'Fig5_MiddlePanel_SWxBlock.svg']) %NOTE: the other non-med SW figures were labelled Fig 4 as we had the task + behav originally in one fig
 
@@ -455,7 +455,7 @@ figure('Position',[2245         400         260         428])
 for j = 1:2 % number of group
     simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
 end
-  ylim([12 26]);set(gca, 'ytick',[12:2:26]);
+ ylim([6 16]);set(gca, 'ytick',[6:2:16]);
 set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); 
 %title(['Commission']);
 format_fig;
@@ -614,9 +614,10 @@ caxis([-1 1]*5)
 format_fig;
 t.FontSize = 30;
 cb = colorbar;
-%   cb.Position = [0.43, 0.2, 0.02, 0.6]; 
+cb.Position = [0.43, 0.2, 0.02, 0.6]; 
 cb.Label.String = 't-values'; 
 cb.FontSize = 25; cb.Label.FontSize = 30; 
+hold on
 
 subplot(1,2,2)
 simpleTopoPlot_ft(topo_GroupOnSW_tV(:,2), layout,'on',[],0,1);
@@ -629,7 +630,7 @@ caxis([-1 1]*7)
 format_fig;
 t.FontSize = 30;
 cb = colorbar;
- cb.Position = [0.9, 0.2, 0.02, 0.6]; 
+cb.Position = [0.9, 0.2, 0.02, 0.6]; 
 cb.Label.String = 'f-values'; 
 cb.FontSize = 25; cb.Label.FontSize = 30; 
 cb.Ticks = -6:2:6;
