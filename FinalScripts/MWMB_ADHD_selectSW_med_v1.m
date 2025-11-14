@@ -23,6 +23,7 @@ else
     path_ExGauss='/Users/elaine/desktop/MATLAB_Functions/exgauss';
     path_FMINSEARCHBND='/Users/elaine/desktop/MATLAB_Functions/FMINSEARCHBND';
     path_RainClould = '/Users/elaine/desktop/MATLAB_Functions/RainCloudPlots';
+    save_path = '/Users/elaine/desktop/Git_Studies/MWMB_ADHD/tables';
 
     %     mkdir(path_detectSW)
 end
@@ -35,8 +36,12 @@ addpath(genpath(path_ExGauss))
 addpath(genpath(path_FMINSEARCHBND))
 addpath(genpath(path_RainClould))
 
-% select relevant files, here task
+% select relevant files, here SW and demo
 SW_files=dir([preproc_path filesep 'SW_clean_i_probe_*.mat']);
+probe_demo_table = readtable([save_path filesep 'SART_ADHD_probe_demo_v1.txt']);
+subject_age = unique(probe_demo_table(:, {'SubID', 'Age'}), 'rows');
+subject_age.SubID = categorical(subject_age.SubID);
+subject_age(subject_age.SubID == 'C015', :) = [];
 
 %EEG Layout info
 run ../MWMB_ADHD_elec_layout.m
@@ -45,7 +50,7 @@ run ../MWMB_ADHD_elec_layout.m
 %% Loop across files
 RS = ["R1", "R2"];
 %redo=0;
-all_threshold_SW=readtable([preproc_path filesep 'all_threshold_SW_90pc.csv']); % all_threshold_SW_v2.csv ; EP - This is from get SW script
+all_threshold_SW=readtable([preproc_path filesep 'all_threshold_SW_v2.csv']); % ;all_threshold_SW_90pc.csv; EP - This is from get SW script
 all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
 all_threshold_SW.Group=categorical(all_threshold_SW.Group);
 all_threshold_SW.Elec=categorical(all_threshold_SW.Elec);
@@ -291,9 +296,9 @@ for nF=1:length(SW_files)
     SW_table_perS.Behav_FA(table_length+(1:length(labels)))=repmat(nanmean(temp_nogos(:,11)==0),length(labels),1);
 
 end
+SW_table = join(SW_table, subject_age, 'Keys', 'SubID'); % adding age 
 SW_table.Block = categorical(SW_table.Block, 1:4, 'Ordinal', true);
 writetable(SW_table,[preproc_path filesep 'all_SW_perProbe_exGaussCTR_v3.csv'])
-
 %% Ctr vs ADHD SW figure (EP - copied from selectSW_v4.m)
 f0=figure;
 clear temp*
@@ -322,13 +327,13 @@ for nP=1:length(VOI)
         t = title(GroupLabels{nGroup}); %title({VOI{nP}(4:end),Groups{nGroup}})
         t.Position(2) = t.Position(2) -.4;
         minmax_val=[minmax_val ; min(temp_topo) max(temp_topo)];
-        caxis([4 18])
+         caxis([4 32])
         format_fig;
     end
     
      % Add one shared colorbar (outside the subplots)
     cb = colorbar;
-    cb.Position = [0.85, 0.2, 0.02, 0.52]; % [left, bottom, width, height]
+    cb.Position = [0.85, 0.25, 0.02, 0.52]; % [left, bottom, width, height]
     cb.Label.String = 'wave/min';
     cb.Label.FontSize = 18; % Colorbar label font size
 
@@ -341,7 +346,7 @@ for nP=1:length(VOI)
 end
 
 % Save figure
-% saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelB_SWD.svg']);
+ saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelB_SWD.svg']);
 
 
 %%
@@ -436,7 +441,7 @@ set(gca, 'xtick',1:4);
 ylabel('SW density (/min)'); xlabel('Block');
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
- ylim([6 16]);set(gca, 'ytick',[6:2:16]);
+ ylim([12 26]);set(gca, 'ytick',[12:2:26]);
 xlim([0.5 4.5])
 saveas(gcf, [pwd filesep 'Figures' filesep,'Fig5_MiddlePanel_SWxBlock.svg']) %NOTE: the other non-med SW figures were labelled Fig 4 as we had the task + behav originally in one fig
 
@@ -455,12 +460,12 @@ figure('Position',[2245         400         260         428])
 for j = 1:2 % number of group
     simpleDotPlot((2*j-3)*0.1,data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
 end
- ylim([6 16]);set(gca, 'ytick',[6:2:16]);
+ ylim([12 26]);set(gca, 'ytick',[12:2:26]);
 set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'NT','ADHD'}); 
 %title(['Commission']);
 format_fig;
 set(gca,'FontSize',22,'FontWeight','bold','LineWidth', 1.5);
-saveas(gcf, [pwd filesep 'Figures' filesep,'Fig5_MiddlePanel_SWxBlockAvg.svg']); %NOTE: the other non-med SW figures were labelled Fig 4 as we had the task + behav originally in one fig
+ saveas(gcf, [pwd filesep 'Figures' filesep,'Fig5_MiddlePanel_SWxBlockAvg.svg']); %NOTE: the other non-med SW figures were labelled Fig 4 as we had the task + behav originally in one fig
 
 mdlSWdens = fitlme(SW_table,'SW_density ~ 1+Block+Group+(1|SubID)');
 anova(mdlSWdens)
@@ -476,7 +481,6 @@ SW_table.Group=reordercats(SW_table.Group,["Control" "ADHD"]);
 Groups={'ADHD','Control'};
 %VOI={'Behav_stdRT','Probe_Vig'}; %Miss: not affect by group | FA, MW not MB: not predicted by SW
 VOI={'Behav_Miss','Behav_RT','Behav_stdRT', 'Probe_Vig','Probe_ON'};
-
 
 for nV=1:length(VOI)
     topo_SWonBehav_tV{nV}=[];
@@ -494,7 +498,6 @@ for nV=1:length(VOI)
         %         topo_pV{nV}(nE,1)=temp_mdl2.Coefficients.pValue(find_trials(temp_mdl2.Coefficients.Name,'Group'));
     end
 end
-
 
 
 %% Mediation (residuals)
@@ -526,74 +529,77 @@ for nV=1:length(VOI)
     end
 end
 
-%%
+%% FDR correction for topos
 all_pval_SWonBehav=[];
 all_pval_med=[];
 for nV=1:length(VOI)
     all_pval_SWonBehav=[all_pval_SWonBehav ; topo_SWonBehav_pV{nV}];
     all_pval_med=[all_pval_med ; topo_med_pV{nV}(:,1) ; topo_med_pV{nV}(:,2) ; topo_med_pV{nV}(:,3)];
 end
-all_pval=[topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,2) ; all_pval_SWonBehav ; all_pval_med];
+% all_pval=[topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,2) ; all_pval_SWonBehav ; all_pval_med];
+all_pval=[all_pval_SWonBehav ; all_pval_med];
 FDR_thr=fdr(all_pval,0.05);
 
-f1 = figure('Position', [100, 100, 1000, 650]);  % wider and taller
 
-cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
-subplot(1,2,1)
-simpleTopoPlot_ft(topo_GroupOnSW_tV(:,1), layout,'on',[],0,1);
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',180,'box','no','label','no');
-%  ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<fdr([topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,1)],0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
- ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',180,'box','no','label','no');
-colormap(cmap2);
-t = title({'Group', '(ADHD vs NT)'}); t.Position(2) = t.Position(2) -.3;
-t.Position(2) = t.Position(2) -.04;
-caxis([-1 1]*5)
-format_fig;
-t.FontSize = 30;
-cb = colorbar;
-cb.Position = [0.43, 0.2, 0.02, 0.6]; 
-cb.Label.String = 't-values'; 
-cb.FontSize = 25; cb.Label.FontSize = 30; 
-hold on
-
-subplot(1,2,2)
-simpleTopoPlot_ft(topo_GroupOnSW_tV(:,2), layout,'on',[],0,1);
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',180,'box','no','label','no');
-ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',180,'box','no','label','no');
-colormap(cmap2);
-t = title(['Group * Block']);t.Position(2) = t.Position(2) -.3;
-t.Position(2) = t.Position(2) -.04;
-caxis([-1 1]*7)
-format_fig;
-t.FontSize = 30;
-cb = colorbar;
-cb.Position = [0.9, 0.2, 0.02, 0.6]; 
-cb.Label.String = 'f-values'; 
-cb.FontSize = 25; cb.Label.FontSize = 30; 
-cb.Ticks = -6:2:6;
-
-% Move subplots closer to each other
-ax1 = subplot(1,2,1); ax2 = subplot(1,2,2); 
-set(ax1, 'Position', get(ax1, 'Position') - [0.05 0 0 0]);  % Shift left
-ax2.Position(1) = ax2.Position(1) - 0.02;
-
-hold on;
-h1 = plot(nan, nan, 'o', 'MarkerSize', 25, 'MarkerFaceColor', [1 1 1]*0.7, 'MarkerEdgeColor', [1 1 1]*0.7); % Uncorrected p < 0.05
-h2 = plot(nan, nan, 'o', 'MarkerSize', 25, 'MarkerFaceColor', [0 0 0], 'MarkerEdgeColor', [0 0 0]); % FDR-corrected p < 0.05
-hold off;
-
-lgd = legend([h1, h2], {'Uncorrected p < 0.05', 'FDR-corrected p < 0.05'}, 'Box', 'off');
-lgd.Position = [0.2, 0.1, 0.1, 0.1]; % horizontal,vertical, width, height 
-lgd.FontSize = 28;
-
-sgtitle(['Slow Wave Density'],'FontWeight', 'bold', 'FontSize', 50);
-
-% Save figure
- saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelC_SWxGroup.svg']);
+%% FDR-corrected SW-Group fig 
+% f1 = figure('Position', [100, 100, 1000, 650]);  % wider and taller
+% 
+% cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
+% subplot(1,2,1)
+% simpleTopoPlot_ft(topo_GroupOnSW_tV(:,1), layout,'on',[],0,1);
+% ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',180,'box','no','label','no');
+% %  ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<fdr([topo_GroupOnSW_pV(:,1) ; topo_GroupOnSW_pV(:,1)],0.05)), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',72,'box','no','label','no');
+%  ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,1)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',180,'box','no','label','no');
+% colormap(cmap2);
+% t = title({'Group', '(ADHD vs NT)'}); t.Position(2) = t.Position(2) -.3;
+% t.Position(2) = t.Position(2) -.04;
+% caxis([-1 1]*5)
+% format_fig;
+% t.FontSize = 30;
+% cb = colorbar;
+% cb.Position = [0.43, 0.2, 0.02, 0.6]; 
+% cb.Label.String = 't-values'; 
+% cb.FontSize = 25; cb.Label.FontSize = 30; 
+% hold on
+% 
+% subplot(1,2,2)
+% simpleTopoPlot_ft(topo_GroupOnSW_tV(:,2), layout,'on',[],0,1);
+% ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<0.05), 'pointsymbol','o','pointcolor',[1 1 1]*0.7,'pointsize',180,'box','no','label','no');
+% ft_plot_lay_me(layout, 'chanindx', find(topo_GroupOnSW_pV(:,2)<FDR_thr), 'pointsymbol','o','pointcolor',[1 1 1]*0,'pointsize',180,'box','no','label','no');
+% colormap(cmap2);
+% t = title(['Group * Block']);t.Position(2) = t.Position(2) -.3;
+% t.Position(2) = t.Position(2) -.04;
+% caxis([-1 1]*7)
+% format_fig;
+% t.FontSize = 30;
+% cb = colorbar;
+% cb.Position = [0.9, 0.2, 0.02, 0.6]; 
+% cb.Label.String = 'f-values'; 
+% cb.FontSize = 25; cb.Label.FontSize = 30; 
+% cb.Ticks = -6:2:6;
+% 
+% % Move subplots closer to each other
+% ax1 = subplot(1,2,1); ax2 = subplot(1,2,2); 
+% set(ax1, 'Position', get(ax1, 'Position') - [0.05 0 0 0]);  % Shift left
+% ax2.Position(1) = ax2.Position(1) - 0.02;
+% 
+% hold on;
+% h1 = plot(nan, nan, 'o', 'MarkerSize', 25, 'MarkerFaceColor', [1 1 1]*0.7, 'MarkerEdgeColor', [1 1 1]*0.7); % Uncorrected p < 0.05
+% h2 = plot(nan, nan, 'o', 'MarkerSize', 25, 'MarkerFaceColor', [0 0 0], 'MarkerEdgeColor', [0 0 0]); % FDR-corrected p < 0.05
+% hold off;
+% 
+% lgd = legend([h1, h2], {'Uncorrected p < 0.05', 'FDR-corrected p < 0.05'}, 'Box', 'off');
+% lgd.Position = [0.2, 0.1, 0.1, 0.1]; % horizontal,vertical, width, height 
+% lgd.FontSize = 28;
+% 
+% sgtitle(['Slow Wave Density'],'FontWeight', 'bold', 'FontSize', 50);
+% 
+% % Save figure
+%  saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelC_SWxGroup.svg']);
 
 %%
 f2=figure('Position', [100, 100, 1650, 400]); 
-VOIlabels = {'Omission Errors', 'Reaction Time (s)', 'Std Deviation of RT', 'Sleepiness Ratings', '"On Task" Reports'};
+VOIlabels = {'Omission Errors', 'Reaction Time (s)', 'RT Variability', 'Sleepiness Ratings', '"On Task" Reports'};
 for nV=1:length(VOI)
     figure(f2);
     ax = subplot(1, length(VOI), nV); %subplot(2,length(VOI)/2,nV)
@@ -607,7 +613,7 @@ for nV=1:length(VOI)
     colormap(cmap2);
     t = title({VOIlabels{nV}});
     t.Position(2) = t.Position(2) -.3;
-    caxis([-1 1]*6)
+    caxis([-1 1]*7)
     format_fig;
     t.FontSize = 26;
     %colorbar;
@@ -616,6 +622,7 @@ cb = colorbar;
 cb.Label.String = 't-values'; 
 cb.Label.FontSize = 22;
 cb.TickLabelInterpreter = 'tex'; 
+cb.Ticks = -6:2:6;
 cb.FontSize = 22; 
 cb.Position = [0.85, 0.2, 0.01, 0.6]; 
 
@@ -651,7 +658,7 @@ for nV=1:length(VOI)
     t = title({VOIlabels{nV}});
     t.Position(2) = t.Position(2) -.3;
     set(t, 'FontSize', 30);
-    caxis([-1 1]*6)
+    caxis([-1 1]*7)
     format_fig;
     t.FontSize = 26;
 %     colorbar;
@@ -661,6 +668,7 @@ cb.Label.String = 't-values';
 cb.Label.FontSize = 22;
 cb.TickLabelInterpreter = 'tex'; 
 cb.FontSize = 22; 
+cb.Ticks = -6:2:6;
 cb.Position = [0.85, 0.2, 0.01, 0.6]; 
 
 titleax = axes('Position',[0 0 1 1],'Visible','off');
@@ -682,195 +690,196 @@ hold off
 
 % Save figure
  saveas(gcf, [pwd filesep 'Figures' filesep 'Fig5_PanelC_MedSWxBehav.svg']);
+
  %% Behaviour - Repeated Measures plot
  Colors=[253,174,97;
     171,217,233;
     44,123,182]/256;
 
 
- %Miss
-     figure; hold on;
-subjects = [];
- data_to_plot=[];
- meandata_to_plot=[];
- group_labels={'Control','ADHD'};
- %all_block_table.Group=categorical(all_block_table.Group);
- for j = 1:2 % number of group
-     for i = 1:4 % number of repetitions
-         subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
-         subject_means = [];
-         for s = 1:length(subjects)
-             subject_mean = mean(SW_table.Behav_Miss( SW_table.Block == num2str(i) & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
-             subject_means = [subject_means; subject_mean];
-         end
-         data_to_plot{i, j} = subject_means;
-         meandata_to_plot(i, j) = nanmean(subject_means);
-     end
-     plot((1:4)+(2*j-3)*0.1,100*meandata_to_plot(:,j)','Color',Colors(j,:),'LineWidth',4)
-
-     subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
-     subject_means = [];
-     for s = 1:length(subjects)
-         subject_mean = mean(SW_table.Behav_Miss(SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
-         subject_means = [subject_means; subject_mean];
-     end
-     data_to_plot_perS{j} = subject_means;
-
- end
- for i = 1:4 % number of repetitions
-     for j = 1:2 % number of group
-         simpleDotPlot(i+(2*j-3)*0.1,100*data_to_plot{i, j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
-     end
- end
-
-    set(gca, 'xtick',1:4); %to change y-axis to percentage
-    title(['Omission Errors per Block']);
-    ylabel('% of Omission Errors'); xlabel('Block Number');
-    format_fig;
-    set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
-ylim([0 0.04]*100)
-xlim([0.5 4.5])
-% saveas(gcf,[pwd filesep 'Figures' filesep 'FigX_PanelY_MissesPerBlock.svg'])
-
-    figure('Position',[2245         400         210         428])
-      for j = 1:2 % number of group
-         simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
-     end
-ylim([0 0.04]*100)
- set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
-    title(['Omission']);
+%  %Miss
+%      figure; hold on;
+% subjects = [];
+%  data_to_plot=[];
+%  meandata_to_plot=[];
+%  group_labels={'Control','ADHD'};
+%  %all_block_table.Group=categorical(all_block_table.Group);
+%  for j = 1:2 % number of group
+%      for i = 1:4 % number of repetitions
+%          subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+%          subject_means = [];
+%          for s = 1:length(subjects)
+%              subject_mean = mean(SW_table.Behav_Miss( SW_table.Block == num2str(i) & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+%              subject_means = [subject_means; subject_mean];
+%          end
+%          data_to_plot{i, j} = subject_means;
+%          meandata_to_plot(i, j) = nanmean(subject_means);
+%      end
+%      plot((1:4)+(2*j-3)*0.1,100*meandata_to_plot(:,j)','Color',Colors(j,:),'LineWidth',4)
+% 
+%      subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+%      subject_means = [];
+%      for s = 1:length(subjects)
+%          subject_mean = mean(SW_table.Behav_Miss(SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+%          subject_means = [subject_means; subject_mean];
+%      end
+%      data_to_plot_perS{j} = subject_means;
+% 
+%  end
+%  for i = 1:4 % number of repetitions
+%      for j = 1:2 % number of group
+%          simpleDotPlot(i+(2*j-3)*0.1,100*data_to_plot{i, j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+%      end
+%  end
+% 
+%     set(gca, 'xtick',1:4); %to change y-axis to percentage
+%     title(['Omission Errors per Block']);
 %     ylabel('% of Omission Errors'); xlabel('Block Number');
-    format_fig;
-    set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
-xlabel('ADHD');
-
-
-%FA
-figure; hold on;
-subjects = [];
-data_to_plot=[];
-meandata_to_plot=[];
-group_labels={'Control','ADHD'};
-%all_block_table.Group=categorical(all_block_table.Group);
-for j = 1:2 % number of group
-    for i = 1:4 % number of repetitions
-        subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
-        subject_means = [];
-        for s = 1:length(subjects)
-            subject_mean = mean(SW_table.Behav_FA( SW_table.Block == num2str(i) & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
-            subject_means = [subject_means; subject_mean];
-        end
-        data_to_plot{i, j} = subject_means;
-        meandata_to_plot(i, j) = nanmean(subject_means);
-    end
-    plot((1:4)+(2*j-3)*0.1,100*meandata_to_plot(:,j)','Color',Colors(j,:),'LineWidth',4)
-
-    subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
-    subject_means = [];
-    for s = 1:length(subjects)
-        subject_mean = mean(SW_table.Behav_FA(SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
-        subject_means = [subject_means; subject_mean];
-    end
-    data_to_plot_perS{j} = subject_means;
-
-end
-for i = 1:4 % number of repetitions
-    for j = 1:2 % number of group
-        simpleDotPlot(i+(2*j-3)*0.1,100*data_to_plot{i, j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
-    end
-end
-
-set(gca, 'xtick',1:4); %to change y-axis to percentage
-title(['Commission Errors per Block']);
-ylabel('% of Commission Errors'); xlabel('Block Number');
-format_fig;
-set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
+%     format_fig;
+%     set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
 % ylim([0 0.04]*100)
-xlim([0.5 4.5])
-
-figure('Position',[2245         400         210         428])
-for j = 1:2 % number of group
-    simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
-end
+% xlim([0.5 4.5])
+% % saveas(gcf,[pwd filesep 'Figures' filesep 'FigX_PanelY_MissesPerBlock.svg'])
+% 
+%     figure('Position',[2245         400         210         428])
+%       for j = 1:2 % number of group
+%          simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+%      end
 % ylim([0 0.04]*100)
-set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
-title(['Commission']);
-%     ylabel('% of Omission Errors'); xlabel('Block Number');
-format_fig;
-set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
-xlabel('ADHD');
-
-    %% False Alarms
-    subjects =[];
-    data_to_plot=[];
-    group_labels={'Control','ADHD'};
-    for i = 1:4 % number of repetitions
-      for j = 1:2 % number of group
-             subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
-             subject_means = [];
-             for s = 1:length(subjects)
-                 subject_mean = mean(SW_table.Behav_FA( SW_table.Block == i & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
-                 subject_means = [subject_means; subject_mean];
-             end
-            data_to_plot{i, j} = subject_means;
-      end
-    end
-
-    figure; hold on;
-    h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-    set(gca, 'XLim', [-0.015 1]);
-    xtix = get(gca, 'xtick'); %to change y-axis to percentage
-    set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
-    title(['Commission Errors per Block']);
-    xlabel('% of Commission Errors'); ylabel('Block Number');
-    format_fig;
-    set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
-    %StdRT
-    subjects = [];
-    data_to_plot=[];
-    group_labels={'Control','ADHD'};
-    for i = 1:4 % number of repetitions
-      for j = 1:2 % number of group
-             subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
-             subject_means = [];
-             for s = 1:length(subjects)
-                 subject_mean = mean(SW_table.Behav_stdRT( SW_table.Block == i & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
-                 subject_means = [subject_means; subject_mean];
-             end
-            data_to_plot{i, j} = subject_means;
-      end
-    end
-
-    figure; hold on;
-    h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-    set(gca, 'XLim', [0 .45]);
-    title(['Standard Deviation of Hit Reaction Times per Block']);
-    xlabel('Standard Deviation of Reaction Times (seconds)'); ylabel('Block Number');
-    format_fig;
-    set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
-
-    %Hit RT
-    subjects =[];;
-    data_to_plot=[];
-    group_labels={'Control','ADHD'};
-    for i = 1:4 % number of repetitions
-      for j = 1:2 % number of group
-             subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
-             subject_means = [];
-             for s = 1:length(subjects)
-                 subject_mean = mean(SW_table.Behav_RT( SW_table.Block == i & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
-                 subject_means = [subject_means; subject_mean];
-             end
-            data_to_plot{i, j} = subject_means;
-      end
-    end
-    figure; hold on;
-    h   = rm_raincloud(data_to_plot, Colors(1:2,:));
-    set(gca, 'XLim', [0.1 .75]);
-    title(['Mean Reaction Times per Block']);
-    xlabel('Reaction Time (seconds)'); ylabel('Block Number');
-    format_fig;
-    set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
+%  set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
+%     title(['Omission']);
+% %     ylabel('% of Omission Errors'); xlabel('Block Number');
+%     format_fig;
+%     set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
+% xlabel('ADHD');
+% 
+% 
+% %FA
+% figure; hold on;
+% subjects = [];
+% data_to_plot=[];
+% meandata_to_plot=[];
+% group_labels={'Control','ADHD'};
+% %all_block_table.Group=categorical(all_block_table.Group);
+% for j = 1:2 % number of group
+%     for i = 1:4 % number of repetitions
+%         subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+%         subject_means = [];
+%         for s = 1:length(subjects)
+%             subject_mean = mean(SW_table.Behav_FA( SW_table.Block == num2str(i) & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+%             subject_means = [subject_means; subject_mean];
+%         end
+%         data_to_plot{i, j} = subject_means;
+%         meandata_to_plot(i, j) = nanmean(subject_means);
+%     end
+%     plot((1:4)+(2*j-3)*0.1,100*meandata_to_plot(:,j)','Color',Colors(j,:),'LineWidth',4)
+% 
+%     subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+%     subject_means = [];
+%     for s = 1:length(subjects)
+%         subject_mean = mean(SW_table.Behav_FA(SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+%         subject_means = [subject_means; subject_mean];
+%     end
+%     data_to_plot_perS{j} = subject_means;
+% 
+% end
+% for i = 1:4 % number of repetitions
+%     for j = 1:2 % number of group
+%         simpleDotPlot(i+(2*j-3)*0.1,100*data_to_plot{i, j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+%     end
+% end
+% 
+% set(gca, 'xtick',1:4); %to change y-axis to percentage
+% title(['Commission Errors per Block']);
+% ylabel('% of Commission Errors'); xlabel('Block Number');
+% format_fig;
+% set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
+% % ylim([0 0.04]*100)
+% xlim([0.5 4.5])
+% 
+% figure('Position',[2245         400         210         428])
+% for j = 1:2 % number of group
+%     simpleDotPlot((2*j-3)*0.1,100*data_to_plot_perS{j},200,Colors(j,:),1,'k','o',[],3,0,0,0);
+% end
+% % ylim([0 0.04]*100)
+% set(gca, 'xtick',[-0.1 0.1],'xticklabel',{'-','+'}); %to change y-axis to percentage
+% title(['Commission']);
+% %     ylabel('% of Omission Errors'); xlabel('Block Number');
+% format_fig;
+% set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
+% xlabel('ADHD');
+% 
+%     %% False Alarms
+%     subjects =[];
+%     data_to_plot=[];
+%     group_labels={'Control','ADHD'};
+%     for i = 1:4 % number of repetitions
+%       for j = 1:2 % number of group
+%              subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+%              subject_means = [];
+%              for s = 1:length(subjects)
+%                  subject_mean = mean(SW_table.Behav_FA( SW_table.Block == i & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+%                  subject_means = [subject_means; subject_mean];
+%              end
+%             data_to_plot{i, j} = subject_means;
+%       end
+%     end
+% 
+%     figure; hold on;
+%     h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+%     set(gca, 'XLim', [-0.015 1]);
+%     xtix = get(gca, 'xtick'); %to change y-axis to percentage
+%     set(gca, 'xtick',xtix, 'xtickLabel',xtix*100); %to change y-axis to percentage
+%     title(['Commission Errors per Block']);
+%     xlabel('% of Commission Errors'); ylabel('Block Number');
+%     format_fig;
+%     set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
+%     %StdRT
+%     subjects = [];
+%     data_to_plot=[];
+%     group_labels={'Control','ADHD'};
+%     for i = 1:4 % number of repetitions
+%       for j = 1:2 % number of group
+%              subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+%              subject_means = [];
+%              for s = 1:length(subjects)
+%                  subject_mean = mean(SW_table.Behav_stdRT( SW_table.Block == i & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+%                  subject_means = [subject_means; subject_mean];
+%              end
+%             data_to_plot{i, j} = subject_means;
+%       end
+%     end
+% 
+%     figure; hold on;
+%     h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+%     set(gca, 'XLim', [0 .45]);
+%     title(['Standard Deviation of Hit Reaction Times per Block']);
+%     xlabel('Standard Deviation of Reaction Times (seconds)'); ylabel('Block Number');
+%     format_fig;
+%     set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
+% 
+%     %Hit RT
+%     subjects =[];;
+%     data_to_plot=[];
+%     group_labels={'Control','ADHD'};
+%     for i = 1:4 % number of repetitions
+%       for j = 1:2 % number of group
+%              subjects = unique(SW_table.SubID(SW_table.Group == group_labels{j})); % Getting all subjects in this group
+%              subject_means = [];
+%              for s = 1:length(subjects)
+%                  subject_mean = mean(SW_table.Behav_RT( SW_table.Block == i & SW_table.Group ==group_labels{j} & SW_table.SubID == subjects(s)));
+%                  subject_means = [subject_means; subject_mean];
+%              end
+%             data_to_plot{i, j} = subject_means;
+%       end
+%     end
+%     figure; hold on;
+%     h   = rm_raincloud(data_to_plot, Colors(1:2,:));
+%     set(gca, 'XLim', [0.1 .75]);
+%     title(['Mean Reaction Times per Block']);
+%     xlabel('Reaction Time (seconds)'); ylabel('Block Number');
+%     format_fig;
+%     set(gca,'FontSize',30,'FontWeight','bold','LineWidth', 1.5);
 
     %% block-level stats
 
@@ -933,10 +942,10 @@ mdlblockstdRT2 = fitlme(SW_table,'Behav_stdRT~1+Block*Group+(Block|SubID)');
 
 anova(mdlblockstdRT1)
 
-%% Topos of the relationship between Group and SWDens using LMEs with BlockN as random slope
+%% Cluster perm Group and SWDens
 
 SWdens_est=cell(1,2);
-totperm=500;
+totperm=1000;
 addpath([pwd filesep '..' filesep 'analysis'])
 for nCh=1:length(layout.label)-2
     sub_table=SW_table(SW_table.Elec==layout.label(nCh),:);
@@ -949,8 +958,9 @@ for nCh=1:length(layout.label)-2
     SWdens_est{1}=[SWdens_est{1} ; [nCh real_out]];
     SWdens_est{2}=[SWdens_est{2} ; [nCh*ones(totperm,1) perm_out]];
 end
-
 %%
+save('SWdens_est.mat', 'SWdens_est')
+%% Topos of the relationship between Group and SWDens using LMEs and cluster permutation
 clus_alpha=0.05;
 montecarlo_alpha=0.05;
 
@@ -992,7 +1002,7 @@ caxis([-1 1]*5)
 format_fig;
 t.FontSize = 30;
 cb = colorbar;
-%   cb.Position = [0.43, 0.2, 0.02, 0.6]; 
+   cb.Position = [0.43, 0.2, 0.02, 0.6]; 
 cb.Label.String = 't-values'; 
 cb.FontSize = 25; cb.Label.FontSize = 30; 
 
@@ -1019,8 +1029,8 @@ caxis([-1 1]*7)
 format_fig;
 t.FontSize = 30;
 cb = colorbar;
- cb.Position = [0.9, 0.2, 0.02, 0.6]; 
 cb.Label.String = 'f-values'; 
+ cb.Position = [0.9, 0.2, 0.02, 0.6]; 
 cb.FontSize = 25; cb.Label.FontSize = 30; 
 cb.Ticks = -6:2:6;
 
@@ -1029,13 +1039,15 @@ ax1 = subplot(1,2,1); ax2 = subplot(1,2,2);
 set(ax1, 'Position', get(ax1, 'Position') - [0.05 0 0 0]);  % Shift left
 ax2.Position(1) = ax2.Position(1) - 0.02;
 
-% hold on;
-% h1 = plot(nan, nan, 'o', 'MarkerSize', 25, 'MarkerFaceColor', [1 1 1]*0.7, 'MarkerEdgeColor', [1 1 1]*0.7); % Uncorrected p < 0.05
-% h2 = plot(nan, nan, 'o', 'MarkerSize', 25, 'MarkerFaceColor', [0 0 0], 'MarkerEdgeColor', [0 0 0]); % FDR-corrected p < 0.05
-% hold off;
+hold on;
+h1 = plot(nan, nan, 'o', 'MarkerSize', 25, 'MarkerFaceColor', [1 1 1]*0.7, 'MarkerEdgeColor', [1 1 1]*0.7); % Uncorrected p < 0.05
+h2 = plot(nan, nan, 'o', 'MarkerSize', 25, 'MarkerFaceColor', [0 0 0], 'MarkerEdgeColor', [0 0 0]); % FDR-corrected p < 0.05
+hold off;
 
 lgd = legend([h1, h2], {'Uncorrected p < 0.05', 'FDR-corrected p < 0.05'}, 'Box', 'off');
-lgd.Position = [0.2, 0.1, 0.1, 0.1]; % horizontal,vertical, width, height 
+lgd.Position = [0.13, 0.05, 0.1, 0.1]; % horizontal,vertical, width, height 
 lgd.FontSize = 28;
 
-sgtitle(['Slow Wave Density'],'FontWeight', 'bold', 'FontSize', 50);
+% sgtitle(['Slow Wave Density'],'FontWeight', 'bold', 'FontSize', 50);
+% % Save figure
+ saveas(gcf, [pwd filesep 'Figures' filesep 'Fig4_PanelC_SWxGroup.svg']);

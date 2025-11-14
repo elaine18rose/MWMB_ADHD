@@ -23,6 +23,7 @@ else
     path_ICAlabel='/Users/elaine/desktop/MATLAB_Functions/ICLabel/';
     path_ExGauss='/Users/elaine/desktop/MATLAB_Functions/exgauss';
     path_FMINSEARCHBND='/Users/elaine/desktop/MATLAB_Functions/FMINSEARCHBND';
+    path_fdrbh = '/Users/elaine/desktop/MATLAB_Functions/fdr_bh/';
     save_path = '/Users/elaine/desktop/Git_Studies/MWMB_ADHD/tables';
     %     mkdir(path_detectSW)
 end
@@ -33,10 +34,13 @@ addpath(path_fieldtrip)
 ft_defaults;
 addpath(genpath(path_ExGauss))
 addpath(genpath(path_FMINSEARCHBND))
+addpath(genpath(path_fdrbh))
 
 demo_table = readtable([save_path filesep 'SART_ADHD_behav_demo_v1.txt']);
 demo_table.Group = categorical(demo_table.Group);
 demo_table.Sex = categorical(demo_table.Sex);
+demo_table.SubID = categorical(demo_table.SubID);
+demo_table.Group = reordercats(demo_table.Group, {'C', 'A'});
 
 SW_demo_table = readtable([save_path filesep 'SART_ADHD_SW_demo_v1.txt']);
 SW_demo_table.Group = categorical(SW_demo_table.Group);
@@ -46,8 +50,17 @@ SW_demo_table.SubID = categorical(SW_demo_table.SubID);
 
 probe_demo_table = readtable([save_path filesep 'SART_ADHD_probe_demo_v1.txt']);
 probe_demo_table.Group = categorical(probe_demo_table.Group);
+probe_demo_table.Group = reordercats(probe_demo_table.Group, {'C', 'A'});
 probe_demo_table.Sex = categorical(probe_demo_table.Sex);
 probe_demo_table.SubID = categorical(probe_demo_table.SubID);
+
+
+block_demo_table = readtable([save_path filesep 'SART_ADHD_block_demo_v1.txt']);
+block_demo_table.Group = categorical(block_demo_table.Group);
+block_demo_table.Sex = categorical(block_demo_table.Sex);
+block_demo_table.SubID = categorical(block_demo_table.SubID);
+block_demo_table.Group = reordercats(block_demo_table.Group, {'C', 'A'});
+
 %% Age 
 unique_subids = unique(demo_table.SubID);
 unique_ages = zeros(length(unique_subids), 1);
@@ -490,3 +503,145 @@ cramers_V = sqrt(chi2_stat / (N * (k - 1)));
 % Display everything
 fprintf('Chi-squared test of independence:\n');
 fprintf('χ²(%d, N = %d) = %.2f, p < %.3g, Cramér''s V = %.3f\n', df, N, chi2_stat, p_val, cramers_V);
+
+%% 20/10/25 Addressing reviewer comments
+%FA
+mdlFA0 = fitlme(demo_table,'FA~1+BlockN+Group+(1|SubID)');
+mdlFA1 = fitlme(demo_table,'FA~1+BlockN*Group+(1|SubID)');
+compare(mdlFA0, mdlFA1) % winning model is mdlFA0
+mdlFA0_age = fitlme(demo_table,'FA~1+BlockN+Group+Age+(1|SubID)'); % adding age as a covariate
+compare(mdlFA0, mdlFA0_age) % winning model is mdlFA0_age
+anova(mdlFA0_age)
+% mdlFA0_ageInt = fitlme(demo_table,'FA~1+BlockN+Group*Age+(1|SubID)'); % adding age as an interaction with group
+% compare(mdlFA0_age, mdlFA0_ageInt)
+% anova(mdlFA0_ageInt)
+
+%Misses
+mdlmiss0 = fitlme(demo_table,'Misses~1+BlockN+Group+(1|SubID)');
+mdlmiss1 = fitlme(demo_table,'Misses~1+BlockN*Group+(1|SubID)');
+compare(mdlmiss0, mdlmiss1) % winning model is mdlmiss1
+mdlmiss1_age = fitlme(demo_table,'Misses~1+BlockN*Group+Age+(1|SubID)'); % adding age as a covariate
+compare(mdlmiss1, mdlmiss1_age) % winning model is mdlmiss1_age
+anova(mdlmiss1_age)
+% mdlmiss1_ageInt = fitlme(demo_table,'Misses~1+BlockN*Group*Age+(1|SubID)'); % adding age as an interaction with group
+% compare(mdlmiss1_age, mdlmiss1_ageInt) % winning model is mdlmiss1_ageInt
+% anova(mdlmiss1_ageInt)
+
+%RT
+mdlRT0  = fitlme(demo_table,'RT~1+BlockN+Group+(1|SubID)'); 
+mdlRT1  = fitlme(demo_table,'RT~1+BlockN*Group+(1|SubID)'); 
+compare(mdlRT0, mdlRT1) % winning model is mdlRT0
+mdlRT0_age = fitlme(demo_table,'RT~1+BlockN+Group+Age+(1|SubID)'); % adding age as a covariate
+compare(mdlRT0, mdlRT0_age) % winning model is mdlRT0
+anova(mdlRT0)
+
+% RT variability (CV)
+mdlcvRT0  = fitlme(block_demo_table,'cvRT~1+BlockN+Group+(1|SubID)'); 
+mdlcvRT1  = fitlme(block_demo_table,'cvRT~1+BlockN*Group+(1|SubID)'); 
+compare(mdlcvRT0, mdlcvRT1) % winning model is mdlcvRT0
+mdlcvRT0_age = fitlme(block_demo_table,'cvRT~1+BlockN+Group+Age+(1|SubID)'); % adding age as a covariate
+compare(mdlcvRT0, mdlcvRT0_age) % winning model is mdlcvRT0
+anova(mdlcvRT0)
+
+
+% D prime
+mdldprime0 = fitlme(block_demo_table,'dprime~1+BlockN+Group+(1|SubID)');
+mdldprime1 = fitlme(block_demo_table,'dprime~1+BlockN*Group+(1|SubID)');  
+compare(mdldprime0,mdldprime1) % winning model is mdldprime0
+mdldprime0_age = fitlme(block_demo_table,'dprime~1+BlockN+Group+Age+(1|SubID)'); % adding age as a covariate
+compare(mdldprime0,mdldprime0_age) % winning model is mdldprime0
+anova(mdldprime0)
+
+%criterion
+mdlcrit0 = fitlme(block_demo_table,'criterion~1+BlockN+Group+(1|SubID)'); 
+mdlcrit1 = fitlme(block_demo_table,'criterion~1+BlockN*Group+(1|SubID)');  
+compare(mdlcrit0,mdlcrit1) % winning model is mdlcrit0
+mdlcrit0_age = fitlme(block_demo_table,'criterion~1+BlockN+Group+Age+(1|SubID)'); % adding age as a covariate
+compare(mdlcrit0,mdlcrit0_age) % winning model is mdlcrit0
+anova(mdlcrit0)
+
+%%%% mind states %%%%
+% On Task
+mdlON0 = fitlme(block_demo_table,'ON~1+BlockN+Group+(1|SubID)'); 
+mdlON1 = fitlme(block_demo_table,'ON~1+BlockN*Group+(1|SubID)');
+compare(mdlON0, mdlON1) % winning model is mdlON1
+mdlON0_age = fitlme(block_demo_table,'ON~1+BlockN+Group+Age+(1|SubID)'); % adding age as a covariate
+compare(mdlON0, mdlON1_age) % winning model is mdlON0
+anova(mdlON0)
+
+% Mind Wandering
+mdlMW0 = fitlme(block_demo_table,'MW~1+BlockN+Group+(1|SubID)');
+mdlMW1 = fitlme(block_demo_table,'MW~1+BlockN*Group+(1|SubID)');
+compare(mdlMW0, mdlMW1)
+mdlMW0_age = fitlme(block_demo_table,'MW~1+BlockN+Group+Age+(1|SubID)'); % adding age as a covariate
+compare(mdlMW0, mdlMW0_age) % winning model is mdlMW0
+anova(mdlMW0)
+
+% Mind Blanking
+mdlMB0 = fitlme(block_demo_table,'MB~1+BlockN+Group+(1|SubID)');
+mdlMB1 = fitlme(block_demo_table,'MB~1+BlockN*Group+(1|SubID)');
+compare(mdlMB0, mdlMB1)
+mdlMB0_age = fitlme(block_demo_table,'MB~1+BlockN+Group+Age+(1|SubID)'); % adding age as a covariate
+compare(mdlMB0, mdlMB0_age) % winning model is mdlMB0
+anova(mdlMB0)
+
+
+% Don't Remember
+mdlDK0 = fitlme(block_demo_table,'DK~1+BlockN+Group+(1|SubID)');
+mdlDK1 = fitlme(block_demo_table,'DK~1+BlockN*Group+(1|SubID)');
+compare(mdlDK0, mdlDK1) %NOTE: mdlDK1 was better fitting but the interaction, although sig (p=.02), doesn't withhold sig after bonferroni correction (new alpha = .0125)
+mdlDK1_age = fitlme(block_demo_table,'DK~1+BlockN*Group+Age+(1|SubID)'); % adding age as a covariate
+compare(mdlDK1, mdlDK1_age)
+anova(mdlDK1)
+
+%%% Sleepiness %%%
+mdlvig0 = fitlme(probe_demo_table,'Vigilance~1+Block+Group+(1|SubID)');
+mdlvig1 = fitlme(probe_demo_table,'Vigilance~1+Block*Group+(1|SubID)');
+compare(mdlvig0, mdlvig1)
+mdlvig0_age = fitlme(probe_demo_table,'Vigilance~1+Block+Group+Age+(1|SubID)'); % adding age as a covariate
+compare(mdlvig0, mdlvig0_age) % winning model is mdlvig0_age
+mdlvig0_ageInt = fitlme(probe_demo_table,'Vigilance~1+Block+Group*Age+(1|SubID)'); % adding age as an interaction with group 
+compare(mdlvig0_age, mdlvig0_ageInt) % winning model is mdlvig0_age
+anova(mdlvig0_age)
+   
+
+%% Benjamini correction for behaviour p-values 
+all_pvals = [ ...
+    mdlmiss1_age.Coefficients.pValue(strcmp(mdlmiss1_age.Coefficients.Name, 'Group_A')); ...
+    mdlmiss1_age.Coefficients.pValue(strcmp(mdlmiss1_age.Coefficients.Name, 'BlockN')); ...
+    mdlmiss1_age.Coefficients.pValue(strcmp(mdlmiss1_age.Coefficients.Name, 'Age')); ...
+    mdlmiss1_age.Coefficients.pValue(strcmp(mdlmiss1_age.Coefficients.Name, 'Group_A:BlockN')); ...
+    mdlFA0_age.Coefficients.pValue(strcmp(mdlFA0_age.Coefficients.Name, 'Group_A')); ...
+    mdlFA0_age.Coefficients.pValue(strcmp(mdlFA0_age.Coefficients.Name, 'BlockN')); ...
+    mdlFA0_age.Coefficients.pValue(strcmp(mdlFA0_age.Coefficients.Name, 'Age')); ...
+    mdldprime0.Coefficients.pValue(strcmp(mdldprime0.Coefficients.Name, 'Group_A')); ...
+    mdldprime0.Coefficients.pValue(strcmp(mdldprime0.Coefficients.Name, 'BlockN')); ...
+    mdlcrit0.Coefficients.pValue(strcmp(mdlcrit0.Coefficients.Name, 'Group_A')); ...
+    mdlcrit0.Coefficients.pValue(strcmp(mdlcrit0.Coefficients.Name, 'BlockN')); ...
+    mdlRT0.Coefficients.pValue(strcmp(mdlRT0.Coefficients.Name, 'Group_A')); ...
+    mdlRT0.Coefficients.pValue(strcmp(mdlRT0.Coefficients.Name, 'BlockN')); ...
+%     mdlstdRT0.Coefficients.pValue(strcmp(mdlstdRT0.Coefficients.Name, 'Group_A')); ...
+%     mdlstdRT0.Coefficients.pValue(strcmp(mdlstdRT0.Coefficients.Name, 'BlockN')); ...
+    mdlcvRT0.Coefficients.pValue(strcmp(mdlcvRT0.Coefficients.Name, 'Group_A')); ...
+    mdlcvRT0.Coefficients.pValue(strcmp(mdlcvRT0.Coefficients.Name, 'BlockN')) ...
+]';
+
+[h, crit_p, ~,adj_p] = fdr_bh(all_pvals, 0.05, 'pdep', 'yes');
+
+labels = {'Miss: Group_A';'Miss: BlockN';'Miss: Age';'Miss: Group_A*BlockN';'FA: Group_A';'FA: BlockN';'FA: Age';'dprime: Group_A';'dprime: BlockN';
+    'criterion: Group_A';'criterion: BlockN';'RT: Group_A';'RT: BlockN';
+%     'stdRT: Group_A';'stdRT: BlockN';
+    'cvRT: Group_A';'cvRT: BlockN'};
+behaviour_corr_pV = table(labels, all_pvals(:), adj_p(:), 'VariableNames', ...
+    {'Coefficient', 'Raw_p', 'Adj_p'});
+behaviour_corr_pV.Significant = behaviour_corr_pV.Adj_p < 0.05;
+disp(behaviour_corr_pV)
+
+
+
+
+
+
+
+
+

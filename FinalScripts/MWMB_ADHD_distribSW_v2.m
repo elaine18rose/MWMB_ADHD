@@ -180,6 +180,7 @@ end
 %%
 figure('Position',[347   308   441   306]);
 uniqueGroupIDs={'Control','ADHD'};
+uniqueGroupLabel={'Neurotypical','ADHD'};
 all_GroupID=categorical(all_GroupID);
 Colors=[253,174,97;
     171,217,233;
@@ -189,7 +190,7 @@ for nG=1:length(uniqueGroupIDs)
     temp_plot=all_distrib_SW(all_GroupID==uniqueGroupIDs(nG),:);
     [pV hplot(nG)]=simpleTplot(bins,temp_plot,0,Colors(nG,:),[0],'-',0.5,1,0,1,4);
 end
-legend(hplot,uniqueGroupIDs, 'Box', 'off')
+legend(hplot,uniqueGroupLabel, 'Box', 'off')
 format_fig;
 xlabel('Amplitude (µV)')
 ylabel('Density (wave/min)')
@@ -290,4 +291,3 @@ format_fig;
 xlabel('Amplitude all waves')
 ylabel('SW density')
 xlim([0 100])
-
