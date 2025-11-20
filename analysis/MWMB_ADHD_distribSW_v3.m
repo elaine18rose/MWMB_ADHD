@@ -51,6 +51,20 @@ run ../MWMB_ADHD_elec_layout.m
 load([pwd filesep '..' filesep 'Preproc' filesep 'all_badChannels_badProbes.mat']);
 
 %%
+% %redo=0;
+% all_threshold_SW=readtable([preproc_path filesep 'all_threshold_SW_90pc.csv']); % all_threshold_SW_v2.csv ; EP - This is from get SW script
+% all_threshold_SW.SubID=categorical(all_threshold_SW.SubID);
+% all_threshold_SW.Group=categorical(all_threshold_SW.Group);
+% all_threshold_SW.Elec=categorical(all_threshold_SW.Elec);
+% CTR_threshold_SW=all_threshold_SW(all_threshold_SW.Group=='Control' & all_threshold_SW.SubID~='C017',:);
+% 
+% CTR_threshold_SW.Thr_EG(CTR_threshold_SW.Thr_EG>(nanmean(CTR_threshold_SW.Thr_EG)+5*nanstd(CTR_threshold_SW.Thr_EG)))=NaN;
+% [Elec_group, ~, idx] = unique(CTR_threshold_SW.Elec);
+% % mean_Thr = splitapply(@nanmean, CTR_threshold_SW.Thr_EG, idx);
+% mean_Thr = splitapply(@nanmean, CTR_threshold_SW.Thr_PC, idx);
+% av_CTR_threshold_SW = table(Elec_group, mean_Thr, 'VariableNames', {'Elec', 'mean_Thr'});
+
+%%
 SW_table=array2table(zeros(0,17),'VariableNames',{'SubID','Group','Block','Elec','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope','SW_threshold','SW_peakneg','SW_peakpos','Probe_MS','Probe_Vig','Behav_Miss','Behav_FA','Behav_RT'});
 SW_table.SubID=categorical(SW_table.SubID);
 SW_table.Group=categorical(SW_table.Group);

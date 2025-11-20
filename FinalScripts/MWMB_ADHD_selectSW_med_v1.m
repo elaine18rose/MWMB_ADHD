@@ -951,8 +951,8 @@ for nCh=1:length(layout.label)-2
 end
 
 %%
-clus_alpha=0.05;
-montecarlo_alpha=0.05;
+clus_alpha=0.1;
+montecarlo_alpha=0.1;
 
 cfg_neighb=[];
 cfg_neighb.method = 'triangulation';

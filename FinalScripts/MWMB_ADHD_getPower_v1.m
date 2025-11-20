@@ -674,7 +674,7 @@ format_fig;
 sgtitle('Power Distribution (3-8.7 Hz)', 'FontWeight', 'bold', 'FontSize', 25);
 
 % Save figure
-saveas(gcf, [pwd filesep 'Figures' filesep 'Fig3_PanelC_TopoPS.svg']);
+%saveas(gcf, [pwd filesep 'Figures' filesep 'Fig3_PanelC_TopoPS.svg']);
 
 %% APERIODIC: Cluster perm to see if there are sig group diff between pow and freq 
 thisCh=match_str(chLabels,'Fz'); %Pz, Fz, Cz, Oz
