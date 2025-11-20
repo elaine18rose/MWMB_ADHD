@@ -41,6 +41,7 @@ table_probe =readtable([save_path filesep 'MWMB_ADHD_all_probe_behav.txt']);
 
 %%
 table_behav=readtable([save_path filesep 'MWMB_ADHD_all_behav_byTrial.txt']);
+table_behav_block = readtable([save_path filesep 'MWMB_ADHD_all_block.txt']);
 
 table_ques=readtable([save_path filesep  'SART-Ppt-Demo-Questionnaire-Scores.xlsx']);
 table_ques.SubID=categorical(table_ques.SubID);
@@ -70,6 +71,15 @@ table_behav_demo.CAARS_ADHDIndex=nan(size(table_behav_demo,1),1);
 table_behav_demo.CAARS_InconsistencyIndex=nan(size(table_behav_demo,1),1);
 table_behav_demo.Epworth=nan(size(table_behav_demo,1),1);
 table_behav_demo.Epworth_Rating=nan(size(table_behav_demo,1),1);
+table_behav_demo.MEQ=nan(size(table_behav_demo,1),1);
+table_behav_demo.AUDIT=nan(size(table_behav_demo,1),1);
+table_behav_demo.DUDIT=nan(size(table_behav_demo,1),1);
+table_behav_demo.IPI=nan(size(table_behav_demo,1),1);
+table_behav_demo.WURS=nan(size(table_behav_demo,1),1);
+table_behav_demo.IDASDysphoria=nan(size(table_behav_demo,1),1);
+table_behav_demo.IDASWellBeing=nan(size(table_behav_demo,1),1);
+table_behav_demo.IDASPanic=nan(size(table_behav_demo,1),1);
+table_behav_demo.IDASDepression=nan(size(table_behav_demo,1),1);
 
 table_behav_demo.ReportedSubtype=string(table_behav_demo.ReportedSubtype);
 table_behav_demo.DIVASubtype=string(table_behav_demo.DIVASubtype);
@@ -134,6 +144,33 @@ for k=1:length(unique_IDs)
 
     table_behav_demo.Epworth_Rating(table_behav_demo.SubID==unique_IDs(k))=...
         table_ques.Epworth_Rating(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.MEQ(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.MEQ(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.AUDIT(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.AUDIT(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.DUDIT(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.DUDIT(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.IPI(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.IPI(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.WURS(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.WURS(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.IDASDysphoria(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.IDASDysphoria(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.IDASWellBeing(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.IDASWellBeing(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.IDASPanic(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.IDASPanic(table_ques.SubID==unique_IDs(k));
+
+    table_behav_demo.IDASDepression(table_behav_demo.SubID==unique_IDs(k))=...
+        table_ques.IDASDepression(table_ques.SubID==unique_IDs(k));
 end
 
 writetable(table_behav_demo,[save_path filesep 'SART_ADHD_behav_demo_v1.txt']);
@@ -224,7 +261,34 @@ for k=1:length(unique_IDs)
         table_ques.Epworth(table_ques.SubID==unique_IDs(k));
 
     table_probe_demo.Epworth_Rating(table_probe_demo.SubID==unique_IDs(k))=...
-        table_ques.Epworth_Rating(table_ques.SubID==unique_IDs(k));
+        table_ques.Epworth_Rating(table_ques.SubID==unique_IDs(k))
+
+    table_probe_demo.MEQ(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.MEQ(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.AUDIT(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.AUDIT(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.DUDIT(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.DUDIT(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.IPI(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.IPI(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.WURS(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.WURS(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.IDASDysphoria(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.IDASDysphoria(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.IDASWellBeing(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.IDASWellBeing(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.IDASPanic(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.IDASPanic(table_ques.SubID==unique_IDs(k));
+
+    table_probe_demo.IDASDepression(table_probe_demo.SubID==unique_IDs(k))=...
+        table_ques.IDASDepression(table_ques.SubID==unique_IDs(k));
 end
 
 writetable(table_probe_demo,[save_path filesep 'SART_ADHD_probe_demo_v1.txt']);
@@ -316,9 +380,164 @@ for k=1:length(unique_IDs)
 
     table_sw_demo.Epworth_Rating(table_sw_demo.SubID==unique_IDs(k))=...
         table_ques.Epworth_Rating(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.MEQ(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.MEQ(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.AUDIT(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.AUDIT(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.DUDIT(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.DUDIT(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.IPI(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.IPI(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.WURS(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.WURS(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.IDASDysphoria(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.IDASDysphoria(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.IDASWellBeing(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.IDASWellBeing(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.IDASPanic(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.IDASPanic(table_ques.SubID==unique_IDs(k));
+
+    table_sw_demo.IDASDepression(table_sw_demo.SubID==unique_IDs(k))=...
+        table_ques.IDASDepression(table_ques.SubID==unique_IDs(k));
 end
 
 writetable(table_sw_demo,[save_path filesep 'SART_ADHD_SW_demo_v1.txt']);
+
+%% Writing a table for block-level behaviour + demo data
+table_block_demo = table_behav_block;
+table_block_demo.SubID = categorical(table_block_demo.SubID);
+
+table_block_demo.Age = nan(size(table_block_demo,1),1);
+table_block_demo.Sex = nan(size(table_block_demo,1),1);
+table_block_demo.Education_Years = nan(size(table_block_demo,1),1);
+table_block_demo.Depression = nan(size(table_block_demo,1),1);
+table_block_demo.Anxiety = nan(size(table_block_demo,1),1);
+table_block_demo.ReportedSubtype = nan(size(table_block_demo,1),1);
+table_block_demo.DIVASubtype = nan(size(table_block_demo,1),1);
+
+table_block_demo.ASRS_Inattentiveness = nan(size(table_block_demo,1),1);
+table_block_demo.ASRS_Hyperactivity = nan(size(table_block_demo,1),1);
+table_block_demo.ASRS_5 = nan(size(table_block_demo,1),1);
+table_block_demo.CAARS_Inattentiveness = nan(size(table_block_demo,1),1);
+table_block_demo.CAARS_Hyperactivity = nan(size(table_block_demo,1),1);
+table_block_demo.CAARS_TotalADHDSymptoms = nan(size(table_block_demo,1),1);
+table_block_demo.CAARS_ADHDIndex = nan(size(table_block_demo,1),1);
+table_block_demo.CAARS_InconsistencyIndex = nan(size(table_block_demo,1),1);
+table_block_demo.Epworth = nan(size(table_block_demo,1),1);
+table_block_demo.Epworth_Rating = nan(size(table_block_demo,1),1);
+table_block_demo.MEQ = nan(size(table_block_demo,1),1);
+table_block_demo.AUDIT = nan(size(table_block_demo,1),1);
+table_block_demo.DUDIT = nan(size(table_block_demo,1),1);
+table_block_demo.IPI = nan(size(table_block_demo,1),1);
+table_block_demo.WURS = nan(size(table_block_demo,1),1);
+table_block_demo.IDASDysphoria = nan(size(table_block_demo,1),1);
+table_block_demo.IDASWellBeing = nan(size(table_block_demo,1),1);
+table_block_demo.IDASPanic = nan(size(table_block_demo,1),1);
+table_block_demo.IDASDepression = nan(size(table_block_demo,1),1);
+
+table_block_demo.ReportedSubtype = string(table_block_demo.ReportedSubtype);
+table_block_demo.DIVASubtype = string(table_block_demo.DIVASubtype);
+table_block_demo.Sex = string(table_block_demo.Sex);
+table_block_demo.CAARS_InconsistencyIndex = string(table_block_demo.CAARS_InconsistencyIndex);
+table_block_demo.Epworth_Rating = string(table_block_demo.Epworth_Rating);
+
+
+unique_IDs = unique(table_block_demo.SubID);
+for k = 1:length(unique_IDs)
+    currentID = unique_IDs(k);
+    if ismember(char(currentID), {'C015'})
+        continue;
+    end
+
+    table_block_demo.Age(table_block_demo.SubID==currentID) = ...
+        table_ques.Age(table_ques.SubID==currentID);
+
+    table_block_demo.Sex(table_block_demo.SubID==currentID) = ...
+        table_ques.Sex(table_ques.SubID==currentID);
+
+    table_block_demo.Education_Years(table_block_demo.SubID==currentID) = ...
+        table_ques.YearsOfEducation(table_ques.SubID==currentID);
+
+    table_block_demo.Depression(table_block_demo.SubID==currentID) = ...
+        table_ques.Depression(table_ques.SubID==currentID);
+
+    table_block_demo.Anxiety(table_block_demo.SubID==currentID) = ...
+        table_ques.Anxiety(table_ques.SubID==currentID);
+
+    table_block_demo.ReportedSubtype(table_block_demo.SubID==currentID) = ...
+        table_ques.ReportedSubtype(table_ques.SubID==currentID);
+
+    table_block_demo.DIVASubtype(table_block_demo.SubID==currentID) = ...
+        table_ques.DIVASubtype(table_ques.SubID==currentID);
+
+    table_block_demo.ASRS_Inattentiveness(table_block_demo.SubID==currentID) = ...
+        table_ques.ASRS_Inattentiveness(table_ques.SubID==currentID);
+
+    table_block_demo.ASRS_Hyperactivity(table_block_demo.SubID==currentID) = ...
+        table_ques.ASRS_Hyperactivity(table_ques.SubID==currentID);
+
+    table_block_demo.ASRS_5(table_block_demo.SubID==currentID) = ...
+        table_ques.ASRS_5(table_ques.SubID==currentID);
+
+    table_block_demo.CAARS_Inattentiveness(table_block_demo.SubID==currentID) = ...
+        table_ques.CAARS_Inattentiveness(table_ques.SubID==currentID);
+
+    table_block_demo.CAARS_Hyperactivity(table_block_demo.SubID==currentID) = ...
+        table_ques.CAARS_Hyperactivity(table_ques.SubID==currentID);
+
+    table_block_demo.CAARS_TotalADHDSymptoms(table_block_demo.SubID==currentID) = ...
+        table_ques.CAARS_TotalADHDSymptoms(table_ques.SubID==currentID);
+
+    table_block_demo.CAARS_ADHDIndex(table_block_demo.SubID==currentID) = ...
+        table_ques.CAARS_ADHDIndex(table_ques.SubID==currentID);
+
+    table_block_demo.CAARS_InconsistencyIndex(table_block_demo.SubID==currentID) = ...
+        table_ques.CAARS_InconsistencyIndex(table_ques.SubID==currentID);
+
+    table_block_demo.Epworth(table_block_demo.SubID==currentID) = ...
+        table_ques.Epworth(table_ques.SubID==currentID);
+
+    table_block_demo.Epworth_Rating(table_block_demo.SubID==currentID) = ...
+        table_ques.Epworth_Rating(table_ques.SubID==currentID);
+
+      table_block_demo.MEQ(table_block_demo.SubID==unique_IDs(k))=...
+          table_ques.MEQ(table_ques.SubID==unique_IDs(k));
+
+      table_block_demo.AUDIT(table_block_demo.SubID==unique_IDs(k))=...
+          table_ques.AUDIT(table_ques.SubID==unique_IDs(k));
+
+      table_block_demo.DUDIT(table_block_demo.SubID==unique_IDs(k))=...
+          table_ques.DUDIT(table_ques.SubID==unique_IDs(k));
+
+      table_block_demo.IPI(table_block_demo.SubID==unique_IDs(k))=...
+          table_ques.IPI(table_ques.SubID==unique_IDs(k));
+
+      table_block_demo.WURS(table_block_demo.SubID==unique_IDs(k))=...
+          table_ques.WURS(table_ques.SubID==unique_IDs(k));
+
+      table_block_demo.IDASDysphoria(table_block_demo.SubID==unique_IDs(k))=...
+          table_ques.IDASDysphoria(table_ques.SubID==unique_IDs(k));
+
+      table_block_demo.IDASWellBeing(table_block_demo.SubID==unique_IDs(k))=...
+          table_ques.IDASWellBeing(table_ques.SubID==unique_IDs(k));
+
+      table_block_demo.IDASPanic(table_block_demo.SubID==unique_IDs(k))=...
+          table_ques.IDASPanic(table_ques.SubID==unique_IDs(k));
+
+      table_block_demo.IDASDepression(table_block_demo.SubID==unique_IDs(k))=...
+          table_ques.IDASDepression(table_ques.SubID==unique_IDs(k));
+end
+
+
+writetable(table_block_demo, [save_path filesep 'SART_ADHD_block_demo_v1.txt']);
 
 
 
